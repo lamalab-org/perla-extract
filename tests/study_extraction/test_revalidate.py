@@ -35,13 +35,25 @@ def test_revalidation_refreshes_only_derived_run_artifacts(tmp_path):
         },
     )
 
+    original = (run_dir / "report.json").read_bytes()
     report = revalidate_run(run_dir)
 
     assert report["status"] == "complete"
     assert report["validation_issue_count"] == 0
     assert report["usage"] == {"cost": 1.25}
-    assert json.loads((run_dir / "validation.json").read_text())["status"] == "verified"
-    assert json.loads((run_dir / "grounded_values.json").read_text()) == []
+    assert (run_dir / "report.json").read_bytes() == original
+    second = revalidate_run(run_dir)
+    assert second["revalidation"]["output_dir"].endswith("revalidation-0002")
+    assert (
+        json.loads((run_dir / "revalidation-0001" / "validation.json").read_text())[
+            "status"
+        ]
+        == "verified"
+    )
+    assert (
+        json.loads((run_dir / "revalidation-0001" / "grounded_values.json").read_text())
+        == []
+    )
 
 
 def test_revalidation_command_reports_bad_run_without_hiding_it(tmp_path):

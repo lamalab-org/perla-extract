@@ -1,0 +1,1870 @@
+{
+  "paper": {
+    "title": "Electrodeposition of Hole-Transport Layer on Methylammonium Lead Iodide Film: A Strategy To Assemble Perovskite Solar Cells",
+    "doi": null
+  },
+  "device_families": [
+    {
+      "family_id": "family-01",
+      "label": "Electrochemically deposited PEDOT n-i-p MAPbI3 perovskite solar cell; Au top layer shown in cross-sections, function unspecified",
+      "variant": null,
+      "architecture": "FTO/bl-TiO2/mp-TiO2/MAPbI3/PEDOT",
+      "polarity": "n-i-p",
+      "full_stack_raw": "FTO/TiO2/MAPbI3/PEDOT",
+      "layers": [
+        {
+          "layer_id": "family-01-layer-01",
+          "sequence": 1,
+          "role": "transparent_electrode",
+          "material": "FTO",
+          "constituents": [
+            {
+              "name": "FTO",
+              "role": "transparent electrode",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_dc965a4b8db9",
+                  "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+                },
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_dc965a4b8db9",
+              "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+            },
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-02",
+          "sequence": 2,
+          "role": "electron_transport_layer",
+          "material": "bl-TiO2",
+          "constituents": [
+            {
+              "name": "TiO2",
+              "role": "blocking layer",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_dc965a4b8db9",
+                  "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+                },
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": "TiO2 blocking layer",
+          "material_form": "other",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_dc965a4b8db9",
+              "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+            },
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-03",
+          "sequence": 3,
+          "role": "electron_transport_layer",
+          "material": "mp-TiO2",
+          "constituents": [
+            {
+              "name": "TiO2",
+              "role": "mesoporous layer",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_dc965a4b8db9",
+                  "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+                },
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": "mesoporous TiO2 layer",
+          "material_form": "mesoporous_layer",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_dc965a4b8db9",
+              "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+            },
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-04",
+          "sequence": 4,
+          "role": "absorber",
+          "material": "MAPbI3",
+          "constituents": [
+            {
+              "name": "MAPbI3",
+              "role": "perovskite absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p1_0019_text_0000d96eddcb",
+                  "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+                },
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p1_0019_text_0000d96eddcb",
+              "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+            },
+            {
+              "block_id": "main_p2_0035_text_dc965a4b8db9",
+              "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+            },
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-05",
+          "sequence": 5,
+          "role": "hole_transport_layer",
+          "material": "PEDOT",
+          "constituents": [
+            {
+              "name": "PEDOT",
+              "role": "HTM layer",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p1_0019_text_0000d96eddcb",
+                  "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p1_0019_text_0000d96eddcb",
+              "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+            },
+            {
+              "block_id": "main_p2_0036_text_acf0d5862e04",
+              "quote": "Figure 2. (A) Top-view SEM image before (upper part) and after PEDOT (lower part) electrodeposition and (B) cross-sectional FIB-SEM image of a PSC, where the PEDOT electrodeposition was carried out at E = 1.0 V with Q pol = 5 mC cm -2 . (C) Theoretical and actual PEDOT layer thicknesses (determined from cross-sectional SEM images). (D) Raman-spectra of a fully assembled FTO/TiO2/MAPbI3/PEDOT architecture and a FTO/PEDOT reference material."
+            },
+            {
+              "block_id": "main_p3_0047_text_e7d6b26634be",
+              "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-au-figure-cross-section",
+          "sequence": 6,
+          "role": "not_reported",
+          "material": "Au",
+          "constituents": [],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0036_text_acf0d5862e04",
+              "quote": "Figure 2. (A) Top-view SEM image before (upper part) and after PEDOT (lower part) electrodeposition and (B) cross-sectional FIB-SEM image of a PSC, where the PEDOT electrodeposition was carried out at E = 1.0 V with Q pol = 5 mC cm -2 . (C) Theoretical and actual PEDOT layer thicknesses (determined from cross-sectional SEM images). (D) Raman-spectra of a fully assembled FTO/TiO2/MAPbI3/PEDOT architecture and a FTO/PEDOT reference material."
+            },
+            {
+              "block_id": "supplement_p12_0146_text_f31d07f0c725",
+              "quote": "Figure S5. Cross-sectional SEM images of a SC, where the PEDOT electrodeposition was carried out at E = 1.0 V for A: Qpol = 5 mC cm -2 , and B: Qpol = 10 mC cm -2 . In both cases the electrodeposition was immediately followed by a reduction step at E = -0.6 V for t = 60 s."
+            }
+          ]
+        }
+      ],
+      "absorbers": [
+        {
+          "absorber_id": "family-01-absorber-01",
+          "layer_id": "family-01-layer-04",
+          "label": "MAPbI3 perovskite absorber",
+          "formula": {
+            "name": "absorber formula",
+            "raw_value": "MAPbI3",
+            "value_number": null,
+            "unit": null,
+            "evidence": [
+              {
+                "block_id": "main_p1_0019_text_0000d96eddcb",
+                "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+              },
+              {
+                "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+              }
+            ]
+          },
+          "properties": [
+            {
+              "name": "solar-cell perovskite layer thickness description",
+              "raw_value": "thicker perovskite layers",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            }
+          ],
+          "constituents": [
+            {
+              "name": "MAPbI3",
+              "role": "host absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p1_0019_text_0000d96eddcb",
+                  "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+                },
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p1_0019_text_0000d96eddcb",
+              "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+            },
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+            }
+          ]
+        }
+      ],
+      "processing_steps": [
+        {
+          "step_id": "family-01-step-01",
+          "sequence": 1,
+          "operation": "FTO substrate cleaning",
+          "target_layer_ids": [
+            "family-01-layer-01"
+          ],
+          "materials": [
+            "soap",
+            "DI water",
+            "ethanol"
+          ],
+          "conditions": [
+            {
+              "name": "ethanol sonication time",
+              "raw_value": "20 minutes",
+              "value_number": 20.0,
+              "unit": "minutes",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "final cleaning treatment",
+              "raw_value": "plasma cleaned",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-02",
+          "sequence": 2,
+          "operation": "spin-coating of TiO2 blocking layer",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "titanium diisopropoxide bis(acetylacetonate)",
+            "1butanol"
+          ],
+          "conditions": [
+            {
+              "name": "titanium diisopropoxide bis(acetylacetonate) solution concentration",
+              "raw_value": "0.15 M",
+              "value_number": 0.15,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "blocking-layer precursor solvent",
+              "raw_value": "1butanol",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "substrate dimensions",
+              "raw_value": "5 cm x 5 cm",
+              "value_number": null,
+              "unit": "cm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "first spin speed",
+              "raw_value": "700 rpm",
+              "value_number": 700.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "first spin time",
+              "raw_value": "8 s",
+              "value_number": 8.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "second spin speed",
+              "raw_value": "1000 rpm",
+              "value_number": 1000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "second spin time",
+              "raw_value": "10 s",
+              "value_number": 10.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "third spin speed",
+              "raw_value": "2000 rpm",
+              "value_number": 2000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "third spin time",
+              "raw_value": "40 s",
+              "value_number": 40.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "spin acceleration",
+              "raw_value": "1000 rpm",
+              "value_number": 1000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "blocking-TiO2 solution volume",
+              "raw_value": "0.5 cm-3",
+              "value_number": 0.5,
+              "unit": "cm-3",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            },
+            {
+              "block_id": "supplement_p8_0132_text_deb37acdcad2",
+              "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-03",
+          "sequence": 3,
+          "operation": "heat treatment of TiO2 blocking layer",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "heat-treatment time",
+              "raw_value": "5 minutes",
+              "value_number": 5.0,
+              "unit": "minutes",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "heat-treatment temperature",
+              "raw_value": "125°C",
+              "value_number": 125.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "atmosphere",
+              "raw_value": "N2 atmosphere",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "glovebox water level",
+              "raw_value": "H2O< 0.1 ppm",
+              "value_number": null,
+              "unit": "ppm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "glovebox oxygen level",
+              "raw_value": "O2< 0.1 ppm",
+              "value_number": null,
+              "unit": "ppm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-04",
+          "sequence": 4,
+          "operation": "spin-coating of mesoporous TiO2 layer",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "mesoporous TiO2",
+            "ethanol"
+          ],
+          "conditions": [
+            {
+              "name": "suspension concentration",
+              "raw_value": "c=0.12 g cm -3",
+              "value_number": 0.12,
+              "unit": "g cm -3",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating procedure",
+              "raw_value": "1 step static coating procedure",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "substrate dimensions",
+              "raw_value": "5 cm x 5 cm",
+              "value_number": null,
+              "unit": "cm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "spin speed",
+              "raw_value": "2000 rpm",
+              "value_number": 2000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "spin time",
+              "raw_value": "20 s",
+              "value_number": 20.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "spin acceleration",
+              "raw_value": "1000 rpm",
+              "value_number": 1000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "mesoporous-TiO2 suspension volume",
+              "raw_value": "1.0 cm-3",
+              "value_number": 1.0,
+              "unit": "cm-3",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            },
+            {
+              "block_id": "supplement_p8_0132_text_deb37acdcad2",
+              "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-05",
+          "sequence": 5,
+          "operation": "calcination of mesoporous TiO2 layer",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "calcination time",
+              "raw_value": "1 hour",
+              "value_number": 1.0,
+              "unit": "hour",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "calcination temperature",
+              "raw_value": "550 °C",
+              "value_number": 550.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            },
+            {
+              "name": "calcination atmosphere",
+              "raw_value": "air",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "FTO substrates were washed with soap, rinsed with DI water, sonicated in ethanol for 20 minutes and finally plasma cleaned prior to use. First, a TiO2 blocking layer was spin-coated onto the FTO slides from a 0.15 M titanium diisopropoxide bis(acetylacetonate) solution in 1butanol. After spin-coating, the layer was immediately subjected to a heat treatment for 5 minutes at 125°C under glovebox conditions (N2 atmosphere, H2O< 0.1 ppm, O2< 0.1 ppm). Then a mesoporous TiO2 layer was spin-coated from an ethanol-based suspension (c=0.12 g cm -3 ). Then the mesoporous layers were calcined for 1 hour at 550 °C in air."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-06",
+          "sequence": 6,
+          "operation": "TiCl4 treatment",
+          "target_layer_ids": [
+            "family-01-layer-02",
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "TiCl4",
+            "aqueous solution"
+          ],
+          "conditions": [
+            {
+              "name": "TiCl4 concentration",
+              "raw_value": "20 mM TiCl4",
+              "value_number": 20.0,
+              "unit": "mM",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+                }
+              ]
+            },
+            {
+              "name": "immersion time",
+              "raw_value": "10 minutes",
+              "value_number": 10.0,
+              "unit": "minutes",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+                }
+              ]
+            },
+            {
+              "name": "treatment temperature",
+              "raw_value": "T=90 °C",
+              "value_number": 90.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-07",
+          "sequence": 7,
+          "operation": "post-TiCl4 calcination",
+          "target_layer_ids": [
+            "family-01-layer-02",
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "calcination temperature",
+              "raw_value": "500 °C",
+              "value_number": 500.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+                }
+              ]
+            },
+            {
+              "name": "calcination time",
+              "raw_value": "30 minutes",
+              "value_number": 30.0,
+              "unit": "minutes",
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+                }
+              ]
+            },
+            {
+              "name": "calcination atmosphere",
+              "raw_value": "air",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p7_0129_text_9cec1e207752",
+                  "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0129_text_9cec1e207752",
+              "quote": "After that the FTO/bl-TiO2/mp-TiO2 samples were subjected to a TiCl4 treatment, by immersing them into aqueous solution of 20 mM TiCl4 for 10 minutes, at T=90 °C. Finally, this was followed by a calcination step at 500 °C for 30 minutes in air."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-08",
+          "sequence": 8,
+          "operation": "preparation of solar-cell perovskite precursor solution",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "PbI2",
+            "MAI",
+            "DMSO",
+            "dimethylformamide"
+          ],
+          "conditions": [
+            {
+              "name": "preparation method",
+              "raw_value": "Lewis base adduct method",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            },
+            {
+              "name": "PbI2 concentration",
+              "raw_value": "1.4 M",
+              "value_number": 1.4,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            },
+            {
+              "name": "MAI concentration",
+              "raw_value": "1.4 M",
+              "value_number": 1.4,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            },
+            {
+              "name": "DMSO concentration",
+              "raw_value": "1.4 M",
+              "value_number": 1.4,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            },
+            {
+              "name": "precursor solvent",
+              "raw_value": "dimethylformamide",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            },
+            {
+              "name": "solution stirring time",
+              "raw_value": "1 h",
+              "value_number": 1.0,
+              "unit": "h",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "solution stirring temperature",
+              "raw_value": "room temperature",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "filter pore size",
+              "raw_value": "0.2 µm",
+              "value_number": 0.2,
+              "unit": "µm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+            },
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-09",
+          "sequence": 9,
+          "operation": "one-step spin-coating of MAPbI3 with antisolvent treatment",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "perovskite solution",
+            "diethyl-ether"
+          ],
+          "conditions": [
+            {
+              "name": "coating method",
+              "raw_value": "one-step method",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+                }
+              ]
+            },
+            {
+              "name": "substrate dimensions",
+              "raw_value": "2.5 cm x 2.5 cm",
+              "value_number": null,
+              "unit": "cm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "spin speed",
+              "raw_value": "4000 rpm",
+              "value_number": 4000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "spin time",
+              "raw_value": "25 s",
+              "value_number": 25.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "spin acceleration",
+              "raw_value": "1200 rpm",
+              "value_number": 1200.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "perovskite solution volume",
+              "raw_value": "50 µl",
+              "value_number": 50.0,
+              "unit": "µl",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "antisolvent",
+              "raw_value": "diethyl-ether",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "diethyl ether volume",
+              "raw_value": "0.5 ml",
+              "value_number": 0.5,
+              "unit": "ml",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "diethyl ether dispensing duration",
+              "raw_value": "less than 4 s",
+              "value_number": null,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0132_text_deb37acdcad2",
+                  "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+                }
+              ]
+            },
+            {
+              "name": "elapsed spin time for antisolvent dispensing",
+              "raw_value": "6 s elapsed time",
+              "value_number": 6.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0133_text_ba8417923858",
+                  "quote": "the early stage (6 s elapsed time) of the film formation."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+            },
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+            },
+            {
+              "block_id": "supplement_p8_0132_text_deb37acdcad2",
+              "quote": "bl-TiO2 - a 3 step dynamic coating procedure on a 5 cm x 5 cm substrate: (1) at 700 rpm for 8 s, (2) at 1000 rpm for 10 s and (3) 2000 rpm for 40 s (acceleration 1000 rpm). 0.5 cm-3 of bl-TiO2 solution was used. mp-TiO2 - a 1 step static coating procedure on a 5 cm x 5 cm substrate: (1) at 2000 rpm for 20 s (acceleration 1000 rpm). 1.0 cm-3 of mp-TiO2 suspension was used. MAPbI3 - a 1 step static coating procedure on a 2.5 cm x 2.5 cm substrate: (1) at 4000 rpm for 25 s (acceleration 1200 rpm). 50 µl of perovskite solution was used. 0.5 ml diethyl ether was dispensed on the spinning substrate in a continuous motion in less than 4 s during"
+            },
+            {
+              "block_id": "supplement_p8_0133_text_ba8417923858",
+              "quote": "the early stage (6 s elapsed time) of the film formation."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-10",
+          "sequence": 10,
+          "operation": "antisolvent evaporation",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "hot-plate temperature",
+              "raw_value": "65 °C",
+              "value_number": 65.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "hot-plate time",
+              "raw_value": "1 min",
+              "value_number": 1.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-11",
+          "sequence": 11,
+          "operation": "MAPbI3 annealing",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "annealing temperature",
+              "raw_value": "T=100 °C",
+              "value_number": 100.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "annealing time",
+              "raw_value": "2 min",
+              "value_number": 2.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0130_text_924be6b70fb2",
+                  "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p8_0130_text_924be6b70fb2",
+              "quote": "Prior to spin coating, all solutions were left to stir for 1 h at room temperature and were filtered with an inorganic membrane filter (0.2 µm pore size, G8549141, Whatman). During spin-coating the samples were subjected to an antisolvent treatment step with diethyl-ether (Sigma-Aldrich, for HPLC, ≥99.9%, inhibitor-free). Subsequently, the samples were transferred to a hot-plate preheated to 65 °C for 1 min to ensure evaporation of the antisolvent. Finally, an annealing step was performed at T=100 °C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-12",
+          "sequence": 12,
+          "operation": "assembly of electrochemical cell for PEDOT electropolymerization",
+          "target_layer_ids": [
+            "family-01-layer-05"
+          ],
+          "materials": [
+            "bis-EDOT",
+            "Bu4NPF6",
+            "DCM",
+            "Pt mesh",
+            "Ag/AgCl wire"
+          ],
+          "conditions": [
+            {
+              "name": "bis-EDOT concentration",
+              "raw_value": "0.01 M",
+              "value_number": 0.01,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "Bu4NPF6 concentration",
+              "raw_value": "0.1 M",
+              "value_number": 0.1,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "electropolymerization solvent",
+              "raw_value": "DCM",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "electrode setup",
+              "raw_value": "standard three-electrode setup",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "working electrode",
+              "raw_value": "FTO/TiO2/perovskite electrodes",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "counterelectrode",
+              "raw_value": "Pt mesh",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "Pt-mesh area",
+              "raw_value": "4 cm 2",
+              "value_number": 4.0,
+              "unit": "cm 2",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "pseudo-reference electrode",
+              "raw_value": "Ag/AgCl wire",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "ferrocene/ferrocenium formal potential",
+              "raw_value": "E = 0.45 ± 0.04 V vs. our Ag/AgCl",
+              "value_number": null,
+              "unit": "V",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+                }
+              ]
+            },
+            {
+              "name": "assembly atmosphere",
+              "raw_value": "N2 atmosphere",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+                }
+              ]
+            },
+            {
+              "name": "assembly-glovebox water level",
+              "raw_value": "H2O < 0.1 ppm",
+              "value_number": null,
+              "unit": "ppm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+                }
+              ]
+            },
+            {
+              "name": "assembly-glovebox oxygen level",
+              "raw_value": "O2 < 0.1 ppm",
+              "value_number": null,
+              "unit": "ppm",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+                }
+              ]
+            },
+            {
+              "name": "electrochemical-cell sealing",
+              "raw_value": "sealed hermetically",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p8_0135_text_be9378070580",
+              "quote": "The electropolymerization was carried out in a 0.01 M bis-EDOT and 0.1 M Bu4NPF6 containing DCM solution, with a Gamry potentiostat in a standard three-electrode setup. The FTO/TiO2/perovskite electrodes functioned as the working electrode, a Pt mesh (4 cm 2 ) as the counterelectrode (cleaned by 'Piranha solution', water and finally DCM), and a Ag/AgCl wire as a pseudo-reference electrode. Its potential was calibrated before and after the experiments, by measuring the formal potential of the ferrocene/ferrocenium redox couple in dichloromethane (0.01 M ferrocene and 0.1 M Bu4NPF6). Cyclic voltammetry was used, and the formal potential was found to be E = 0.45 ± 0.04 V vs. our Ag/AgCl."
+            },
+            {
+              "block_id": "supplement_p8_0135_text_be9378070580",
+              "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-13",
+          "sequence": 13,
+          "operation": "prepolymerization hold",
+          "target_layer_ids": [
+            "family-01-layer-05"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "hold potential",
+              "raw_value": "E = 0.6 V",
+              "value_number": 0.6,
+              "unit": "V",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+                }
+              ]
+            },
+            {
+              "name": "hold time",
+              "raw_value": "20 s",
+              "value_number": 20.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+                }
+              ]
+            },
+            {
+              "name": "purpose",
+              "raw_value": "to discharge the electrochemical double layer",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "supplement_p8_0135_text_be9378070580",
+                  "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "supplement_p8_0135_text_be9378070580",
+              "quote": "All cells were assembled in a glovebox (N2 atmosphere, H2O < 0.1 ppm, O2 < 0.1 ppm) and sealed hermetically to ensure inert conditions. Before each polymerization the solar cells were held at E = 0.6 V for 20 s to discharge the electrochemical double layer, thus ensuring accurate polymerization charge control."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-14",
+          "sequence": 14,
+          "operation": "electrochemical deposition of PEDOT for post-treatment evaluation",
+          "target_layer_ids": [
+            "family-01-layer-05"
+          ],
+          "materials": [
+            "PEDOT"
+          ],
+          "conditions": [
+            {
+              "name": "deposition potential",
+              "raw_value": "1.0 V",
+              "value_number": 1.0,
+              "unit": "V",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0045_text_028f32ca57d5",
+                  "quote": "We employed electrochemical post-treatment approach to alter the doping level (Scheme S2). PEDOT fi lms deposited at 1.0 V, with a Q pol = 3 -10 mC cm -2 seemed to be optimal to evaluate posttreatment conditions. This reductive post-treatment method, however, had an unintended side-e ff ect, as revealed by crosssectional SEM images (Figure S5A,B). Though the reduction of PEDOT is bene fi cial for its performance, it destroys some of the MAPbI3 from the underlying layer."
+                }
+              ]
+            },
+            {
+              "name": "polymerization charge-density range",
+              "raw_value": "Q pol = 3 -10 mC cm -2",
+              "value_number": null,
+              "unit": "mC cm -2",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0045_text_028f32ca57d5",
+                  "quote": "We employed electrochemical post-treatment approach to alter the doping level (Scheme S2). PEDOT fi lms deposited at 1.0 V, with a Q pol = 3 -10 mC cm -2 seemed to be optimal to evaluate posttreatment conditions. This reductive post-treatment method, however, had an unintended side-e ff ect, as revealed by crosssectional SEM images (Figure S5A,B). Though the reduction of PEDOT is bene fi cial for its performance, it destroys some of the MAPbI3 from the underlying layer."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p1_0019_text_0000d96eddcb",
+              "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+            },
+            {
+              "block_id": "main_p3_0045_text_028f32ca57d5",
+              "quote": "We employed electrochemical post-treatment approach to alter the doping level (Scheme S2). PEDOT fi lms deposited at 1.0 V, with a Q pol = 3 -10 mC cm -2 seemed to be optimal to evaluate posttreatment conditions. This reductive post-treatment method, however, had an unintended side-e ff ect, as revealed by crosssectional SEM images (Figure S5A,B). Though the reduction of PEDOT is bene fi cial for its performance, it destroys some of the MAPbI3 from the underlying layer."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p1_0019_text_0000d96eddcb",
+          "quote": "In this study, we report the electrochemical deposition of PEDOT (HTM layer) directly on the MAPbI3 fi lm deposited on a FTO/TiO2 electrode and its implementation in a perovskite solar cell (PSC) with an n -i -p architecture (Scheme 1). The e ff ect of electrochemical post-treatments of the HTM layer on the performance of PSC has also been scrutinized."
+        },
+        {
+          "block_id": "main_p2_0035_text_dc965a4b8db9",
+          "quote": "Figure 1. (A) Potentiodynamic deposition of PEDOT with 25 mV s -1 sweep rate in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM on a PSC architecture (FTO/bl-TiO2/mp-TiO2/MAPbI3) employing a thin MAPbI3 layer. (B) UV -vis absorbance spectra recorded after each cycle at E = 0.0 V during polymerization. (C) First half-cycle of the potentiodynamic deposition plotted together with the absorbance change at 700 nm. (D) Potentiostatic deposition of PEDOT at di ff erent potentials in a 0.01 M bis-EDOT, 0.1 M Bu4NPF6 DCM solution on a PSC architecture employing regular thickness MAPbI3 layers with a polymerization charge density of 10 mC cm -2 ."
+        },
+        {
+          "block_id": "main_p2_0036_text_acf0d5862e04",
+          "quote": "Figure 2. (A) Top-view SEM image before (upper part) and after PEDOT (lower part) electrodeposition and (B) cross-sectional FIB-SEM image of a PSC, where the PEDOT electrodeposition was carried out at E = 1.0 V with Q pol = 5 mC cm -2 . (C) Theoretical and actual PEDOT layer thicknesses (determined from cross-sectional SEM images). (D) Raman-spectra of a fully assembled FTO/TiO2/MAPbI3/PEDOT architecture and a FTO/PEDOT reference material."
+        },
+        {
+          "block_id": "main_p3_0047_text_e7d6b26634be",
+          "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+        },
+        {
+          "block_id": "supplement_p8_0130_text_924be6b70fb2",
+          "quote": "The preparation of the FTO/TiO2/MAPbI3 architectures followed the Lewis base adduct method. 2 Briefly, the perovskite layers were prepared by the one-step method where all the precursors were dissolved in dimethylformamide and subsequently spin-coated onto the FTO/bl-TiO2/mp-TiO2 substrates. The initial studies were carried out on thin perovskite layers, which allowed in situ spectroelectrochemical monitoring of the PEDOT electrodeposition. To prepare thin perovskite layers, the spin coating solution consisted of 0.36 M PbI2, MAI, and DMSO. For the preparation of solar cells thicker perovskite layers were formed, from a 1.4 M PbI2, MAI, and DMSO containing solution."
+        },
+        {
+          "block_id": "supplement_p12_0146_text_f31d07f0c725",
+          "quote": "Figure S5. Cross-sectional SEM images of a SC, where the PEDOT electrodeposition was carried out at E = 1.0 V for A: Qpol = 5 mC cm -2 , and B: Qpol = 10 mC cm -2 . In both cases the electrodeposition was immediately followed by a reduction step at E = -0.6 V for t = 60 s."
+        }
+      ]
+    }
+  ],
+  "individual_devices": [
+    {
+      "device_id": "device-01",
+      "family_id": "family-01",
+      "label": "champion device containing a PEDOT layer with rapid postreduction",
+      "variant": "rapid reduction",
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [
+        {
+          "name": "PEDOT electrodeposition potential",
+          "raw_value": "E = 1.0 V",
+          "value_number": 1.0,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p3_0047_text_e7d6b26634be",
+              "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+            }
+          ]
+        },
+        {
+          "name": "PEDOT polymerization charge density",
+          "raw_value": "Q pol = 10 mC cm -2",
+          "value_number": 10.0,
+          "unit": "mC cm -2",
+          "evidence": [
+            {
+              "block_id": "main_p3_0047_text_e7d6b26634be",
+              "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+            }
+          ]
+        },
+        {
+          "name": "postreduction potential",
+          "raw_value": "E = -0.6 V",
+          "value_number": -0.6,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p3_0047_text_e7d6b26634be",
+              "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+            }
+          ]
+        },
+        {
+          "name": "postreduction time",
+          "raw_value": "t = 10 s",
+          "value_number": 10.0,
+          "unit": "s",
+          "evidence": [
+            {
+              "block_id": "main_p3_0047_text_e7d6b26634be",
+              "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p3_0046_text_76427b454b6e",
+          "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+        },
+        {
+          "block_id": "main_p3_0047_text_e7d6b26634be",
+          "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+        },
+        {
+          "block_id": "main_p4_0056_text_1595b02105ba",
+          "quote": "The electrochemical deposition of PEDOT o ff ers a convenient way to deposit a hole-transport layer on a MAPbI3 layer for designing n -i -p junction perovskite solar cells. By employing potentiostatically controlled electrodeposition technique, it is possible to obtain controlled thicknesses of HTM layers. An electrochemical postreduction step introduced to control the doping level of the as-deposited PEDOT fi lms is an essential step in achieving better performance of PSCs. Care should be exercised not to destroy the underlying MAPbI3 layer during the post-treatment process. The champion device showed a power conversion e ffi ciency of 5.9%."
+        }
+      ]
+    }
+  ],
+  "performance_observations": [
+    {
+      "observation_id": "observation-01",
+      "device_id": "device-01",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "power conversion efficiency",
+          "raw_value": "5.9%",
+          "value_number": 5.9,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p3_0046_text_76427b454b6e",
+              "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+            },
+            {
+              "block_id": "main_p4_0056_text_1595b02105ba",
+              "quote": "The electrochemical deposition of PEDOT o ff ers a convenient way to deposit a hole-transport layer on a MAPbI3 layer for designing n -i -p junction perovskite solar cells. By employing potentiostatically controlled electrodeposition technique, it is possible to obtain controlled thicknesses of HTM layers. An electrochemical postreduction step introduced to control the doping level of the as-deposited PEDOT fi lms is an essential step in achieving better performance of PSCs. Care should be exercised not to destroy the underlying MAPbI3 layer during the post-treatment process. The champion device showed a power conversion e ffi ciency of 5.9%."
+            }
+          ]
+        },
+        {
+          "name": "illumination condition",
+          "raw_value": "1 Sun",
+          "value_number": 1.0,
+          "unit": "Sun",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0137_text_a419752fca23",
+              "quote": "UV-vis absorption spectra of the prepared electrodes were recorded with a Cary 50 Bio spectrophotometer (Varian). Top-down and cross-sectional scanning electron microscopic (SEM) images were captured using a FEI Helios NanoLab™ DualBeam™ instrument. Raman spectroscopic measurements were performed on a DXR Raman Microscope using a green laser ( λ = 532 nm), operating at 10 mW laser power at room temperature. The characterization of the solar cells was performed in a 2-electrode setup on a Princeton Applied Research PARStat 2273 potentiostat under 1 Sun conditions. The voltage was swept with a 50 mV s -1 sweep rate."
+            }
+          ]
+        },
+        {
+          "name": "illumination irradiance",
+          "raw_value": "100 mW cm -2",
+          "value_number": 100.0,
+          "unit": "mW cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p11_0144_text_40d5012fec51",
+              "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            },
+            {
+              "block_id": "supplement_p14_0150_text_3f62af21494b",
+              "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        },
+        {
+          "name": "voltage sweep rate",
+          "raw_value": "50 mV s -1",
+          "value_number": 50.0,
+          "unit": "mV s -1",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0137_text_a419752fca23",
+              "quote": "UV-vis absorption spectra of the prepared electrodes were recorded with a Cary 50 Bio spectrophotometer (Varian). Top-down and cross-sectional scanning electron microscopic (SEM) images were captured using a FEI Helios NanoLab™ DualBeam™ instrument. Raman spectroscopic measurements were performed on a DXR Raman Microscope using a green laser ( λ = 532 nm), operating at 10 mW laser power at room temperature. The characterization of the solar cells was performed in a 2-electrode setup on a Princeton Applied Research PARStat 2273 potentiostat under 1 Sun conditions. The voltage was swept with a 50 mV s -1 sweep rate."
+            },
+            {
+              "block_id": "supplement_p11_0144_text_40d5012fec51",
+              "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            },
+            {
+              "block_id": "supplement_p14_0150_text_3f62af21494b",
+              "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p3_0047_text_e7d6b26634be",
+          "quote": "Figure 3. (A) E ff ect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/ PEDOT PSC for PEDOT layers electrodeposited at E = 1.0 V. (B) Chronoamperometric curves recorded for the PEDOT layers electrodeposited at E = 1.0 V, when a reductive post-treatment at E = -0.6 V was employed. (C) Buildup of the open circuit potential in a FTO/TiO2/MAPbI3/PEDOT SC for the PEDOT layers electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 . (D) J -V curve of the champion device containing a PEDOT layer electrodeposited at E = 1.0 V for Q pol = 10 mC cm -2 , where the postreduction step was at E = -0.6 V for t = 10 s."
+        },
+        {
+          "block_id": "main_p3_0046_text_76427b454b6e",
+          "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+        },
+        {
+          "block_id": "main_p4_0056_text_1595b02105ba",
+          "quote": "The electrochemical deposition of PEDOT o ff ers a convenient way to deposit a hole-transport layer on a MAPbI3 layer for designing n -i -p junction perovskite solar cells. By employing potentiostatically controlled electrodeposition technique, it is possible to obtain controlled thicknesses of HTM layers. An electrochemical postreduction step introduced to control the doping level of the as-deposited PEDOT fi lms is an essential step in achieving better performance of PSCs. Care should be exercised not to destroy the underlying MAPbI3 layer during the post-treatment process. The champion device showed a power conversion e ffi ciency of 5.9%."
+        },
+        {
+          "block_id": "supplement_p9_0137_text_a419752fca23",
+          "quote": "UV-vis absorption spectra of the prepared electrodes were recorded with a Cary 50 Bio spectrophotometer (Varian). Top-down and cross-sectional scanning electron microscopic (SEM) images were captured using a FEI Helios NanoLab™ DualBeam™ instrument. Raman spectroscopic measurements were performed on a DXR Raman Microscope using a green laser ( λ = 532 nm), operating at 10 mW laser power at room temperature. The characterization of the solar cells was performed in a 2-electrode setup on a Princeton Applied Research PARStat 2273 potentiostat under 1 Sun conditions. The voltage was swept with a 50 mV s -1 sweep rate."
+        },
+        {
+          "block_id": "supplement_p11_0144_text_40d5012fec51",
+          "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+        },
+        {
+          "block_id": "supplement_p14_0150_text_3f62af21494b",
+          "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+        }
+      ]
+    }
+  ],
+  "population_statistics": [
+    {
+      "population_id": "population-01",
+      "family_id": "family-01",
+      "label": "MAPbI3 PSCs employing electrochemically deposited PEDOT without any post-treatment; photovoltaic parameter comparison, not a pooled mean",
+      "statistic_type": "other",
+      "sample_size": null,
+      "metrics": [
+        {
+          "name": "open circuit voltage",
+          "raw_value": "low",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0045_text_028f32ca57d5",
+              "quote": "Post-treatment of PEDOT Layer. The doping level of the HTL is important for optimization of PSCs. When we evaluated the photovoltaic performance of the MAPbI3 PSCs employing the electrochemically deposited PEDOT holetransporting layers, without any post-treatment (see Supporting Information for detailed analysis (Figure S4)), all of them exhibited low open circuit voltage ( V OC) (Figure 3A) and fi ll factor (FF). The inability of PEDOT layer to transport the holes e ffi ciently results in increased charge recombination (Figure S4). One way to overcome these issues is to modulate the doping level of PEDOT layer."
+            }
+          ]
+        },
+        {
+          "name": "fill factor",
+          "raw_value": "low",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0045_text_028f32ca57d5",
+              "quote": "Post-treatment of PEDOT Layer. The doping level of the HTL is important for optimization of PSCs. When we evaluated the photovoltaic performance of the MAPbI3 PSCs employing the electrochemically deposited PEDOT holetransporting layers, without any post-treatment (see Supporting Information for detailed analysis (Figure S4)), all of them exhibited low open circuit voltage ( V OC) (Figure 3A) and fi ll factor (FF). The inability of PEDOT layer to transport the holes e ffi ciently results in increased charge recombination (Figure S4). One way to overcome these issues is to modulate the doping level of PEDOT layer."
+            }
+          ]
+        },
+        {
+          "name": "illumination condition",
+          "raw_value": "1 Sun",
+          "value_number": 1.0,
+          "unit": "Sun",
+          "evidence": [
+            {
+              "block_id": "supplement_p11_0144_text_40d5012fec51",
+              "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        },
+        {
+          "name": "illumination irradiance",
+          "raw_value": "100 mW cm -2",
+          "value_number": 100.0,
+          "unit": "mW cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p11_0144_text_40d5012fec51",
+              "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        },
+        {
+          "name": "voltage sweep rate",
+          "raw_value": "50 mV s -1",
+          "value_number": 50.0,
+          "unit": "mV s -1",
+          "evidence": [
+            {
+              "block_id": "supplement_p11_0144_text_40d5012fec51",
+              "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p3_0045_text_028f32ca57d5",
+          "quote": "Post-treatment of PEDOT Layer. The doping level of the HTL is important for optimization of PSCs. When we evaluated the photovoltaic performance of the MAPbI3 PSCs employing the electrochemically deposited PEDOT holetransporting layers, without any post-treatment (see Supporting Information for detailed analysis (Figure S4)), all of them exhibited low open circuit voltage ( V OC) (Figure 3A) and fi ll factor (FF). The inability of PEDOT layer to transport the holes e ffi ciently results in increased charge recombination (Figure S4). One way to overcome these issues is to modulate the doping level of PEDOT layer."
+        },
+        {
+          "block_id": "supplement_p11_0144_text_40d5012fec51",
+          "quote": "Figure S4. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: Open circuit voltage, C: fill factor, and D: Overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+        }
+      ]
+    },
+    {
+      "population_id": "population-02",
+      "family_id": "family-01",
+      "label": "Devices subjected to rapid, mild, or rapid-mild PEDOT post-treatment; photovoltaic parameter comparison, not a pooled mean",
+      "statistic_type": "other",
+      "sample_size": null,
+      "metrics": [
+        {
+          "name": "open circuit voltage compared to untreated PEDOT",
+          "raw_value": "an improvement",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0046_text_76427b454b6e",
+              "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+            }
+          ]
+        },
+        {
+          "name": "short circuit current density",
+          "raw_value": "remained low in most cases",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0046_text_76427b454b6e",
+              "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+            }
+          ]
+        },
+        {
+          "name": "fill factor",
+          "raw_value": "remained low in most cases",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0046_text_76427b454b6e",
+              "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+            }
+          ]
+        },
+        {
+          "name": "illumination condition",
+          "raw_value": "1 Sun",
+          "value_number": 1.0,
+          "unit": "Sun",
+          "evidence": [
+            {
+              "block_id": "supplement_p14_0150_text_3f62af21494b",
+              "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        },
+        {
+          "name": "illumination irradiance",
+          "raw_value": "100 mW cm -2",
+          "value_number": 100.0,
+          "unit": "mW cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p14_0150_text_3f62af21494b",
+              "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        },
+        {
+          "name": "voltage sweep rate",
+          "raw_value": "50 mV s -1",
+          "value_number": 50.0,
+          "unit": "mV s -1",
+          "evidence": [
+            {
+              "block_id": "supplement_p14_0150_text_3f62af21494b",
+              "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p3_0045_text_028f32ca57d5",
+          "quote": "Three di ff erent strategies were employed to mitigate this e ff ect: (i) rapid reduction at -0.6 V for 10 s (Figure S6A); (ii) mild reduction at -0.5 V for 60 s (Figure S6B); and (iii) rapid-mild reduction at -0.5 V for 20 s (Figure S6C)."
+        },
+        {
+          "block_id": "main_p3_0046_text_76427b454b6e",
+          "quote": "There was an improvement in the V OC of the devices compared to the untreated PEDOT in all cases (Figure S7), but the J SC and the FF remained low in most cases (Figure S9A -D). The only exception was the rapid reduction, where the champion cell had a 5.9% e ffi ciency ( Figure 3D). Topdown and cross-sectional SEM images recorded for samples post-treated with the rapid reduction revealed that the degradation of the MAPbI3 layers can be avoided using this strategy (Figure S8)."
+        },
+        {
+          "block_id": "supplement_p13_0148_text_6e69375cf31d",
+          "quote": "Figure S7. The effect of PEDOT thickness (polymerization charge density) on the open circuit voltage in a FTO/TiO2/MAPbI3/PEDOT SC for PEDOT layers electrodeposited at E = 1.0 V. The applied post-reduction step was A: rapid reduction at E = -0.6 V for t = 10 s, B: mild reduction at E = -0.5 V for t = 60 s, and C: rapid-mild reduction at E = -0.5 V for t = 20 s."
+        },
+        {
+          "block_id": "supplement_p14_0150_text_3f62af21494b",
+          "quote": "Figure S9. The effect of PEDOT thickness (polymerization charge density) in a FTO/TiO2/MAPbI3/PEDOT SC on the A: short circuit current density, B: open circuit voltage, C: fill factor, and D: overall efficiency. The SCs were tested under 1 Sun (100 mW cm -2 ) illumination with a 50 mV s -1 sweep rate."
+        }
+      ]
+    }
+  ],
+  "stability_tests": [],
+  "unresolved_notes": [
+    "The rapid, mild, and rapid-mild reduction arms change post-treatment conditions rather than the underlying functional-layer identities, so they were not split into separate device families. Their reported group-level conditions were rapid reduction at -0.6 V for 10 s, mild reduction at -0.5 V for 60 s, and rapid-mild reduction at -0.5 V for 20 s (span-5900167d697d, span-254915434424). Only the champion device is explicitly tied to one of these exact treatments.",
+    "The untreated and collectively post-treated qualitative photovoltaic outcomes apply to multiple devices, but no sample sizes or individual-device identities are reported. They are therefore retained as population-level statistics rather than individual-device performance observations.",
+    "Thin-MAPbI3 PSC architectures and MAPbI3/PEDOT specimens were used for in situ spectroelectrochemical, transient-absorption, SEM, Raman, or related characterization. Thickness alone does not define a new device family, and the supplied evidence does not report a photovoltaic performance outcome for an individually identified thin-layer device.",
+    "FTO/TiO2/MAPbI3 electrodes used for electrolyte exposure, electrochemical-bias stability, SEM, and XPS were partial stacks rather than complete photovoltaic devices, so their material-stability outcomes were not represented as photovoltaic StabilityTest records.",
+    "No scan direction was reported for the champion J-V curve.",
+    "The detailed precursor architecture FTO/bl-TiO2/mp-TiO2/MAPbI3 and the completed PEDOT-containing architecture FTO/TiO2/MAPbI3/PEDOT are both reported. The evidence supports the detailed ordered family architecture, but the source does not give one single verbatim stack string containing both the bl-TiO2/mp-TiO2 distinction and PEDOT.",
+    "Main Figure 2B and SI Figure S5 label Au above PEDOT in cross-section. The observed Au layer is retained with role not_reported; the figures do not establish its electrical function, thickness or deposition method. The text-only verbatim architecture still ends in PEDOT. The caption citations locate the images; the Au label was checked visually.",
+    "The regular-thickness MAPbI3 cells are described as a device configuration, not as a population statistic; no aggregate value or sample size is reported.",
+    "The preparation and assembly quantities in the supplementary methods are processing conditions already represented in family-01 and do not support new population statistics or device families.",
+    "The untreated and post-treated photovoltaic statements are group-level qualitative outcomes. They do not establish additional individual devices or permit attribution of those outcomes to device-01 beyond its reported 5.9% efficiency."
+  ]
+}

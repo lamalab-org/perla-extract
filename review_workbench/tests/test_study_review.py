@@ -1018,6 +1018,7 @@ def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
         "current_schema_sha256": study_schema_sha256(),
         "exact_match": False,
         "readable_by_current_schema": True,
+        "structurally_compatible": False,
     }
 
 
@@ -1264,6 +1265,7 @@ def test_record_reclassification_replaces_wrong_type_atomically(
         "device_id": "device-1",
         "measurement_type": "jv_scan",
         "scan_direction": "not_reported",
+        "measurement_conditions": [],
         "metrics": [metric],
         "evidence": [citation],
     }

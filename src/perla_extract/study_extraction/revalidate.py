@@ -10,6 +10,7 @@ import click
 
 from .artifacts import write_json_atomic
 from .models import EvidenceBlock, StudyExtraction
+from .run_artifacts import file_digest, verify_run_manifest
 from .validation import validate_study
 
 
@@ -25,12 +26,15 @@ def _json(path: Path) -> object:
 def revalidate_run(run_dir: Path) -> dict[str, object]:
     """Rebuild validation artifacts from the immutable extraction and document.
 
-    Evidence policy can improve independently of model prompts. Revalidating cached
-    output avoids both another paid call and the misleading implication that a newer
-    local check produced the original extraction. Only derived validation counts and
-    status are refreshed; model responses, usage, and scientific records stay intact.
+    Each check writes a numbered revalidation directory. The original report is
+    sealed together with paid usage and must remain byte-for-byte unchanged, even
+    when newer evidence checks produce a different status. Legacy unsealed runs can
+    be checked, but this operation does not turn them into reproducible new runs.
     """
 
+    manifest_digest = None
+    if (run_dir / "run_manifest.json").is_file():
+        _, manifest_digest = verify_run_manifest(run_dir)
     extraction = StudyExtraction.model_validate(_json(run_dir / "extraction.json"))
     document = _json(run_dir / "document.json")
     raw_blocks = document.get("blocks") if isinstance(document, dict) else None
@@ -51,9 +55,9 @@ def revalidate_run(run_dir: Path) -> dict[str, object]:
     if report.get("status") in {"complete", "complete_needs_review"}:
         coverage_path = run_dir / "claim_coverage_audit.json"
         coverage = _json(coverage_path) if coverage_path.is_file() else None
-        coverage_complete = not isinstance(coverage, dict) or coverage.get(
-            "status"
-        ) == "complete"
+        coverage_complete = (
+            not isinstance(coverage, dict) or coverage.get("status") == "complete"
+        )
         report["status"] = (
             "complete"
             if validation["status"] == "verified"
@@ -61,9 +65,25 @@ def revalidate_run(run_dir: Path) -> dict[str, object]:
             and report.get("enrichment_status") not in {"failed", "needs_review"}
             else "complete_needs_review"
         )
-    write_json_atomic(run_dir / "grounded_values.json", grounded_values)
-    write_json_atomic(run_dir / "validation.json", validation)
-    write_json_atomic(run_dir / "report.json", report)
+    index = 1
+    while True:
+        output_dir = run_dir / f"revalidation-{index:04d}"
+        try:
+            output_dir.mkdir()
+            break
+        except FileExistsError:
+            index += 1
+    report["revalidation"] = {
+        "output_dir": str(output_dir),
+        "original_manifest_sha256": manifest_digest,
+        "original_report_sha256": file_digest(run_dir / "report.json"),
+        "validation_implementation_sha256": file_digest(
+            Path(__file__).with_name("validation.py")
+        ),
+    }
+    write_json_atomic(output_dir / "grounded_values.json", grounded_values)
+    write_json_atomic(output_dir / "validation.json", validation)
+    write_json_atomic(output_dir / "report.json", report)
     return report
 
 
@@ -91,7 +111,7 @@ def main(runs_dir: Path) -> None:
     """Revalidate every completed extraction directory below RUNS_DIR."""
 
     candidates = sorted(
-        path.parent for path in runs_dir.glob("*/extraction.json") if path.is_file()
+        path.parent for path in runs_dir.rglob("extraction.json") if path.is_file()
     )
     completed, failures = revalidate_runs(candidates)
     click.echo(f"Revalidated {completed} run(s); {len(failures)} failed.")

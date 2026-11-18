@@ -1,0 +1,22 @@
+# A fully local, direct-source baseline. Configure your server before running.
+# This changes the method; measure quality before adopting it for production.
+[extraction]
+use_claim_ledger = false
+use_refinement = false
+use_targeted_repair = false
+use_enrichment = false
+max_model_calls = 2
+max_total_tokens = 65536
+max_elapsed_seconds = 1200
+
+[stages.default]
+model = "openai/your-served-model"
+base_url = "http://localhost:8000/v1"
+api_key_env = "LOCAL_MODEL_API_KEY"
+context_tokens = 32768
+max_input_tokens = 24000
+max_output_tokens = 8192
+reasoning_effort = "omit"
+temperature = 0.0
+# Declare the actual revision, quantization and chat template used by your server.
+# tokenizer = "/absolute/path/to/tokenizer.json"

@@ -10,7 +10,7 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -21,10 +21,11 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from perla_extract.study_extraction.reference_io import GROUND_TRUTH_FORMAT_VERSION
+from perla_extract.study_extraction.scoring_coverage import ReferenceCoverage
 from perla_extract.study_extraction.validation import validate_study
 from review_workbench.study_review import ReviewEvent, StudyReviewStore
 
-GROUND_TRUTH_FORMAT_VERSION = 3
 GROUND_TRUTH_FILENAMES = (
     "ground_truth.json",
     "seed_extraction.json",
@@ -59,7 +60,7 @@ class GroundTruthReview(BaseModel):
     reviewers: list[str]
     adjudicators: list[str] = Field(min_length=1)
     completed_stages: dict[str, list[str]]
-    uncertain_record_keys: list[str]
+    uncertain_record_keys: list[str] = Field(max_length=0)
 
 
 class GroundTruthValidation(BaseModel):
@@ -77,7 +78,7 @@ class GroundTruthManifest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    artifact_format_version: int = Field(ge=1)
+    artifact_format_version: Literal[4] = GROUND_TRUTH_FORMAT_VERSION
     study_schema_version: int = Field(ge=1)
     study_schema_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     paper_id: str
@@ -90,6 +91,7 @@ class GroundTruthManifest(BaseModel):
     review: GroundTruthReview
     validation: GroundTruthValidation
     files: dict[str, str]
+    coverage: ReferenceCoverage = Field(default_factory=ReferenceCoverage)
 
 
 class GroundTruthExport(BaseModel):
@@ -98,16 +100,22 @@ class GroundTruthExport(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     ground_truth: StudyExtraction
-    seed_extraction: StudyExtraction
+    # Historical model output is audit evidence, not the validated reference.
+    # Preserve it even when later schema rules reject its original mistakes.
+    seed_extraction: dict[str, Any]
     review_events: list[ReviewEvent]
     manifest: GroundTruthManifest
 
     def files(self) -> dict[str, object]:
-        """Return stable public filenames without leaking mutable workbench storage."""
+        """Return release filenames, retaining reviewer identities and comments.
+
+        Export preserves the audit trail; it is not anonymization or permission
+        to publish these artifacts. Public release requires a separate review.
+        """
 
         return {
             "ground_truth.json": self.ground_truth.model_dump(mode="json"),
-            "seed_extraction.json": self.seed_extraction.model_dump(mode="json"),
+            "seed_extraction.json": self.seed_extraction,
             "review_events.json": [
                 event.model_dump(mode="json") for event in self.review_events
             ],
@@ -140,7 +148,7 @@ def build_ground_truth_export(
     store.validate_identity(split, paper_id)
     source = store.storage.load_source(split, paper_id)
     revision = store.storage.load_revision(split, paper_id)
-    document = store.load_document(split, paper_id)
+    document = store.storage.load_evidence(split, paper_id, revision.evidence_version)
     events = [ReviewEvent.model_validate(event) for event in revision.events]
     final_event = events[-1]
     if not (
@@ -150,7 +158,6 @@ def build_ground_truth_export(
         raise ValueError("latest review revision must complete adjudication")
 
     truth = StudyExtraction.model_validate(revision.ground_truth)
-    seed = StudyExtraction.model_validate(source.seed_extraction)
     validation = validate_study(truth, _evidence_blocks(document))
     issues = validation.get("issues", [])
     if validation.get("status") != "verified":
@@ -164,15 +171,31 @@ def build_ground_truth_export(
     summary = store.summary(revision.ground_truth, revision.events)
     adjudicator = final_event.reviewer_id
     decisions = summary["record_decisions"].get(adjudicator, {})
-    accepted = {"verified", "uncertain"}
+    unresolved = sorted(
+        key for key, decision in decisions.items() if decision == "uncertain"
+    )
+    if unresolved:
+        raise ValueError(
+            "cannot freeze ground truth with unresolved records: "
+            + ", ".join(unresolved)
+            + "; complete source review and final decisions first"
+        )
+    accepted = {"verified"}
     if (
         sum(decision in accepted for decision in decisions.values())
         != summary["record_count"]
     ):
         raise ValueError("adjudicator must review every current record before export")
 
+    from review_workbench.adjudication import AdjudicationQueue
+
+    if AdjudicationQueue(store).load(split, paper_id, adjudicator, current=revision)[
+        "cases"
+    ]:
+        raise ValueError("resolve pending finalization questions before export")
+
     ground_truth = truth.model_dump(mode="json")
-    seed_extraction = seed.model_dump(mode="json")
+    seed_extraction = source.seed_extraction
     review_events = [event.model_dump(mode="json") for event in events]
     file_hashes = {
         "ground_truth.json": _sha256(ground_truth),
@@ -180,11 +203,6 @@ def build_ground_truth_export(
         "review_events.json": _sha256(review_events),
     }
     reviewers = sorted({event.reviewer_id for event in events})
-    uncertain_record_keys = sorted(
-        record_key
-        for record_key, decision in decisions.items()
-        if decision == "uncertain"
-    )
     manifest = GroundTruthManifest(
         artifact_format_version=GROUND_TRUTH_FORMAT_VERSION,
         study_schema_version=STUDY_SCHEMA_VERSION,
@@ -195,13 +213,16 @@ def build_ground_truth_export(
         evidence_version=revision.evidence_version,
         evidence_document_sha256=_sha256(document),
         frozen_at=final_event.timestamp,
+        coverage=ReferenceCoverage.model_validate(
+            summary["inventory_audits"].get(adjudicator, {}).get("coverage", {})
+        ),
         source_manifest=source.manifest,
         review={
             "event_count": len(events),
             "reviewers": reviewers,
             "adjudicators": [adjudicator],
             "completed_stages": summary["completed_stages"],
-            "uncertain_record_keys": uncertain_record_keys,
+            "uncertain_record_keys": [],
         },
         validation={
             "status": validation["status"],
@@ -212,7 +233,7 @@ def build_ground_truth_export(
     )
     return GroundTruthExport(
         ground_truth=truth,
-        seed_extraction=seed,
+        seed_extraction=seed_extraction,
         review_events=events,
         manifest=manifest,
     )

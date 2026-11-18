@@ -1,0 +1,25 @@
+[
+  {
+    "paper_id": "10.1016--j.nanoen.2022.107416",
+    "experiment": {
+      "id": "control-air-stability",
+      "record_type": "stability_test",
+      "family_id": "family-control",
+      "device_id": null,
+      "description": "Control arm of Figure S12 air-stability experiment.",
+      "conditions": [
+        {"name": "atmosphere", "raw_value": "air", "value_number": null, "unit": null},
+        {"name": "temperature", "raw_value": "room temperature", "value_number": null, "unit": null},
+        {"name": "relative humidity", "raw_value": "RH 25~30%", "value_number": null, "unit": null},
+        {"name": "encapsulation", "raw_value": "without any encapsulation", "value_number": null, "unit": null},
+        {"name": "reported cohort wording; allocation unspecified", "raw_value": "5 devices for control and target samples", "value_number": null, "unit": null}
+      ],
+      "duration": null,
+      "outcomes": [],
+      "evidence": [
+        {"block_id": "supplement_p13_0172_text_917dff5dd1fc", "quote": "Figure S12. The air stability of 5 devices for control and target samples at room temperature at RH 25~30% without any encapsulation."}
+      ],
+      "reason_not_in_scoring_json": "The saved SI contains the caption but not the S12 plot. No control outcome is available; StabilityTest requires a checkpoint with an outcome. Do not reuse the target 133 h / 80% result."
+    }
+  }
+]

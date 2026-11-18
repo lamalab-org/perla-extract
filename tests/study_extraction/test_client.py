@@ -12,6 +12,7 @@ from perla_extract.study_extraction.client import (
     _request_artifact,
     _strict_schema,
 )
+from perla_extract.study_extraction.deployment import DeploymentSettings
 from perla_extract.study_extraction.models import PaperMetadata, StudyExtraction
 
 
@@ -211,16 +212,27 @@ def test_length_truncation_is_not_retried(tmp_path, monkeypatch):
     client = ModelClient(
         cache_dir=tmp_path / "cache",
         output_dir=tmp_path / "out",
+        heartbeat_seconds=0,
     )
     attempts = 0
 
     def truncated(*_args, **_kwargs):
         nonlocal attempts
         attempts += 1
-        raise ModelCallError("length", retryable=False)
+        return SimpleNamespace(
+            model_dump=lambda: {
+                "choices": [{"finish_reason": "length", "message": {"content": "{"}}],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 1,
+                    "total_tokens": 11,
+                },
+            },
+            _hidden_params={},
+        )
 
-    monkeypatch.setattr(client, "_live", truncated)
-    with pytest.raises(ModelCallError, match="length"):
+    monkeypatch.setattr(litellm, "completion", truncated)
+    with pytest.raises(ModelCallError, match="output truncation, max_output_tokens=1"):
         client.complete(
             kind="test",
             slug="test",
@@ -232,6 +244,12 @@ def test_length_truncation_is_not_retried(tmp_path, monkeypatch):
             reasoning_effort=None,
         )
     assert attempts == 1
+    assert client.calls[0]["usage"]["total_tokens"] == 11
+    assert client.calls[0]["usage"]["finish_reason"] == "length"
+    failure = json.loads(
+        (tmp_path / "out/requests/test.attempt-1.failure.json").read_text()
+    )
+    assert failure["content"] == "{"
 
 
 def test_litellm_timeout_becomes_retryable_model_error(tmp_path, monkeypatch):
@@ -254,6 +272,36 @@ def test_litellm_timeout_becomes_retryable_model_error(tmp_path, monkeypatch):
     assert caught.value.retryable is True
     failure = json.loads(failure_path.read_text(encoding="utf-8"))
     assert failure["error_type"] == "Timeout"
+
+
+def test_retry_cost_guard_preserves_provider_timeout(tmp_path, monkeypatch):
+    def time_out(**_kwargs):
+        raise litellm.Timeout(
+            "provider timed out", model="test/model", llm_provider="test"
+        )
+
+    monkeypatch.setattr(litellm, "completion", time_out)
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        max_cost_usd=5,
+        heartbeat_seconds=0,
+    )
+    monkeypatch.setattr(client, "_retry_delay", lambda: None)
+
+    with pytest.raises(ModelBudgetExceeded, match="provider timed out.*Retry blocked"):
+        client.complete(
+            kind="test",
+            slug="test",
+            model="test/model",
+            system="system",
+            prompt="prompt",
+            response_model=StudyExtraction,
+            max_output_tokens=100,
+        )
+
+    assert client.budget_status()["provider_requests"] == 1
+    assert "provider timed out" in client.calls[0]["error"]
 
 
 def test_pydantic_failure_gets_one_error_aware_repair(tmp_path, monkeypatch):
@@ -335,12 +383,13 @@ def test_domain_validation_participates_in_repair_and_cache_validation(
 
 
 def test_model_validator_error_is_logged_and_repaired(tmp_path, monkeypatch):
-    """A ValueError stored in Pydantic context must not break failure logging."""
+    """Repair a large rejected ledger without duplicating it in validation feedback."""
 
     client = ModelClient(
         cache_dir=tmp_path / "cache",
         output_dir=tmp_path / "out",
         heartbeat_seconds=0,
+        deployments={"read": DeploymentSettings(max_input_tokens=20_000)},
     )
     invalid = {
         "objects": [],
@@ -353,10 +402,15 @@ def test_model_validator_error_is_logged_and_repaired(tmp_path, monkeypatch):
                 "scope": "target",
                 "raw_value": None,
                 "shared_targets": [],
-                "evidence": [{"block_id": "main-p1-b1", "quote": "reported device"}],
+                "evidence": [
+                    {"block_id": "main-p1-b1", "quote": "reported device " * 80}
+                ],
             }
         ],
     }
+    invalid["claims"] = [
+        {**invalid["claims"][0], "claim_id": f"claim-{index}"} for index in range(30)
+    ]
     responses = iter([(invalid, {}), ({"objects": [], "claims": []}, {})])
     monkeypatch.setattr(client, "_live", lambda *_args: next(responses))
 
@@ -367,7 +421,8 @@ def test_model_validator_error_is_logged_and_repaired(tmp_path, monkeypatch):
         system="system",
         prompt="prompt",
         response_model=ClaimLedger,
-        max_output_tokens=100,
+        stage="read",
+        max_output_tokens=16_000,
         reasoning_effort=None,
     )
 
@@ -380,6 +435,14 @@ def test_model_validator_error_is_logged_and_repaired(tmp_path, monkeypatch):
     repair_instruction = repair_request["messages"][-1]["content"]
     assert "unknown experimental objects" in repair_instruction
     assert '"ctx"' not in repair_instruction
+    assert '"input"' not in repair_instruction
+    assert json.loads(repair_request["messages"][-2]["content"]) == invalid
+    failure = json.loads(
+        (tmp_path / "out/requests/claims.attempt-1.failure.json").read_text()
+    )
+    assert failure["result"] == invalid
+    assert all("input" not in error for error in failure["validation_errors"])
+    assert client.calls[0]["attempt_count"] == 2
 
 
 def test_model_call_budget_counts_provider_requests_not_cache_reads(

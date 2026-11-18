@@ -31,9 +31,11 @@ dependencies = [
     "pint>=0.24",
     "pydantic>=2.8",
     "pymupdf>=1.24",
+    "tomli>=2; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
+tracing = ["langfuse>=4.7,<5"]
 papersbot = ["feedparser>=6.0", "requests>=2.31"]
 dev = [
     "build",
@@ -60,6 +62,8 @@ docs = [
 perla-extract = "perla_extract.study_extraction.cli:main"
 perla-extract-cohort = "perla_extract.study_extraction.cohort:main"
 perla-extract-revalidate = "perla_extract.study_extraction.revalidate:main"
+perla-compare = "perla_extract.study_extraction.comparison:main"
+perla-experiment = "perla_extract.study_extraction.experiment:main"
 perla-evaluate = "perla_extract.study_extraction.evaluation_cli:main"
 perla-evaluate-dataset = "perla_extract.study_extraction.evaluation_dataset_cli:main"
 perla-papersbot = "perla_extract.papersbot.cli:main"

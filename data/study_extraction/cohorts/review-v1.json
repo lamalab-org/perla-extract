@@ -3,8 +3,9 @@
   "name": "perla-review-v1",
   "purpose": "Development cohort for expert correction of the strongest frozen text-only extraction. These papers have already informed development and are not a held-out test set.",
   "split": "dev",
-  "model": "openrouter/openai/gpt-5.6-sol:exacto",
-  "reasoning_effort": "omit",
+  "stages": {
+    "default": {"model": "openrouter/openai/gpt-5.6-sol:exacto", "reasoning_effort": "omit"}
+  },
   "parser": "docling",
   "claim_recall_passes": 2,
   "max_model_calls_per_paper": 14,

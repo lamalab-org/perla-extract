@@ -1,0 +1,2736 @@
+{
+  "paper": {
+    "title": "Charge-transport efficiently in hybrid lead iodide perovskite solar cells",
+    "doi": "10.1039/C5DT02388B"
+  },
+  "device_families": [
+    {
+      "family_id": "family-01",
+      "label": "CH3NH3PbI3-based perovskite solar cell with mesoporous TiO2",
+      "variant": null,
+      "architecture": "perovskite solar cell",
+      "polarity": "not_reported",
+      "full_stack_raw": null,
+      "layers": [
+        {
+          "layer_id": "family-01-layer-01",
+          "sequence": 1,
+          "role": "transparent_electrode",
+          "material": "fluorinedoped tin oxide conducting glass (FTO, Pilkington)",
+          "constituents": [
+            {
+              "name": "fluorinedoped tin oxide",
+              "role": "conducting coating",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0048_text_02da069e3d0a",
+                  "quote": "PbI2 and N,N-dimethylformide (DMF) were purchased from Sigma-Aldrich and Alfa Aesar, respectively. Spiro-MeOTAD 15 was purchased from Shenzhen Feiming Science and Technology Co., Ltd. All materials else were purchased from J&K Scientific Ltd and used as received. Substrates of the cells are fluorinedoped tin oxide conducting glass (FTO, Pilkington, thickness: 2.2mm, sheet resistance 14 Ω /square). CH3NH3I was synthesized as the literature 33 . 20"
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "thickness",
+              "raw_value": "2.2mm",
+              "value_number": 2.2,
+              "unit": "mm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0048_text_02da069e3d0a",
+                  "quote": "PbI2 and N,N-dimethylformide (DMF) were purchased from Sigma-Aldrich and Alfa Aesar, respectively. Spiro-MeOTAD 15 was purchased from Shenzhen Feiming Science and Technology Co., Ltd. All materials else were purchased from J&K Scientific Ltd and used as received. Substrates of the cells are fluorinedoped tin oxide conducting glass (FTO, Pilkington, thickness: 2.2mm, sheet resistance 14 Ω /square). CH3NH3I was synthesized as the literature 33 . 20"
+                }
+              ]
+            },
+            {
+              "name": "sheet resistance",
+              "raw_value": "14 Ω /square",
+              "value_number": 14.0,
+              "unit": "Ω /square",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0048_text_02da069e3d0a",
+                  "quote": "PbI2 and N,N-dimethylformide (DMF) were purchased from Sigma-Aldrich and Alfa Aesar, respectively. Spiro-MeOTAD 15 was purchased from Shenzhen Feiming Science and Technology Co., Ltd. All materials else were purchased from J&K Scientific Ltd and used as received. Substrates of the cells are fluorinedoped tin oxide conducting glass (FTO, Pilkington, thickness: 2.2mm, sheet resistance 14 Ω /square). CH3NH3I was synthesized as the literature 33 . 20"
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0048_text_02da069e3d0a",
+              "quote": "PbI2 and N,N-dimethylformide (DMF) were purchased from Sigma-Aldrich and Alfa Aesar, respectively. Spiro-MeOTAD 15 was purchased from Shenzhen Feiming Science and Technology Co., Ltd. All materials else were purchased from J&K Scientific Ltd and used as received. Substrates of the cells are fluorinedoped tin oxide conducting glass (FTO, Pilkington, thickness: 2.2mm, sheet resistance 14 Ω /square). CH3NH3I was synthesized as the literature 33 . 20"
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-02",
+          "sequence": 2,
+          "role": "electron_transport_layer",
+          "material": "compact TiO 2",
+          "constituents": [
+            {
+              "name": "TiO 2",
+              "role": "hole-blocking material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": "compact TiO 2",
+          "material_form": "compact_layer",
+          "reported_properties": [
+            {
+              "name": "thickness",
+              "raw_value": "about 50nm",
+              "value_number": null,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0050_text_45a382d02ba8",
+              "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-03",
+          "sequence": 3,
+          "role": "electron_transport_layer",
+          "material": "mesoporous TiO2 layer",
+          "constituents": [
+            {
+              "name": "TiO2",
+              "role": "electron transfer material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0038_text_15f2fc44e94f",
+                  "quote": "Herein, we systematically report controllable TiCl 4 processing of the mesoporous TiO2 film and the photovoltaic performance of CH3NH3PbI3-based perovskite devices via two-step sequential deposition procedure. The interconnection of electron transfer materials TiO2 nanocrystalline grain and the roughness of the 5 mesoporous surface can be controlled by varying the TiCl4 processing time. Moreover, time-resolved photoluminescence (TRPL) spectroscopy revealed that electron injection with proper TiCl4 processing is significant, which can effectively suppress charge recombination, thereby enhance the photovoltaic 10 performance for the devices."
+                },
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": "mesoporous TiO2 layer",
+          "material_form": "mesoporous_layer",
+          "reported_properties": [
+            {
+              "name": "thickness",
+              "raw_value": "180nm",
+              "value_number": 180.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0050_text_45a382d02ba8",
+              "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-04",
+          "sequence": 4,
+          "role": "absorber",
+          "material": "CH3NH3PbI3",
+          "constituents": [
+            {
+              "name": "CH3NH3PbI3",
+              "role": "perovskite absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0038_text_15f2fc44e94f",
+                  "quote": "Herein, we systematically report controllable TiCl 4 processing of the mesoporous TiO2 film and the photovoltaic performance of CH3NH3PbI3-based perovskite devices via two-step sequential deposition procedure. The interconnection of electron transfer materials TiO2 nanocrystalline grain and the roughness of the 5 mesoporous surface can be controlled by varying the TiCl4 processing time. Moreover, time-resolved photoluminescence (TRPL) spectroscopy revealed that electron injection with proper TiCl4 processing is significant, which can effectively suppress charge recombination, thereby enhance the photovoltaic 10 performance for the devices."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0038_text_15f2fc44e94f",
+              "quote": "Herein, we systematically report controllable TiCl 4 processing of the mesoporous TiO2 film and the photovoltaic performance of CH3NH3PbI3-based perovskite devices via two-step sequential deposition procedure. The interconnection of electron transfer materials TiO2 nanocrystalline grain and the roughness of the 5 mesoporous surface can be controlled by varying the TiCl4 processing time. Moreover, time-resolved photoluminescence (TRPL) spectroscopy revealed that electron injection with proper TiCl4 processing is significant, which can effectively suppress charge recombination, thereby enhance the photovoltaic 10 performance for the devices."
+            },
+            {
+              "block_id": "main_p3_0052_text_0767a3a87649",
+              "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-05",
+          "sequence": 5,
+          "role": "hole_transport_layer",
+          "material": "spiro-MeOTAD HTM",
+          "constituents": [
+            {
+              "name": "spiro-MeOTAD",
+              "role": "hole-transport material",
+              "amount": {
+                "name": "amount in HTM formulation",
+                "raw_value": "72.3mg",
+                "value_number": 72.3,
+                "unit": "mg",
+                "evidence": [
+                  {
+                    "block_id": "main_p3_0053_text_6b9fde19acf6",
+                    "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            },
+            {
+              "name": "4-tert-butylpyridine",
+              "role": "HTM formulation constituent",
+              "amount": {
+                "name": "amount in HTM formulation",
+                "raw_value": "28.8 μ l",
+                "value_number": 28.8,
+                "unit": "μ l",
+                "evidence": [
+                  {
+                    "block_id": "main_p3_0053_text_6b9fde19acf6",
+                    "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            },
+            {
+              "name": "lithium bis(trifluoromethylsulphonyl) imide",
+              "role": "HTM formulation constituent",
+              "amount": {
+                "name": "stock-solution amount in HTM formulation",
+                "raw_value": "17.5 μ l",
+                "value_number": 17.5,
+                "unit": "μ l",
+                "evidence": [
+                  {
+                    "block_id": "main_p3_0053_text_6b9fde19acf6",
+                    "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p3_0053_text_6b9fde19acf6",
+              "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-06",
+          "sequence": 6,
+          "role": "back_electrode",
+          "material": "Ag",
+          "constituents": [
+            {
+              "name": "Ag",
+              "role": "cathode",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "thickness",
+              "raw_value": "approximate 200nm",
+              "value_number": null,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0053_text_6b9fde19acf6",
+              "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+            }
+          ]
+        }
+      ],
+      "absorbers": [
+        {
+          "absorber_id": "family-01-absorber-01",
+          "layer_id": "family-01-layer-04",
+          "label": "CH3NH3PbI3 absorber",
+          "formula": {
+            "name": "absorber composition",
+            "raw_value": "CH3NH3PbI3",
+            "value_number": null,
+            "unit": null,
+            "evidence": [
+              {
+                "block_id": "main_p2_0038_text_15f2fc44e94f",
+                "quote": "Herein, we systematically report controllable TiCl 4 processing of the mesoporous TiO2 film and the photovoltaic performance of CH3NH3PbI3-based perovskite devices via two-step sequential deposition procedure. The interconnection of electron transfer materials TiO2 nanocrystalline grain and the roughness of the 5 mesoporous surface can be controlled by varying the TiCl4 processing time. Moreover, time-resolved photoluminescence (TRPL) spectroscopy revealed that electron injection with proper TiCl4 processing is significant, which can effectively suppress charge recombination, thereby enhance the photovoltaic 10 performance for the devices."
+              }
+            ]
+          },
+          "properties": [],
+          "constituents": [
+            {
+              "name": "CH3NH3PbI3",
+              "role": "perovskite absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0038_text_15f2fc44e94f",
+                  "quote": "Herein, we systematically report controllable TiCl 4 processing of the mesoporous TiO2 film and the photovoltaic performance of CH3NH3PbI3-based perovskite devices via two-step sequential deposition procedure. The interconnection of electron transfer materials TiO2 nanocrystalline grain and the roughness of the 5 mesoporous surface can be controlled by varying the TiCl4 processing time. Moreover, time-resolved photoluminescence (TRPL) spectroscopy revealed that electron injection with proper TiCl4 processing is significant, which can effectively suppress charge recombination, thereby enhance the photovoltaic 10 performance for the devices."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0038_text_15f2fc44e94f",
+              "quote": "Herein, we systematically report controllable TiCl 4 processing of the mesoporous TiO2 film and the photovoltaic performance of CH3NH3PbI3-based perovskite devices via two-step sequential deposition procedure. The interconnection of electron transfer materials TiO2 nanocrystalline grain and the roughness of the 5 mesoporous surface can be controlled by varying the TiCl4 processing time. Moreover, time-resolved photoluminescence (TRPL) spectroscopy revealed that electron injection with proper TiCl4 processing is significant, which can effectively suppress charge recombination, thereby enhance the photovoltaic 10 performance for the devices."
+            }
+          ]
+        }
+      ],
+      "processing_steps": [
+        {
+          "step_id": "family-01-step-01",
+          "sequence": 1,
+          "operation": "cleaning of laser-patterned FTO-coated glass substrates",
+          "target_layer_ids": [
+            "family-01-layer-01"
+          ],
+          "materials": [
+            "alkaline, aqueous washing solution",
+            "deionized water",
+            "ethanol",
+            "acetone",
+            "2propanol"
+          ],
+          "conditions": [],
+          "evidence": [
+            {
+              "block_id": "main_p3_0050_text_45a382d02ba8",
+              "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-02",
+          "sequence": 2,
+          "operation": "dip-coating compact TiO2 and sintering",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "TiO2 organic solution"
+          ],
+          "conditions": [
+            {
+              "name": "deposition method",
+              "raw_value": "dip-coating method",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            },
+            {
+              "name": "sintering temperature",
+              "raw_value": "500 ℃",
+              "value_number": 500.0,
+              "unit": "℃",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            },
+            {
+              "name": "sintering time",
+              "raw_value": "30min",
+              "value_number": 30.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0050_text_45a382d02ba8",
+              "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-03",
+          "sequence": 3,
+          "operation": "TiCl4 treatment of compact-TiO2-coated substrates, rinsing and drying",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "aqueous solution of TiCl4",
+            "deionized water"
+          ],
+          "conditions": [
+            {
+              "name": "TiCl4 concentration",
+              "raw_value": "40mM",
+              "value_number": 40.0,
+              "unit": "mM",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            },
+            {
+              "name": "treatment temperature",
+              "raw_value": "70 ℃",
+              "value_number": 70.0,
+              "unit": "℃",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            },
+            {
+              "name": "treatment time",
+              "raw_value": "30min",
+              "value_number": 30.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            },
+            {
+              "name": "drying temperature",
+              "raw_value": "500 ℃",
+              "value_number": 500.0,
+              "unit": "℃",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            },
+            {
+              "name": "drying time",
+              "raw_value": "30min",
+              "value_number": 30.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0050_text_45a382d02ba8",
+                  "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0050_text_45a382d02ba8",
+              "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-04",
+          "sequence": 4,
+          "operation": "preparation of mesoporous TiO2 layer",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "mesoporous TiO2"
+          ],
+          "conditions": [
+            {
+              "name": "deposition method",
+              "raw_value": "spin-coating method",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0058_text_ea740ef43dc5",
+                  "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0050_text_45a382d02ba8",
+              "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+            },
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-05",
+          "sequence": 5,
+          "operation": "variable-time TiCl4 processing of mesoporous TiO2 film and sintering",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "aqueous TiCl4 solution"
+          ],
+          "conditions": [
+            {
+              "name": "TiCl4 concentration",
+              "raw_value": "20m M",
+              "value_number": 20.0,
+              "unit": "m M",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0058_text_ea740ef43dc5",
+                  "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+                }
+              ]
+            },
+            {
+              "name": "treatment temperature",
+              "raw_value": "70 ℃",
+              "value_number": 70.0,
+              "unit": "℃",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0058_text_ea740ef43dc5",
+                  "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+                }
+              ]
+            },
+            {
+              "name": "post-treatment sintering temperature",
+              "raw_value": "500 ℃",
+              "value_number": 500.0,
+              "unit": "℃",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0058_text_ea740ef43dc5",
+                  "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+                }
+              ]
+            },
+            {
+              "name": "post-treatment sintering time",
+              "raw_value": "30min",
+              "value_number": 30.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0058_text_ea740ef43dc5",
+                  "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-06",
+          "sequence": 6,
+          "operation": "PbI2 infiltration by spin coating",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "PbI2",
+            "DMF"
+          ],
+          "conditions": [
+            {
+              "name": "PbI2 concentration in DMF",
+              "raw_value": "462mg/ml (~1M)",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            },
+            {
+              "name": "PbI2 solution heating-plate temperature",
+              "raw_value": "70",
+              "value_number": 70.0,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating speed",
+              "raw_value": "6,500r.p.m.",
+              "value_number": 6500.0,
+              "unit": "r.p.m.",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating time",
+              "raw_value": "5s",
+              "value_number": 5.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0052_text_0767a3a87649",
+              "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-07",
+          "sequence": 7,
+          "operation": "conversion to perovskite by dipping in CH3NH3I solution, rinsing and drying",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "CH3NH3I",
+            "2-propanol"
+          ],
+          "conditions": [
+            {
+              "name": "CH3NH3I concentration",
+              "raw_value": "10mg/ml",
+              "value_number": 10.0,
+              "unit": "mg/ml",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            },
+            {
+              "name": "dipping time",
+              "raw_value": "120min",
+              "value_number": 120.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            },
+            {
+              "name": "drying temperature",
+              "raw_value": "70",
+              "value_number": 70.0,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            },
+            {
+              "name": "drying time",
+              "raw_value": "30min",
+              "value_number": 30.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0052_text_0767a3a87649",
+                  "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0052_text_0767a3a87649",
+              "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-08",
+          "sequence": 8,
+          "operation": "spin coating of HTM",
+          "target_layer_ids": [
+            "family-01-layer-05"
+          ],
+          "materials": [
+            "spiro-MeOTAD",
+            "4-tert-butylpyridine",
+            "lithium bis(trifluoromethylsulphonyl) imide",
+            "acetonitrile",
+            "chlorobenzene"
+          ],
+          "conditions": [
+            {
+              "name": "spin-coating speed",
+              "raw_value": "4,000r.p.m.",
+              "value_number": 4000.0,
+              "unit": "r.p.m.",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating time",
+              "raw_value": "30s",
+              "value_number": 30.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            },
+            {
+              "name": "Li-TFSI stock-solution concentration",
+              "raw_value": "520mg/ml",
+              "value_number": 520.0,
+              "unit": "mg/ml",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            },
+            {
+              "name": "chlorobenzene volume",
+              "raw_value": "1 ml",
+              "value_number": 1.0,
+              "unit": "ml",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0053_text_6b9fde19acf6",
+              "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-09",
+          "sequence": 9,
+          "operation": "thermal evaporation of Ag under vacuum",
+          "target_layer_ids": [
+            "family-01-layer-06"
+          ],
+          "materials": [
+            "Ag"
+          ],
+          "conditions": [
+            {
+              "name": "Ag thickness",
+              "raw_value": "approximate 200nm",
+              "value_number": null,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0053_text_6b9fde19acf6",
+              "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-10",
+          "sequence": null,
+          "operation": "device fabrication under controlled atmospheric conditions",
+          "target_layer_ids": [
+            "family-01-layer-01",
+            "family-01-layer-02",
+            "family-01-layer-03",
+            "family-01-layer-04",
+            "family-01-layer-05",
+            "family-01-layer-06"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "cleanroom humidity",
+              "raw_value": "<1%",
+              "value_number": null,
+              "unit": "%",
+              "evidence": [
+                {
+                  "block_id": "main_p3_0053_text_6b9fde19acf6",
+                  "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p3_0053_text_6b9fde19acf6",
+              "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0038_text_15f2fc44e94f",
+          "quote": "Herein, we systematically report controllable TiCl 4 processing of the mesoporous TiO2 film and the photovoltaic performance of CH3NH3PbI3-based perovskite devices via two-step sequential deposition procedure. The interconnection of electron transfer materials TiO2 nanocrystalline grain and the roughness of the 5 mesoporous surface can be controlled by varying the TiCl4 processing time. Moreover, time-resolved photoluminescence (TRPL) spectroscopy revealed that electron injection with proper TiCl4 processing is significant, which can effectively suppress charge recombination, thereby enhance the photovoltaic 10 performance for the devices."
+        },
+        {
+          "block_id": "main_p3_0048_text_02da069e3d0a",
+          "quote": "PbI2 and N,N-dimethylformide (DMF) were purchased from Sigma-Aldrich and Alfa Aesar, respectively. Spiro-MeOTAD 15 was purchased from Shenzhen Feiming Science and Technology Co., Ltd. All materials else were purchased from J&K Scientific Ltd and used as received. Substrates of the cells are fluorinedoped tin oxide conducting glass (FTO, Pilkington, thickness: 2.2mm, sheet resistance 14 Ω /square). CH3NH3I was synthesized as the literature 33 . 20"
+        },
+        {
+          "block_id": "main_p3_0050_text_45a382d02ba8",
+          "quote": "First, laser-patterned, FTO-coated glass substrates were cleaned by ultrasonication in an alkaline, aqueous washing solution, rinsed with deionized water, ethanol, acetone and 2propanol, respectively. A hole-blocking layer of compact TiO 2 25 with a thickness of about 50nm was deposited by a dip-coating method with a TiO2 organic solution 34-35 , and then followed by a sintering process at 500 ℃ for 30min. After cooling to room temperature, the substrates were treated in an 40mM aqueous solution of TiCl4 at 70 ℃ for 30min, rinsed with deionized water 30 and dried at 500 ℃ for 30min. The mesoporous TiO2 layer with a thickness of 180nm was prepared as previously reported 17 ."
+        },
+        {
+          "block_id": "main_p3_0052_text_0767a3a87649",
+          "quote": "PbI2 was dissolved in DMF at a concentration of 462mg/ml (~1M) under stirring. The PbI2 solution was kept at 70 .notdef on the heating plate. The mesoporous TiO 2 films were then infiltrated 40 with PbI 2 by spin coating at 6,500r.p.m. for 5s and dried. The films were then dipped in a solution of CH3NH3I in 2-propanol (10mg/ml) for 120min, rinsed with 2-propanol and dried at 70 .notdef for 30min."
+        },
+        {
+          "block_id": "main_p3_0053_text_6b9fde19acf6",
+          "quote": "45 The HTM was then deposited by spin coating at 4,000r.p.m. for 30s. The spin-coating formulation was prepared by dissolving 72.3mg (2,2',7,7'-tetrakis(N,N-di-p-methoxyphenyl- amine)-9,9spirobifluorene) (spiro-MeOTAD), 28.8 μ l 4-tert-butylpyridine, 17.5 μ l of a stock solution of 520mg/ml lithium bis(trifluoro50 methylsulphonyl) imide in acetonitrile in 1 ml chlorobenzene. Finally, approximate 200nm Ag (measured by SEM) was thermally evaporated under vacuum to act as the cathode. The device fabrication was carried out under controlled atmospheric conditions and a humidity of <1% in the cleanroom."
+        }
+      ]
+    }
+  ],
+  "individual_devices": [
+    {
+      "device_id": "device-0min",
+      "family_id": "family-01",
+      "label": "0min TiCl4-processed solar cell reported in Table 1",
+      "variant": "0min TiCl4 processing",
+      "champion_status": "not_reported",
+      "selection_basis": "not_reported",
+      "reported_properties": [
+        {
+          "name": "mesoporous-TiO2 TiCl4 processing time",
+          "raw_value": "0min",
+          "value_number": 0.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 solution concentration",
+          "raw_value": "20m M",
+          "value_number": 20.0,
+          "unit": "m M",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 treatment temperature",
+          "raw_value": "70 ℃",
+          "value_number": 70.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering temperature",
+          "raw_value": "500 ℃",
+          "value_number": 500.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+        },
+        {
+          "block_id": "main_p4_0071_text_02453937c5a3",
+          "quote": "Table 1 Detailed photovoltaic parameters of the devices with different processing times of TiCl 4 solution. 30"
+        },
+        {
+          "block_id": "main_p3_0058_text_ea740ef43dc5",
+          "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+        }
+      ]
+    },
+    {
+      "device_id": "device-5min",
+      "family_id": "family-01",
+      "label": "5min TiCl4-processed solar cell reported in Table 1",
+      "variant": "5min TiCl4 processing",
+      "champion_status": "not_reported",
+      "selection_basis": "not_reported",
+      "reported_properties": [
+        {
+          "name": "mesoporous-TiO2 TiCl4 processing time",
+          "raw_value": "5min",
+          "value_number": 5.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 solution concentration",
+          "raw_value": "20m M",
+          "value_number": 20.0,
+          "unit": "m M",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 treatment temperature",
+          "raw_value": "70 ℃",
+          "value_number": 70.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering temperature",
+          "raw_value": "500 ℃",
+          "value_number": 500.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+        },
+        {
+          "block_id": "main_p4_0071_text_02453937c5a3",
+          "quote": "Table 1 Detailed photovoltaic parameters of the devices with different processing times of TiCl 4 solution. 30"
+        },
+        {
+          "block_id": "main_p3_0058_text_ea740ef43dc5",
+          "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+        }
+      ]
+    },
+    {
+      "device_id": "device-10min",
+      "family_id": "family-01",
+      "label": "10min TiCl4-processed solar cell reported in Table 1",
+      "variant": "10min TiCl4 processing",
+      "champion_status": "not_reported",
+      "selection_basis": "not_reported",
+      "reported_properties": [
+        {
+          "name": "mesoporous-TiO2 TiCl4 processing time",
+          "raw_value": "10min",
+          "value_number": 10.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 solution concentration",
+          "raw_value": "20m M",
+          "value_number": 20.0,
+          "unit": "m M",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 treatment temperature",
+          "raw_value": "70 ℃",
+          "value_number": 70.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering temperature",
+          "raw_value": "500 ℃",
+          "value_number": 500.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+        },
+        {
+          "block_id": "main_p4_0071_text_02453937c5a3",
+          "quote": "Table 1 Detailed photovoltaic parameters of the devices with different processing times of TiCl 4 solution. 30"
+        },
+        {
+          "block_id": "main_p3_0058_text_ea740ef43dc5",
+          "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+        }
+      ]
+    },
+    {
+      "device_id": "device-20min",
+      "family_id": "family-01",
+      "label": "20min TiCl4-processed solar cell reported in Table 1",
+      "variant": "20min TiCl4 processing",
+      "champion_status": "not_reported",
+      "selection_basis": "not_reported",
+      "reported_properties": [
+        {
+          "name": "mesoporous-TiO2 TiCl4 processing time",
+          "raw_value": "20min",
+          "value_number": 20.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 solution concentration",
+          "raw_value": "20m M",
+          "value_number": 20.0,
+          "unit": "m M",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 treatment temperature",
+          "raw_value": "70 ℃",
+          "value_number": 70.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering temperature",
+          "raw_value": "500 ℃",
+          "value_number": 500.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+        },
+        {
+          "block_id": "main_p4_0071_text_02453937c5a3",
+          "quote": "Table 1 Detailed photovoltaic parameters of the devices with different processing times of TiCl 4 solution. 30"
+        },
+        {
+          "block_id": "main_p3_0058_text_ea740ef43dc5",
+          "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+        }
+      ]
+    },
+    {
+      "device_id": "device-30min-champion",
+      "family_id": "family-01",
+      "label": "30min TiCl4-treated champion solar cell",
+      "variant": "30min TiCl4 processing",
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [
+        {
+          "name": "mesoporous-TiO2 TiCl4 processing time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 solution concentration",
+          "raw_value": "20m M",
+          "value_number": 20.0,
+          "unit": "m M",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 treatment temperature",
+          "raw_value": "70 ℃",
+          "value_number": 70.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering temperature",
+          "raw_value": "500 ℃",
+          "value_number": 500.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+        },
+        {
+          "block_id": "main_p4_0076_text_75f83f3d86b7",
+          "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+        },
+        {
+          "block_id": "main_p8_0143_text_3e0d3de997d5",
+          "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+        },
+        {
+          "block_id": "main_p3_0058_text_ea740ef43dc5",
+          "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+        }
+      ]
+    },
+    {
+      "device_id": "device-60min",
+      "family_id": "family-01",
+      "label": "60min TiCl4-processed solar cell reported in Table 1",
+      "variant": "60min TiCl4 processing",
+      "champion_status": "not_reported",
+      "selection_basis": "not_reported",
+      "reported_properties": [
+        {
+          "name": "mesoporous-TiO2 TiCl4 processing time",
+          "raw_value": "60min",
+          "value_number": 60.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 solution concentration",
+          "raw_value": "20m M",
+          "value_number": 20.0,
+          "unit": "m M",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "mesoporous-film TiCl4 treatment temperature",
+          "raw_value": "70 ℃",
+          "value_number": 70.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering temperature",
+          "raw_value": "500 ℃",
+          "value_number": 500.0,
+          "unit": "℃",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        },
+        {
+          "name": "post-treatment sintering time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p3_0058_text_ea740ef43dc5",
+              "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+        },
+        {
+          "block_id": "main_p4_0071_text_02453937c5a3",
+          "quote": "Table 1 Detailed photovoltaic parameters of the devices with different processing times of TiCl 4 solution. 30"
+        },
+        {
+          "block_id": "main_p3_0058_text_ea740ef43dc5",
+          "quote": "The fabrication of perovskite solar cells with controllable TiCl 4 85 treatment is described schematically in Fig.1. Firstly, Mesoporous TiO2 film (the thickness of ~180nm) was deposited on a thin compact TiO2 blocking layer by spin-coating method. Secondly, the mesoporous TiO2 film was immersed in 20m M aqueous TiCl4 solution at 70 ℃ for different time (0min, 5min, 10min, 90 20min, 30min, and 60min, respectively) and sintered at 500 ℃ for 30min, followed by spin-coating PbI2 in N,N-dimethylformamide (DMF). Thirdly, the dried PbI 2 film was dipped into CH3NH3I solution for 120min, heated at 70 ℃ for 30min to form perovskite."
+        }
+      ]
+    }
+  ],
+  "performance_observations": [
+    {
+      "observation_id": "jv-0min",
+      "device_id": "device-0min",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "18.3",
+          "value_number": 18.3,
+          "unit": "mA/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.87",
+          "value_number": 0.87,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "53.2",
+          "value_number": 53.2,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+            }
+          ]
+        },
+        {
+          "name": "PCE",
+          "raw_value": "8.4",
+          "value_number": 8.4,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+            }
+          ]
+        },
+        {
+          "name": "Rs",
+          "raw_value": "11.35",
+          "value_number": 11.35,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+            }
+          ]
+        },
+        {
+          "name": "Rsh",
+          "raw_value": "892.72",
+          "value_number": 892.72,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "illumination intensity",
+          "raw_value": "100mW/cm 2",
+          "value_number": 100.0,
+          "unit": "mW/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "measurement atmosphere",
+          "raw_value": "ambient atmosphere",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement temperature",
+          "raw_value": "room temperature",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement mask",
+          "raw_value": "black mask with an aperture (aperture area is close to the active device area)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0069_text_1cdd7d8241d5",
+          "quote": "Fig. 2 (a) photocurrent density-voltage ( J-V ) curves of perovskite solar cell with TiCl4 solution processing for 0min, 5min, 10min, 25 20min, 30min, and 60min, respectively, under simulated 100 mW/cm 2 AM1.5G illumination."
+        },
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "0min | 18.3 | 0.87 | 53.2 | 8.4 | 11.35 | 892.72"
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+        }
+      ]
+    },
+    {
+      "observation_id": "jv-5min",
+      "device_id": "device-5min",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "18.8",
+          "value_number": 18.8,
+          "unit": "mA/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.87",
+          "value_number": 0.87,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "57.0",
+          "value_number": 57.0,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+            }
+          ]
+        },
+        {
+          "name": "PCE",
+          "raw_value": "9.7",
+          "value_number": 9.7,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+            }
+          ]
+        },
+        {
+          "name": "Rs",
+          "raw_value": "11.90",
+          "value_number": 11.9,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+            }
+          ]
+        },
+        {
+          "name": "Rsh",
+          "raw_value": "1661.84",
+          "value_number": 1661.84,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "illumination intensity",
+          "raw_value": "100mW/cm 2",
+          "value_number": 100.0,
+          "unit": "mW/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "measurement atmosphere",
+          "raw_value": "ambient atmosphere",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement temperature",
+          "raw_value": "room temperature",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement mask",
+          "raw_value": "black mask with an aperture (aperture area is close to the active device area)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0069_text_1cdd7d8241d5",
+          "quote": "Fig. 2 (a) photocurrent density-voltage ( J-V ) curves of perovskite solar cell with TiCl4 solution processing for 0min, 5min, 10min, 25 20min, 30min, and 60min, respectively, under simulated 100 mW/cm 2 AM1.5G illumination."
+        },
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "5min | 18.8 | 0.87 | 57.0 | 9.7 | 11.90 | 1661.84"
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+        }
+      ]
+    },
+    {
+      "observation_id": "jv-10min",
+      "device_id": "device-10min",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "19.1",
+          "value_number": 19.1,
+          "unit": "mA/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.91",
+          "value_number": 0.91,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "67.6",
+          "value_number": 67.6,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+            }
+          ]
+        },
+        {
+          "name": "PCE",
+          "raw_value": "11.8",
+          "value_number": 11.8,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+            }
+          ]
+        },
+        {
+          "name": "Rs",
+          "raw_value": "6.11",
+          "value_number": 6.11,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+            }
+          ]
+        },
+        {
+          "name": "Rsh",
+          "raw_value": "1544.46",
+          "value_number": 1544.46,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "illumination intensity",
+          "raw_value": "100mW/cm 2",
+          "value_number": 100.0,
+          "unit": "mW/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "measurement atmosphere",
+          "raw_value": "ambient atmosphere",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement temperature",
+          "raw_value": "room temperature",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement mask",
+          "raw_value": "black mask with an aperture (aperture area is close to the active device area)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0069_text_1cdd7d8241d5",
+          "quote": "Fig. 2 (a) photocurrent density-voltage ( J-V ) curves of perovskite solar cell with TiCl4 solution processing for 0min, 5min, 10min, 25 20min, 30min, and 60min, respectively, under simulated 100 mW/cm 2 AM1.5G illumination."
+        },
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "10min | 19.1 | 0.91 | 67.6 | 11.8 | 6.11 | 1544.46"
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+        }
+      ]
+    },
+    {
+      "observation_id": "jv-20min",
+      "device_id": "device-20min",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "20.5",
+          "value_number": 20.5,
+          "unit": "mA/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.92",
+          "value_number": 0.92,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "69.3",
+          "value_number": 69.3,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+            }
+          ]
+        },
+        {
+          "name": "PCE",
+          "raw_value": "13.1",
+          "value_number": 13.1,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+            }
+          ]
+        },
+        {
+          "name": "Rs",
+          "raw_value": "5.87",
+          "value_number": 5.87,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+            }
+          ]
+        },
+        {
+          "name": "Rsh",
+          "raw_value": "3597.48",
+          "value_number": 3597.48,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "illumination intensity",
+          "raw_value": "100mW/cm 2",
+          "value_number": 100.0,
+          "unit": "mW/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "measurement atmosphere",
+          "raw_value": "ambient atmosphere",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement temperature",
+          "raw_value": "room temperature",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement mask",
+          "raw_value": "black mask with an aperture (aperture area is close to the active device area)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0069_text_1cdd7d8241d5",
+          "quote": "Fig. 2 (a) photocurrent density-voltage ( J-V ) curves of perovskite solar cell with TiCl4 solution processing for 0min, 5min, 10min, 25 20min, 30min, and 60min, respectively, under simulated 100 mW/cm 2 AM1.5G illumination."
+        },
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "20min | 20.5 | 0.92 | 69.3 | 13.1 | 5.87 | 3597.48"
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+        }
+      ]
+    },
+    {
+      "observation_id": "jv-30min",
+      "device_id": "device-30min-champion",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "21.3",
+          "value_number": 21.3,
+          "unit": "mA/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+            },
+            {
+              "block_id": "main_p4_0076_text_75f83f3d86b7",
+              "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.94",
+          "value_number": 0.94,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+            },
+            {
+              "block_id": "main_p4_0076_text_75f83f3d86b7",
+              "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "73.1",
+          "value_number": 73.1,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+            },
+            {
+              "block_id": "main_p4_0076_text_75f83f3d86b7",
+              "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+            }
+          ]
+        },
+        {
+          "name": "PCE",
+          "raw_value": "14.6",
+          "value_number": 14.6,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+            },
+            {
+              "block_id": "main_p4_0076_text_75f83f3d86b7",
+              "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+            }
+          ]
+        },
+        {
+          "name": "Rs",
+          "raw_value": "5.76",
+          "value_number": 5.76,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+            },
+            {
+              "block_id": "main_p4_0076_text_75f83f3d86b7",
+              "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+            }
+          ]
+        },
+        {
+          "name": "Rsh",
+          "raw_value": "2278.23",
+          "value_number": 2278.23,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+            },
+            {
+              "block_id": "main_p4_0076_text_75f83f3d86b7",
+              "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "illumination intensity",
+          "raw_value": "100mW/cm 2",
+          "value_number": 100.0,
+          "unit": "mW/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "measurement atmosphere",
+          "raw_value": "ambient atmosphere",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement temperature",
+          "raw_value": "room temperature",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement mask",
+          "raw_value": "black mask with an aperture (aperture area is close to the active device area)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0069_text_1cdd7d8241d5",
+          "quote": "Fig. 2 (a) photocurrent density-voltage ( J-V ) curves of perovskite solar cell with TiCl4 solution processing for 0min, 5min, 10min, 25 20min, 30min, and 60min, respectively, under simulated 100 mW/cm 2 AM1.5G illumination."
+        },
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "30min | 21.3 | 0.94 | 73.1 | 14.6 | 5.76 | 2278.23"
+        },
+        {
+          "block_id": "main_p4_0076_text_75f83f3d86b7",
+          "quote": "FF) declined. Obviously, the open circuit voltage ( Voc ) for 50 champion device is 0.94 V, the short circuit current ( Jsc ) is 21.3mA/cm 2 , and filling factor (FF) is 73.1% with 14.6% power conversion efficiency based on the employed simple device structure. It is notable that the series resistance Rs and shortcircuit resistance Rsh of solar cell with 30min TiCl 4 treatment was 55 5.76 Ω·cm 2 and 2278.23 Ω·cm 2 , respectively. This Rs was the smallest relative to that of other processing time. These were the results of the optimum interconnectivity of TiO 2 nanoparticles, and the electron collection and transfer was fast and smoothly, in 60 accordance with below measurements."
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+        }
+      ]
+    },
+    {
+      "observation_id": "jv-60min",
+      "device_id": "device-60min",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "19.0",
+          "value_number": 19.0,
+          "unit": "mA/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.93",
+          "value_number": 0.93,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "70.2",
+          "value_number": 70.2,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+            }
+          ]
+        },
+        {
+          "name": "PCE",
+          "raw_value": "12.4",
+          "value_number": 12.4,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+            }
+          ]
+        },
+        {
+          "name": "Rs",
+          "raw_value": "5.84",
+          "value_number": 5.84,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+            }
+          ]
+        },
+        {
+          "name": "Rsh",
+          "raw_value": "1975.21",
+          "value_number": 1975.21,
+          "unit": "Ω•cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "sample | J sc (mA/cm 2 ) | V oc (V) | FF (%) | PCE (%) | R s (Ω•cm 2 ) | R sh (Ω•cm 2 )"
+            },
+            {
+              "block_id": "main_p4_0070_table_c9787b4d136b",
+              "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "illumination intensity",
+          "raw_value": "100mW/cm 2",
+          "value_number": 100.0,
+          "unit": "mW/cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        },
+        {
+          "name": "measurement atmosphere",
+          "raw_value": "ambient atmosphere",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement temperature",
+          "raw_value": "room temperature",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+            }
+          ]
+        },
+        {
+          "name": "measurement mask",
+          "raw_value": "black mask with an aperture (aperture area is close to the active device area)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p3_0056_text_50336792e044",
+              "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0069_text_1cdd7d8241d5",
+          "quote": "Fig. 2 (a) photocurrent density-voltage ( J-V ) curves of perovskite solar cell with TiCl4 solution processing for 0min, 5min, 10min, 25 20min, 30min, and 60min, respectively, under simulated 100 mW/cm 2 AM1.5G illumination."
+        },
+        {
+          "block_id": "main_p4_0070_table_c9787b4d136b",
+          "quote": "60min | 19.0 | 0.93 | 70.2 | 12.4 | 5.84 | 1975.21"
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The photocurrent-voltage (J-V) characteristics of the solar cells were measured using a Keithley 2400 Source under illumination of a simulated sunlight (AM 1.5, 100mW/cm 2 ) provided by a solar simulator (Newport 70 69907) with an AM 1.5 filter. Light intensity was adjusted with an NREL-calibrated Si solar cell with a KG-2 filter for approximating 1 sun light intensity. While measuring current and voltage, the cell was covered with a black mask with an aperture (aperture area is close to the active device area)."
+        },
+        {
+          "block_id": "main_p3_0056_text_50336792e044",
+          "quote": "The incident 75 photon-to-current efficiency (IPCE) was measured in DC mode with a 1/4 m double monochromator (Crowntech DK242), a multi-meter (Keithley 2000), and two light sources depending on the wavelength range required (300-600nm: xenon lamp, 300W; 600-900nm: tungsten-halogen lamp, 150W). The monochromatic 80 light intensity for IPCE efficiency was calibrated with a reference silicon photodiode. All the measurements of the solar cells were performed under ambient atmosphere at room temperature without encapsulation."
+        }
+      ]
+    }
+  ],
+  "population_statistics": [
+    {
+      "population_id": "population-30min-means",
+      "family_id": "family-01",
+      "label": "Mean performance of 30 separate solar cells treated for 30min",
+      "statistic_type": "mean",
+      "sample_size": 30,
+      "metrics": [
+        {
+          "name": "Average Voc",
+          "raw_value": "over 928mV",
+          "value_number": null,
+          "unit": "mV",
+          "evidence": [
+            {
+              "block_id": "main_p8_0143_text_3e0d3de997d5",
+              "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+            }
+          ]
+        },
+        {
+          "name": "Average PCE",
+          "raw_value": "about 13.89 %",
+          "value_number": null,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p8_0143_text_3e0d3de997d5",
+              "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+            }
+          ]
+        },
+        {
+          "name": "TiCl4 processing time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p8_0143_text_3e0d3de997d5",
+              "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p8_0143_text_3e0d3de997d5",
+          "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+        },
+        {
+          "block_id": "main_p8_0144_text_964fd32e3f59",
+          "quote": "Fig. 11 (a) the open-circuit voltage ( Voc ) histograms of solar cells 55 treated for 30min obtained from the measurements of 30 devices and (b) power conversion efficiency (PCE) histograms of solar cells treated for 30min obtained from the measurements of 30 devices."
+        }
+      ]
+    },
+    {
+      "population_id": "population-30min-minima",
+      "family_id": "family-01",
+      "label": "Minimum-threshold outcomes of 30 separate solar cells treated for 30min",
+      "statistic_type": "minimum",
+      "sample_size": 30,
+      "metrics": [
+        {
+          "name": "Population Voc outcome",
+          "raw_value": "all exceeding 900mV",
+          "value_number": null,
+          "unit": "mV",
+          "evidence": [
+            {
+              "block_id": "main_p8_0143_text_3e0d3de997d5",
+              "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+            }
+          ]
+        },
+        {
+          "name": "Population PCE outcome",
+          "raw_value": "all PCE are more than 13%",
+          "value_number": null,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p8_0143_text_3e0d3de997d5",
+              "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+            }
+          ]
+        },
+        {
+          "name": "TiCl4 processing time",
+          "raw_value": "30min",
+          "value_number": 30.0,
+          "unit": "min",
+          "evidence": [
+            {
+              "block_id": "main_p8_0143_text_3e0d3de997d5",
+              "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p8_0143_text_3e0d3de997d5",
+          "quote": "To investigate the reproducibility of solar cells treated for 30min, 30 separate devices were fabricated and tested, histograms of the cell-performance V oc and PCE are presented in Fig. 11. It can be found that Voc s of the devices were all exceeding 900mV 15 and the average Voc was over 928mV. As can be seen form the results, the average PCE located at about 13.89 %, and all PCE are more than 13%. Fig. S4† shows the Photos of perovskite solar cells with 30min TiCl4 processing. A champion PCE up to 14.6% 20 was achieved with the TiCl4 treatment for 30min."
+        },
+        {
+          "block_id": "main_p8_0144_text_964fd32e3f59",
+          "quote": "Fig. 11 (a) the open-circuit voltage ( Voc ) histograms of solar cells 55 treated for 30min obtained from the measurements of 30 devices and (b) power conversion efficiency (PCE) histograms of solar cells treated for 30min obtained from the measurements of 30 devices."
+        }
+      ]
+    }
+  ],
+  "stability_tests": [],
+  "unresolved_notes": [
+    "The source does not explicitly report the device polarity; it was therefore left as not_reported rather than inferred from the ordered layers.",
+    "The six TiCl4 processing times are fabrication variants of one shared device design, not separate device families. Their processing times and shared TiCl4-processing conditions are retained on the measured devices.",
+    "The source reports IPCE curves with a photocurrent response from 400nm to 800nm and says that the integrated photocurrent is consistent with measured Jsc, but it provides no numeric integrated-current outcome and does not identify which individual Table 1 device produced each curve; therefore no additional individual performance observation was created.",
+    "The reported IQE curves provide no device-specific numeric photovoltaic outcome, so they were not represented as performance observations.",
+    "SEM, AFM, XRD, UV-vis, PbI2-film, perovskite-film, and TRPL specimens are partial-stack or material-characterization specimens rather than complete photovoltaic devices and were excluded from device-centered records.",
+    "No photovoltaic aging or operational-stability outcome is reported in the supplied evidence.",
+    "The source passages supplied here do not explicitly state a complete slash-delimited finished-device stack in one passage, so full_stack_raw was left null even though the ordered layers are established across the fabrication passages.",
+    "The title is taken from the supplied supplement section heading; the main-paper title was not otherwise supplied.",
+    "The IPCE passages report curves for treated solar cells and a shared photocurrent-response range of 400nm to 800nm, but they do not explicitly link an IPCE outcome to any one supported individual device; no PerformanceObservation was created.",
+    "The parser text corrupts the coordinated family-level list of mesoporous-TiO2 treatment times with inserted line numbers. The malformed list was removed from the family processing step; the individual treatment times are retained from the unambiguous table row and figure labels."
+  ]
+}

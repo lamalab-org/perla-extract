@@ -6,6 +6,7 @@ import threading
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
+from contextvars import copy_context
 
 from .logging import logger
 
@@ -31,7 +32,9 @@ def heartbeat(operation: str, interval_seconds: float) -> Iterator[float]:
             )
 
     thread = (
-        threading.Thread(target=report, daemon=True) if interval_seconds > 0 else None
+        threading.Thread(target=copy_context().run, args=(report,), daemon=True)
+        if interval_seconds > 0
+        else None
     )
     if thread:
         thread.start()

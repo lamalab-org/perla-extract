@@ -1,23 +1,25 @@
-"""Inventory source claims before deciding how they map to study records.
+"""Collect source statements and select their supporting text for study construction.
 
-The claim ledger is deliberately not a smaller ``StudyExtraction``. It records what
-the paper says, which experimental object it concerns, and whether that object belongs
-to the photovoltaic study. A later document-level model call performs entity
-resolution and schema assembly. This separation prevents every treatment label or
-characterization specimen from becoming a device family merely because it was
-mentioned in a locally valid passage.
+Reader notes describe experimental subjects, individual values, and their citations.
+They can guide a later model that resolves subjects into final study records. This
+module checks textual support and tracks repeated readings; it does not establish
+that a model understood scientific identity or attributed a value correctly.
 """
 
 from __future__ import annotations
 
+import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable, Sequence
 from typing import Annotated, Any, Literal
 
 from pydantic import Field, model_validator
 
-from .evidence import normalized_source_text, source_contains_text
+from .evidence import (
+    normalized_source_text,
+    source_contains_scientific_text,
+)
 from .models import (
     EvidenceBlock,
     EvidenceCitation,
@@ -96,7 +98,7 @@ class SourceClaim(StrictModel):
 
 
 class ClaimLedger(StrictModel):
-    """Carry neutral experimental objects and atomic source claims."""
+    """Reader notes: source-mentioned subjects and individually cited statements."""
 
     objects: list[ExperimentalObject]
     claims: list[SourceClaim]
@@ -166,20 +168,92 @@ def namespace_ledger(ledger: ClaimLedger, namespace: str) -> ClaimLedger:
     )
 
 
-def combine_ledgers(parts: Sequence[tuple[str, ClaimLedger]]) -> ClaimLedger:
-    """Join lossless window ledgers for one global entity-resolution call."""
+def combine_ledgers(
+    parts: Sequence[tuple[str, ClaimLedger]],
+    *,
+    provenance: dict[str, object] | None = None,
+) -> ClaimLedger:
+    """Combine readings, coalescing only exactly repeated source statements.
 
-    namespaced = [namespace_ledger(ledger, window_id) for window_id, ledger in parts]
-    return ClaimLedger(
-        objects=[item for ledger in namespaced for item in ledger.objects],
-        claims=[item for ledger in namespaced for item in ledger.claims],
-    )
+    Object labels, roles, scope, and citations must agree exactly before their IDs
+    can be shared across readings. Objects with an ambiguous repeated description
+    inside any one reading remain separate. Claims additionally require identical
+    subjects, value, kind, label, and shared targets. No chemical normalization or
+    similarity matching is used. ``provenance`` records every original ID so repeated
+    model support is inspectable without treating it as another scientific fact.
+    """
+
+    def key(item: StrictModel, id_field: str) -> str:
+        value = item.model_dump(mode="json", exclude={id_field})
+        return json.dumps(value, sort_keys=True, ensure_ascii=False)
+
+    namespaced = [namespace_ledger(ledger, name) for name, ledger in parts]
+    ambiguous = {
+        value
+        for ledger in namespaced
+        for value, count in Counter(
+            key(item, "object_id") for item in ledger.objects
+        ).items()
+        if count > 1
+    }
+    objects: list[ExperimentalObject] = []
+    claims: list[SourceClaim] = []
+    object_by_key: dict[str, str] = {}
+    canonical_ids: dict[str, str] = {}
+    origins: dict[str, list[str]] = {}
+    for ledger in namespaced:
+        for item in ledger.objects:
+            item_key = key(item, "object_id")
+            retained_id = (
+                object_by_key.get(item_key) if item_key not in ambiguous else None
+            )
+            if retained_id is None:
+                retained_id = item.object_id
+                objects.append(item)
+                object_by_key[item_key] = retained_id
+            canonical_ids[item.object_id] = retained_id
+            origins.setdefault(retained_id, []).append(item.object_id)
+    claim_by_key: dict[str, str] = {}
+    for ledger in namespaced:
+        for claim in ledger.claims:
+            mapped = claim.model_copy(
+                update={
+                    "subject_object_ids": [
+                        canonical_ids[value] for value in claim.subject_object_ids
+                    ]
+                }
+            )
+            item_key = key(mapped, "claim_id")
+            retained_id = claim_by_key.get(item_key)
+            if retained_id is None:
+                retained_id = mapped.claim_id
+                claims.append(mapped)
+                claim_by_key[item_key] = retained_id
+            origins.setdefault(retained_id, []).append(claim.claim_id)
+    if provenance is not None:
+        provenance.update(
+            {
+                "readings": [name for name, _ in parts],
+                "input_objects": sum(len(ledger.objects) for ledger in namespaced),
+                "input_claims": sum(len(ledger.claims) for ledger in namespaced),
+                "retained_objects": len(objects),
+                "retained_claims": len(claims),
+                "origins": origins,
+                "note": "Repeated support counts are not independent evidence or confidence.",
+            }
+        )
+    return ClaimLedger(objects=objects, claims=claims)
 
 
 def grounded_ledger(
     blocks: list[EvidenceBlock], ledger: ClaimLedger
 ) -> tuple[ClaimLedger, dict[str, object]]:
-    """Remove ledger entries whose claimed quotations do not occur in the document."""
+    """Reject missing source quotations, unknown subjects, and unsupported raw values.
+
+    Passing this check establishes textual support, not correct scientific attribution.
+    A copied number can still belong to the wrong specimen; assembly and evaluation
+    must resolve that question.
+    """
 
     block_by_id = {block.block_id: block for block in blocks}
 
@@ -190,7 +264,7 @@ def grounded_ledger(
             citation
             for citation in citations
             if (block := block_by_id.get(citation.block_id)) is not None
-            and source_contains_text(block.text, citation.quote)
+            and source_contains_scientific_text(block.text, citation.quote)
         ]
 
     objects: list[ExperimentalObject] = []
@@ -205,20 +279,35 @@ def grounded_ledger(
             )
     known_objects = {item.object_id for item in objects}
     claims: list[SourceClaim] = []
-    for item in ledger.claims:
-        citations = grounded_citations(item.evidence)
+    for claim in ledger.claims:
+        citations = grounded_citations(claim.evidence)
         subjects = [
-            value for value in item.subject_object_ids if value in known_objects
+            value for value in claim.subject_object_ids if value in known_objects
         ]
-        if citations and len(subjects) == len(item.subject_object_ids):
+        value_supported = claim.raw_value is None or any(
+            source_contains_scientific_text(citation.quote, claim.raw_value)
+            for citation in citations
+        )
+        if (
+            citations
+            and len(subjects) == len(claim.subject_object_ids)
+            and value_supported
+        ):
             claims.append(
-                item.model_copy(
+                claim.model_copy(
                     update={"evidence": citations, "subject_object_ids": subjects}
                 )
             )
         else:
             rejected.append(
-                {"source_id": item.claim_id, "reason": "unresolved evidence or subject"}
+                {
+                    "source_id": claim.claim_id,
+                    "reason": (
+                        "raw value absent from cited evidence"
+                        if citations and not value_supported
+                        else "unresolved evidence or subject"
+                    ),
+                }
             )
     result = ClaimLedger(objects=objects, claims=claims)
     return result, {
@@ -234,19 +323,17 @@ def grounded_ledger(
 def assembly_blocks(
     blocks: Sequence[EvidenceBlock], ledger: ClaimLedger
 ) -> list[EvidenceBlock]:
-    """Return claim-cited source blocks plus the main-paper opening page.
+    """Select cited blocks and paper metadata, or all blocks when no notes exist.
 
-    Long supplements are read completely during claim collection. Schema assembly
-    then receives the compact ledger and only its cited source passages, preventing a
-    second full long-document call while keeping every final value tied to original
-    parser evidence. The opening page is inexpensive context for title and DOI.
+    Reading notes compress the source available to assembly. Blocks not cited by a
+    retained note are omitted, apart from the opening page used for title and DOI.
+    This saves input space but may hide source statements the reader missed.
     """
 
-    cited = {
-        citation.block_id
-        for item in [*ledger.objects, *ledger.claims]
-        for citation in item.evidence
-    }
+    if not ledger.objects and not ledger.claims:
+        return list(blocks)
+    entries: list[ExperimentalObject | SourceClaim] = [*ledger.objects, *ledger.claims]
+    cited = {citation.block_id for item in entries for citation in item.evidence}
     main_pages = [block.page for block in blocks if block.source == "main"]
     first_main_page = min(main_pages) if main_pages else None
     selected = [
@@ -261,23 +348,25 @@ def assembly_blocks(
 def assembly_spans(
     blocks: Sequence[EvidenceBlock], ledger: ClaimLedger
 ) -> list[EvidenceSpan]:
-    """Expose cited passages, their immediate context, and paper-header context.
+    """Select cited spans and their same-block neighbors; empty notes retain all text.
 
-    Claim collection has already read every source block. Sending only the exact
-    passages that support retained claims and one adjacent span on each side keeps the
-    global assembly feasible while preserving local grammar needed to resolve scope.
-    The fixed neighborhood is structural rather than property- or chemistry-specific.
+    One neighboring span on either side supplies local grammar at bounded cost.
+    This heuristic cannot guarantee that distant headers or cross-references remain
+    available. The model's citation choices use exactly this same selected catalog.
     """
 
     block_list = list(blocks)
+    spans = build_evidence_spans(block_list)
+    if not ledger.objects and not ledger.claims:
+        return spans
+    entries: list[ExperimentalObject | SourceClaim] = [*ledger.objects, *ledger.claims]
     cited = {
         (citation.block_id, citation.quote)
-        for item in [*ledger.objects, *ledger.claims]
+        for item in entries
         for citation in item.evidence
     }
     main_pages = [block.page for block in block_list if block.source == "main"]
     first_main_page = min(main_pages) if main_pages else None
-    spans = build_evidence_spans(block_list)
     span_positions = {span.span_id: index for index, span in enumerate(spans)}
     cited_positions = {
         span_positions[span.span_id]
@@ -310,7 +399,7 @@ def assembly_evidence_payload(
     """Serialize the compact passage catalog used by global schema assembly."""
 
     block_by_id = {block.block_id: block for block in blocks}
-    grouped: dict[str, dict[str, str]] = defaultdict(dict)
+    grouped: dict[str, dict[int, str]] = defaultdict(dict)
     for span in assembly_spans(blocks, ledger):
         grouped[span.block_id][span.span_id] = span.text
     return [
@@ -382,7 +471,12 @@ def _matches_evidence(
 
 
 def _reported_values(record: object) -> list[tuple[str, str, set[str]]]:
-    """Return atomic value names, raw text, and citation blocks from a record."""
+    """Return cited atomic values, allowing units to occupy their schema field.
+
+    Compare both raw text alone and raw text plus its reported unit. This does not
+    convert units or infer missing ones; it avoids flagging a value just because
+    the assembler correctly stored the unit separately from the number.
+    """
 
     found: list[tuple[str, str, set[str]]] = []
 
@@ -398,6 +492,14 @@ def _reported_values(record: object) -> list[tuple[str, str, set[str]]]:
                     if isinstance(item, dict) and item.get("block_id")
                 }
                 found.append((" ".join(local_context), value["raw_value"], blocks))
+                if isinstance(value.get("unit"), str) and value["unit"].strip():
+                    found.append(
+                        (
+                            " ".join(local_context),
+                            f"{value['raw_value']} {value['unit']}",
+                            blocks,
+                        )
+                    )
             for key, child in value.items():
                 if key != "evidence":
                     walk(child, local_context)
@@ -488,13 +590,34 @@ def audit_claim_coverage(
     for item in ledger.objects:
         if item.scope != "target" or item.role not in TOP_LEVEL_RECORD_BY_OBJECT_ROLE:
             status = "context" if item.scope == "context" else "uncertain"
+            # An uncertain source object is not a confirmed target, but neither
+            # is it evidence that a matching record is spurious. Keep its links
+            # for review without counting them as covered target statements.
+            record_kind = (
+                TOP_LEVEL_RECORD_BY_OBJECT_ROLE[item.role][0]
+                if status == "uncertain"
+                and item.role in TOP_LEVEL_RECORD_BY_OBJECT_ROLE
+                else None
+            )
+            candidates = [
+                record_id
+                for record_id, _, block_ids, quotes in records.get(
+                    record_kind or "", []
+                )
+                if _matches_evidence(item.evidence, block_ids, quotes) is not None
+            ]
+            claimed_record_keys.update(
+                (record_kind, record_id)
+                for record_id in candidates
+                if record_kind is not None
+            )
             counts[status] += 1
             items.append(
                 {
                     **item.model_dump(mode="json"),
                     "status": status,
-                    "record_kind": None,
-                    "candidate_record_ids": [],
+                    "record_kind": record_kind,
+                    "candidate_record_ids": candidates,
                 }
             )
             object_record_keys[item.object_id] = set()
@@ -582,17 +705,10 @@ def audit_claim_coverage(
         source_blocks = {item.block_id for item in claim.evidence}
         for _, record_id, record, block_ids, quotes in candidate_entries:
             match = _matches_evidence(claim.evidence, block_ids, quotes)
-            requires_atomic_value = claim.kind == "reported_quantity" or bool(
-                claim.shared_targets
-            )
-            value_supported = (
-                not requires_atomic_value
-                or claim.raw_value is None
-                or any(
-                    bool(source_blocks & value_blocks)
-                    and _contains_raw_value(claim.raw_value, value_raw)
-                    for _, value_raw, value_blocks in _reported_values(record)
-                )
+            value_supported = claim.raw_value is None or any(
+                bool(source_blocks & value_blocks)
+                and _contains_raw_value(claim.raw_value, value_raw)
+                for _, value_raw, value_blocks in _reported_values(record)
             )
             if match == "covered" and value_supported:
                 exact_claims.append(record_id)
@@ -642,7 +758,7 @@ def audit_claim_coverage(
             items.append(
                 {
                     "source_id": f"unclaimed:{record_kind}:{record_id}",
-                    "label": f"Final {record_kind} has no matching target object claim",
+                    "label": f"Final {record_kind} has no matching target or uncertain reader object; missing notes do not establish that the record is wrong",
                     "status": "unclaimed",
                     "record_kind": record_kind,
                     "candidate_record_ids": [record_id],

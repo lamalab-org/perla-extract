@@ -1,0 +1,3432 @@
+{
+  "paper": {
+    "title": "Methylammonium Chloride Induces Intermediate Phase Stabilization for Efficient Perovskite Solar Cells",
+    "doi": "10.1016/j.joule.2019.06.014"
+  },
+  "device_families": [
+    {
+      "family_id": "family-psc-01",
+      "label": "FAPbI3-based mesoscopic perovskite solar cell",
+      "variant": "pristine, MACl, FACl, and MAI additive-processing variants",
+      "architecture": "mesoscopic single-junction perovskite solar cell",
+      "polarity": "not_reported",
+      "full_stack_raw": "FTO/c-TiO2/mp-TiO2/perovskite/PEAI/spiro-OMeTAD/Au",
+      "layers": [
+        {
+          "layer_id": "layer-fam01-01",
+          "sequence": 1,
+          "role": "transparent_electrode",
+          "material": "Asahi FTO glass",
+          "constituents": [
+            {
+              "name": "fluorine-doped tin oxide (FTO)",
+              "role": "transparent electrode",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0102_text_80b428009d30",
+                  "quote": "sulfoxide (DMSO, > 99.5%) were procured from Sigma-Aldrich and used as received. Methylamine hydrochloride (MACl, 98%) was procured from Acros Organics. Fluorine-doped tin oxide on glass (FTO glass, 7 U sq -1 ) was obtained from Asahi. Ethanol (absolute, 99.9%) was procured from Changshu Yangyuan Chemicals. Diethyl ether (extra pure grade) was procured form Duksan. TiO2 paste (SC-HT040) was procured from ShareChem. Lead iodide (PbI2, 99.999%) was purchased from TCI."
+                },
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "FTO sheet resistance",
+              "raw_value": "7 U sq -1",
+              "value_number": 7.0,
+              "unit": "U sq -1",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0102_text_80b428009d30",
+                  "quote": "sulfoxide (DMSO, > 99.5%) were procured from Sigma-Aldrich and used as received. Methylamine hydrochloride (MACl, 98%) was procured from Acros Organics. Fluorine-doped tin oxide on glass (FTO glass, 7 U sq -1 ) was obtained from Asahi. Ethanol (absolute, 99.9%) was procured from Changshu Yangyuan Chemicals. Diethyl ether (extra pure grade) was procured form Duksan. TiO2 paste (SC-HT040) was procured from ShareChem. Lead iodide (PbI2, 99.999%) was purchased from TCI."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+            },
+            {
+              "block_id": "main_p11_0102_text_80b428009d30",
+              "quote": "sulfoxide (DMSO, > 99.5%) were procured from Sigma-Aldrich and used as received. Methylamine hydrochloride (MACl, 98%) was procured from Acros Organics. Fluorine-doped tin oxide on glass (FTO glass, 7 U sq -1 ) was obtained from Asahi. Ethanol (absolute, 99.9%) was procured from Changshu Yangyuan Chemicals. Diethyl ether (extra pure grade) was procured form Duksan. TiO2 paste (SC-HT040) was procured from ShareChem. Lead iodide (PbI2, 99.999%) was purchased from TCI."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-fam01-02",
+          "sequence": 2,
+          "role": "electron_transport_layer",
+          "material": "compact TiO2",
+          "constituents": [
+            {
+              "name": "TiO2",
+              "role": "electron-transport material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": "compact TiO2 layer",
+          "material_form": "compact_layer",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-fam01-03",
+          "sequence": 3,
+          "role": "electron_transport_layer",
+          "material": "mesoporous TiO2",
+          "constituents": [
+            {
+              "name": "TiO2",
+              "role": "electron-transport material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": "mesoporous TiO2 (mp-TiO2) layer",
+          "material_form": "mesoporous_layer",
+          "reported_properties": [
+            {
+              "name": "TiO2 paste particle diameter",
+              "raw_value": "approximately 50 nm",
+              "value_number": 50.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-fam01-04",
+          "sequence": 4,
+          "role": "absorber",
+          "material": "perovskite",
+          "constituents": [
+            {
+              "name": "FAPbI3",
+              "role": "perovskite precursor host",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-fam01-05",
+          "sequence": 5,
+          "role": "interlayer",
+          "material": "phenylethylammonium iodide (PEAI)",
+          "constituents": [
+            {
+              "name": "phenylethylammonium iodide (PEAI)",
+              "role": "perovskite surface coating",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-fam01-06",
+          "sequence": 6,
+          "role": "hole_transport_layer",
+          "material": "spiro-OMeTAD",
+          "constituents": [
+            {
+              "name": "spiro-OMeTAD",
+              "role": "hole-transfer material",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "4tert-butylpyridine (TBP)",
+              "role": "HTM additive",
+              "amount": {
+                "name": "TBP volume",
+                "raw_value": "35.5 m L",
+                "value_number": 35.5,
+                "unit": "m L",
+                "evidence": [
+                  {
+                    "block_id": "main_p11_0106_text_c064ba7d8603",
+                    "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI)",
+              "role": "HTM additive",
+              "amount": {
+                "name": "Li-TFSI volume",
+                "raw_value": "23 m L",
+                "value_number": 23.0,
+                "unit": "m L",
+                "evidence": [
+                  {
+                    "block_id": "main_p11_0106_text_c064ba7d8603",
+                    "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "tris(2-(1h-pyrazol-1-yl)-4tert-butylpyridine)-cobalt(III)tris(bis(trifluoromethylsulfonyl)imide) (FK209)",
+              "role": "HTM additive",
+              "amount": {
+                "name": "FK209 volume",
+                "raw_value": "5 m L",
+                "value_number": 5.0,
+                "unit": "m L",
+                "evidence": [
+                  {
+                    "block_id": "main_p11_0106_text_c064ba7d8603",
+                    "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-fam01-07",
+          "sequence": 7,
+          "role": "back_electrode",
+          "material": "Au",
+          "constituents": [
+            {
+              "name": "gold (Au)",
+              "role": "counter electrode",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": "100 nm thick Au films",
+          "material_form": "other",
+          "reported_properties": [
+            {
+              "name": "Au contact thickness",
+              "raw_value": "100 nm",
+              "value_number": 100.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+            }
+          ]
+        }
+      ],
+      "absorbers": [
+        {
+          "absorber_id": "absorber-fam01-01",
+          "layer_id": "layer-fam01-04",
+          "label": "FAPbI3-based perovskite absorber",
+          "formula": {
+            "name": "perovskite precursor host",
+            "raw_value": "FAPbI3",
+            "value_number": null,
+            "unit": null,
+            "evidence": [
+              {
+                "block_id": "main_p11_0106_text_c064ba7d8603",
+                "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+              }
+            ]
+          },
+          "properties": [],
+          "constituents": [
+            {
+              "name": "FAPbI3",
+              "role": "precursor host",
+              "amount": {
+                "name": "FAPbI3 precursor concentration",
+                "raw_value": "1,139 mg mL -1",
+                "value_number": 1139.0,
+                "unit": "mg mL -1",
+                "evidence": [
+                  {
+                    "block_id": "main_p11_0106_text_c064ba7d8603",
+                    "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+            }
+          ]
+        }
+      ],
+      "processing_steps": [
+        {
+          "step_id": "process-fam01-01",
+          "sequence": 1,
+          "operation": "substrate cleaning",
+          "target_layer_ids": [
+            "layer-fam01-01"
+          ],
+          "materials": [
+            "RCA-2 (H2O2-NCl-H2O)",
+            "acetone",
+            "ethanol",
+            "isopropyl alcohol (IPA)"
+          ],
+          "conditions": [
+            {
+              "name": "RCA-2 cleaning duration",
+              "raw_value": "15 min",
+              "value_number": 15.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+                }
+              ]
+            },
+            {
+              "name": "sequential ultrasonic cleaning duration",
+              "raw_value": "15 min",
+              "value_number": 15.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+            }
+          ]
+        },
+        {
+          "step_id": "process-fam01-02",
+          "sequence": 2,
+          "operation": "spray pyrolysis of compact TiO2",
+          "target_layer_ids": [
+            "layer-fam01-02"
+          ],
+          "materials": [
+            "titanium diisopropoxide bis(acetylacetonate)",
+            "ethanol"
+          ],
+          "conditions": [
+            {
+              "name": "precursor solution volume",
+              "raw_value": "60 mL",
+              "value_number": 60.0,
+              "unit": "mL",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+                }
+              ]
+            },
+            {
+              "name": "titanium precursor:ethanol volume ratio",
+              "raw_value": "1:10 volume ratio",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+                }
+              ]
+            },
+            {
+              "name": "substrate temperature before spraying",
+              "raw_value": "450 ° C",
+              "value_number": 450.0,
+              "unit": "° C",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+                }
+              ]
+            },
+            {
+              "name": "post-spray heating temperature",
+              "raw_value": "450 ° C",
+              "value_number": 450.0,
+              "unit": "° C",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            },
+            {
+              "name": "post-spray heating duration",
+              "raw_value": "1 h",
+              "value_number": 1.0,
+              "unit": "h",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+            },
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+            }
+          ]
+        },
+        {
+          "step_id": "process-fam01-03",
+          "sequence": 3,
+          "operation": "spin coating and heating of mesoporous TiO2",
+          "target_layer_ids": [
+            "layer-fam01-03"
+          ],
+          "materials": [
+            "TiO2 paste",
+            "ethanol",
+            "terpineol"
+          ],
+          "conditions": [
+            {
+              "name": "ethanol:terpineol weight ratio",
+              "raw_value": "78:22 w/w",
+              "value_number": null,
+              "unit": "w/w",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            },
+            {
+              "name": "heating temperature",
+              "raw_value": "500 ° C",
+              "value_number": 500.0,
+              "unit": "° C",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            },
+            {
+              "name": "heating duration",
+              "raw_value": "1 h",
+              "value_number": 1.0,
+              "unit": "h",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            },
+            {
+              "name": "cooling endpoint",
+              "raw_value": "200 ° C",
+              "value_number": 200.0,
+              "unit": "° C",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+            }
+          ]
+        },
+        {
+          "step_id": "process-fam01-04",
+          "sequence": 4,
+          "operation": "perovskite precursor preparation and spin coating",
+          "target_layer_ids": [
+            "layer-fam01-04"
+          ],
+          "materials": [
+            "FAPbI3",
+            "DMF",
+            "DMSO",
+            "MACl",
+            "diethyl ether"
+          ],
+          "conditions": [
+            {
+              "name": "FAPbI3 precursor concentration",
+              "raw_value": "1,139 mg mL -1",
+              "value_number": 1139.0,
+              "unit": "mg mL -1",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "DMF:DMSO volume ratio",
+              "raw_value": "4:1 ratio by volume",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "MACl addition range",
+              "raw_value": "0 \u0018 50 mol%",
+              "value_number": null,
+              "unit": "mol%",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "filtered solution volume per sample",
+              "raw_value": "70 m L",
+              "value_number": 70.0,
+              "unit": "m L",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating speed",
+              "raw_value": "6,000 rpm",
+              "value_number": 6000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating duration",
+              "raw_value": "50 s",
+              "value_number": 50.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating ramp time",
+              "raw_value": "0.1 s",
+              "value_number": 0.1,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "diethyl-ether antisolvent volume",
+              "raw_value": "1 mL",
+              "value_number": 1.0,
+              "unit": "mL",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "time before diethyl-ether dripping",
+              "raw_value": "10 s",
+              "value_number": 10.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+            }
+          ]
+        },
+        {
+          "step_id": "process-fam01-05",
+          "sequence": 5,
+          "operation": "perovskite-film drying on a hot plate",
+          "target_layer_ids": [
+            "layer-fam01-04"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "drying temperature",
+              "raw_value": "150 ° C",
+              "value_number": 150.0,
+              "unit": "° C",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "drying duration",
+              "raw_value": "10 min",
+              "value_number": 10.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+            }
+          ]
+        },
+        {
+          "step_id": "process-fam01-06",
+          "sequence": 6,
+          "operation": "PEAI spin coating after cooling",
+          "target_layer_ids": [
+            "layer-fam01-05"
+          ],
+          "materials": [
+            "phenylethylammonium iodide (PEAI)",
+            "IPA"
+          ],
+          "conditions": [
+            {
+              "name": "PEAI solution concentration",
+              "raw_value": "5 mM",
+              "value_number": 5.0,
+              "unit": "mM",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            },
+            {
+              "name": "PEAI spin-coating speed",
+              "raw_value": "3,000 rpm",
+              "value_number": 3000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+            }
+          ]
+        },
+        {
+          "step_id": "process-fam01-07",
+          "sequence": 7,
+          "operation": "hole-transfer-material deposition",
+          "target_layer_ids": [
+            "layer-fam01-06"
+          ],
+          "materials": [
+            "spiro-OMeTAD",
+            "chlorobenzene",
+            "4tert-butylpyridine (TBP)",
+            "Li-TFSI",
+            "acetonitrile",
+            "FK209"
+          ],
+          "conditions": [
+            {
+              "name": "spiro-OMeTAD concentration",
+              "raw_value": "90 mg/mL",
+              "value_number": 90.0,
+              "unit": "mg/mL",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "TBP volume",
+              "raw_value": "35.5 m L",
+              "value_number": 35.5,
+              "unit": "m L",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "Li-TFSI volume",
+              "raw_value": "23 m L",
+              "value_number": 23.0,
+              "unit": "m L",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "Li-TFSI stock-solution concentration",
+              "raw_value": "520 mg/mL acetonitrile",
+              "value_number": 520.0,
+              "unit": "mg/mL",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "FK209 volume",
+              "raw_value": "5 m L",
+              "value_number": 5.0,
+              "unit": "m L",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "FK209 stock-solution concentration",
+              "raw_value": "180 mg/mL acetonitrile",
+              "value_number": 180.0,
+              "unit": "mg/mL",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+            }
+          ]
+        },
+        {
+          "step_id": "process-fam01-08",
+          "sequence": 8,
+          "operation": "thermal evaporation of gold counter electrode",
+          "target_layer_ids": [
+            "layer-fam01-07"
+          ],
+          "materials": [
+            "gold"
+          ],
+          "conditions": [
+            {
+              "name": "Au film thickness",
+              "raw_value": "100 nm",
+              "value_number": 100.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            },
+            {
+              "name": "vapor-deposition pressure",
+              "raw_value": "10 \u0000 6 torr",
+              "value_number": null,
+              "unit": "torr",
+              "evidence": [
+                {
+                  "block_id": "main_p11_0106_text_c064ba7d8603",
+                  "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p11_0106_text_c064ba7d8603",
+              "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p11_0106_text_c064ba7d8603",
+          "quote": "Asahi FTO glass (FTO glass, 7 U sq -1 ) was used as the substrate for the devices. The substrates were cleaned using the RCA-2 (H2O2-NCl-H2O) procedure 73 for 15 min to remove metal ion impurities. The substrates were then cleaned sequentially with acetone, ethanol, and isopropyl alcohol (IPA) in an ultrasonic system for 15 min. To deposit the compact TiO2 layer, 60 mL of a titanium diisopropoxide bis(acetylacetonate)/ethanol (with 1:10 volume ratio) solution was applied by spraying. Prior to spraying, the substrates were placed on a hot plate and the temperature was increased to 450 \u000e Crapidly."
+        },
+        {
+          "block_id": "main_p11_0106_text_c064ba7d8603",
+          "quote": "After completing the spray pyrolysis step, the substrates were stored at 450 \u000e C for 1 h to improve the electrical properties, 74 then slowly cooled to room temperature. On top of the c -TiO2 layer, a mesoporous TiO2 (mp-TiO2) layer was deposited by spin-coating. The TiO2 paste, approximately 50 nm in diameter, was purchased from ShareChem. The paste was dispersed in ethanol/terpineol (78:22 w/w). The FTO/ c -TiO2 substrates prepared with mp-TiO2 were heated at 500 \u000e C on a hot plate for 1 h to remove organic compounds and then slowly cooled to 200 \u000e C."
+        },
+        {
+          "block_id": "main_p11_0106_text_c064ba7d8603",
+          "quote": "To fabricate perovskite solar cells, the perovskite precursor solution was prepared by mixing 1,139 mg mL -1 FAPbI3 in a mixture of DMF and DMSO in a 4:1 ratio by volume. MACl was added in the range 0 \u0018 50 mol%. For each sample, 70 m L of the filtered solution was spread over the FTO/ c -TiO2/mp-TiO2 substrate at 6,000 rpm for 50 s with 0.1 s ramping. During spin coating, 1 mL diethyl ether was dripped after spinning for 10 s using a pipette. The film was dried on a hot plate at 150 \u000e C for 10 min. After cooling the substrate, the perovskite film was spin coated with phenylethylammonium iodide (PEAI) dissolved with IPA (5 mM) at 3,000 rpm."
+        },
+        {
+          "block_id": "main_p11_0106_text_c064ba7d8603",
+          "quote": "The hole transfer materials were deposited by preparing a spiro-OMeTAD (Lumtech) in chlorobenzene (90 mg/mL) and mixing with 35.5 m L 4tert -butylpyridine (TBP), 23 m L Li-bis(trifluoromethanesulfonyl)imide (Li-TFSI) (520 mg/mL acetonitrile), and 5 m L tris(2-(1h-pyrazol-1-yl)-4tert -butylpyridine)-cobalt(III)tris(bis (trifluoromethylsulfonyl)imide) (FK209, Lumtech) (180 mg/mL acetonitrile). Finally, a gold counter electrode was deposited on the substrate using a thermal evaporation system. The back and front contacts were formed from 100 nm thick Au films deposited by vapor deposition at a pressure of 10 \u0000 6 torr."
+        },
+        {
+          "block_id": "main_p3_0033_text_025068410b31",
+          "quote": "In this work, we systematically studied the role of MACl additive in FAPbI3-based perovskite solar cells. The grain size in films prepared using various contents was dramatically greater, by a factor of 6, compared to the film prepared without additive. Interestingly, MACl effectively stabilizes an intermediate to the pure FAPbI3 a -phase without annealing-only through cationic site substitution. From the fabricating high crystallinity of ultra-pure a -phase FAPbI3-based perovskite, the photoluminescence lifetimes also increased by a factor of 4.3."
+        }
+      ]
+    }
+  ],
+  "individual_devices": [
+    {
+      "device_id": "device-ma-pristine",
+      "family_id": "family-psc-01",
+      "label": "Table S3 pristine device",
+      "variant": "pristine (0 mol% MACl)",
+      "champion_status": "no",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MACl addition",
+          "raw_value": "0",
+          "value_number": 0.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "0 | 24.84 | 1.027 | 77.08 | 19.66"
+            }
+          ]
+        },
+        {
+          "name": "active cell area",
+          "raw_value": "0.0804 cm 2",
+          "value_number": 0.0804,
+          "unit": "cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "0 | 24.84 | 1.027 | 77.08 | 19.66"
+        },
+        {
+          "block_id": "supplement_p23_0073_text_1e36811a76a0",
+          "quote": "Table s3. Device performance of efficiencies, Jsc , Voc , and FF of perovskite devices for MA-10, MA-20, MA-30, MA-40, and MA-50, respectively."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "device_id": "device-ma10",
+      "family_id": "family-psc-01",
+      "label": "Table S3 MA-10 device",
+      "variant": "MA-10",
+      "champion_status": "no",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MACl concentration",
+          "raw_value": "10 mol%",
+          "value_number": 10.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0049_text_0d9813a80f8a",
+              "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+            }
+          ]
+        },
+        {
+          "name": "active cell area",
+          "raw_value": "0.0804 cm 2",
+          "value_number": 0.0804,
+          "unit": "cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-10 | 24.99 | 1.034 | 78.50 | 20.30"
+        },
+        {
+          "block_id": "supplement_p23_0073_text_1e36811a76a0",
+          "quote": "Table s3. Device performance of efficiencies, Jsc , Voc , and FF of perovskite devices for MA-10, MA-20, MA-30, MA-40, and MA-50, respectively."
+        },
+        {
+          "block_id": "main_p4_0049_text_0d9813a80f8a",
+          "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "device_id": "device-ma20",
+      "family_id": "family-psc-01",
+      "label": "Table S3 MA-20 device",
+      "variant": "MA-20",
+      "champion_status": "no",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MACl concentration",
+          "raw_value": "20 mol%",
+          "value_number": 20.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0049_text_0d9813a80f8a",
+              "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+            }
+          ]
+        },
+        {
+          "name": "active cell area",
+          "raw_value": "0.0804 cm 2",
+          "value_number": 0.0804,
+          "unit": "cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-20 | 25.23 | 1.083 | 79.61 | 21.74"
+        },
+        {
+          "block_id": "supplement_p23_0073_text_1e36811a76a0",
+          "quote": "Table s3. Device performance of efficiencies, Jsc , Voc , and FF of perovskite devices for MA-10, MA-20, MA-30, MA-40, and MA-50, respectively."
+        },
+        {
+          "block_id": "main_p4_0049_text_0d9813a80f8a",
+          "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "device_id": "device-ma30",
+      "family_id": "family-psc-01",
+      "label": "Table S3 MA-30 device",
+      "variant": "MA-30",
+      "champion_status": "no",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MACl concentration",
+          "raw_value": "30 mol%",
+          "value_number": 30.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0049_text_0d9813a80f8a",
+              "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+            }
+          ]
+        },
+        {
+          "name": "active cell area",
+          "raw_value": "0.0804 cm 2",
+          "value_number": 0.0804,
+          "unit": "cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-30 | 25.45 | 1.101 | 80.38 | 22.52"
+        },
+        {
+          "block_id": "supplement_p23_0073_text_1e36811a76a0",
+          "quote": "Table s3. Device performance of efficiencies, Jsc , Voc , and FF of perovskite devices for MA-10, MA-20, MA-30, MA-40, and MA-50, respectively."
+        },
+        {
+          "block_id": "main_p4_0049_text_0d9813a80f8a",
+          "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "device_id": "device-ma40",
+      "family_id": "family-psc-01",
+      "label": "Table S3 MA-40 best device",
+      "variant": "MA-40",
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [
+        {
+          "name": "MACl concentration",
+          "raw_value": "40 mol%",
+          "value_number": 40.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0049_text_0d9813a80f8a",
+              "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+            },
+            {
+              "block_id": "main_p3_0033_text_025068410b31",
+              "quote": "Using density functional theory (DFT), we provide a theoretical framework for understanding the interaction of MACl with a perovskite active layer. The formation energy of the resulting perovskite structure is related to the amount of incorporated MACl. Consequently, MACl additive induces intermediate phase stabilization for over 24% efficiency. The highest efficiency achieved was 24.02%, which was obtained with the addition of 40 mol% MACl. These results suggest that the MACl additive is a promising material for high-quality film formation and high-performance device that offers great opportunities for the practical applications."
+            }
+          ]
+        },
+        {
+          "name": "active cell area",
+          "raw_value": "0.0804 cm 2",
+          "value_number": 0.0804,
+          "unit": "cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-40 | 25.92 | 1.130 | 82.02 | 24.02"
+        },
+        {
+          "block_id": "main_p3_0033_text_025068410b31",
+          "quote": "Using density functional theory (DFT), we provide a theoretical framework for understanding the interaction of MACl with a perovskite active layer. The formation energy of the resulting perovskite structure is related to the amount of incorporated MACl. Consequently, MACl additive induces intermediate phase stabilization for over 24% efficiency. The highest efficiency achieved was 24.02%, which was obtained with the addition of 40 mol% MACl. These results suggest that the MACl additive is a promising material for high-quality film formation and high-performance device that offers great opportunities for the practical applications."
+        },
+        {
+          "block_id": "supplement_p23_0073_text_1e36811a76a0",
+          "quote": "Table s3. Device performance of efficiencies, Jsc , Voc , and FF of perovskite devices for MA-10, MA-20, MA-30, MA-40, and MA-50, respectively."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "device_id": "device-ma50",
+      "family_id": "family-psc-01",
+      "label": "Table S3 MA-50 device",
+      "variant": "MA-50",
+      "champion_status": "no",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MACl concentration",
+          "raw_value": "50 mol%",
+          "value_number": 50.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0049_text_0d9813a80f8a",
+              "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+            }
+          ]
+        },
+        {
+          "name": "active cell area",
+          "raw_value": "0.0804 cm 2",
+          "value_number": 0.0804,
+          "unit": "cm 2",
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-50 | 25.38 | 1.123 | 81.97 | 23.36"
+        },
+        {
+          "block_id": "supplement_p23_0073_text_1e36811a76a0",
+          "quote": "Table s3. Device performance of efficiencies, Jsc , Voc , and FF of perovskite devices for MA-10, MA-20, MA-30, MA-40, and MA-50, respectively."
+        },
+        {
+          "block_id": "main_p4_0049_text_0d9813a80f8a",
+          "quote": "The surface morphologies of the different film compositions were evaluated by collecting top-view images using a scanning electron microscope (SEM). The interesting results were that the grain sizes of perovskite films are directly related to the amount of incorporated MACl. Figure 1A shows the photographs of the film surfaces manufactured using the MACl introduced in concentrations of 10 mol%, 20 mol%, 30 mol%, 40 mol%, and 50 mol% (denoted MA-10, MA-20, MA-30, MA-40, and MA-50, respectively). The grain size obtained without the additive (pristine) was approximately 250 nm (average). However, the MA-10 produced a film with a larger grain size of 600 nm (see Figure 1B)."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "device_id": "device-comparison-pristine",
+      "family_id": "family-psc-01",
+      "label": "Pristine comparator in FACl and MAI comparison tables",
+      "variant": "Pristine",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "additive condition",
+          "raw_value": "Pristine",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            },
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+        },
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+        }
+      ]
+    },
+    {
+      "device_id": "device-facl10",
+      "family_id": "family-psc-01",
+      "label": "FACl 10 mol% comparison device",
+      "variant": "FACl 10 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "FACl concentration",
+          "raw_value": "10 mol%",
+          "value_number": 10.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 10 mol% | 23.46 | 7.039 | 74.62 | 18.19"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 10 mol% | 23.46 | 7.039 | 74.62 | 18.19"
+        }
+      ]
+    },
+    {
+      "device_id": "device-facl20",
+      "family_id": "family-psc-01",
+      "label": "FACl 20 mol% comparison device",
+      "variant": "FACl 20 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "FACl concentration",
+          "raw_value": "20 mol%",
+          "value_number": 20.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 20 mol% | 23.97 | 1.030 | 78.25 | 19.32"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 20 mol% | 23.97 | 1.030 | 78.25 | 19.32"
+        }
+      ]
+    },
+    {
+      "device_id": "device-facl30",
+      "family_id": "family-psc-01",
+      "label": "FACl 30 mol% comparison device",
+      "variant": "FACl 30 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "FACl concentration",
+          "raw_value": "30 mol%",
+          "value_number": 30.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 30 mol% | 24.36 | 1.092 | 76.27 | 20.28"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 30 mol% | 24.36 | 1.092 | 76.27 | 20.28"
+        }
+      ]
+    },
+    {
+      "device_id": "device-facl40",
+      "family_id": "family-psc-01",
+      "label": "FACl 40 mol% comparison device",
+      "variant": "FACl 40 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "FACl concentration",
+          "raw_value": "40 mol%",
+          "value_number": 40.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 40 mol% | 24.34 | 0.993 | 77.59 | 18.75"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 40 mol% | 24.34 | 0.993 | 77.59 | 18.75"
+        }
+      ]
+    },
+    {
+      "device_id": "device-facl50",
+      "family_id": "family-psc-01",
+      "label": "FACl 50 mol% comparison device",
+      "variant": "FACl 50 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "FACl concentration",
+          "raw_value": "50 mol%",
+          "value_number": 50.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 50 mol% | 22.52 | 0.995 | 74.37 | 16.66"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 50 mol% | 22.52 | 0.995 | 74.37 | 16.66"
+        }
+      ]
+    },
+    {
+      "device_id": "device-mai10",
+      "family_id": "family-psc-01",
+      "label": "MAI 10 mol% comparison device",
+      "variant": "MAI 10 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MAI concentration",
+          "raw_value": "10 mol%",
+          "value_number": 10.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 10 mol% | 23.89 | 1.032 | 74.5 | 18.38"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 10 mol% | 23.89 | 1.032 | 74.5 | 18.38"
+        }
+      ]
+    },
+    {
+      "device_id": "device-mai20",
+      "family_id": "family-psc-01",
+      "label": "MAI 20 mol% comparison device",
+      "variant": "MAI 20 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MAI concentration",
+          "raw_value": "20 mol%",
+          "value_number": 20.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 20 mol% | 23.51 | 0.999 | 74.21 | 17.44"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 20 mol% | 23.51 | 0.999 | 74.21 | 17.44"
+        }
+      ]
+    },
+    {
+      "device_id": "device-mai30",
+      "family_id": "family-psc-01",
+      "label": "MAI 30 mol% comparison device",
+      "variant": "MAI 30 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MAI concentration",
+          "raw_value": "30 mol%",
+          "value_number": 30.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 30 mol% | 23.34 | 0.974 | 74.05 | 16.83"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 30 mol% | 23.34 | 0.974 | 74.05 | 16.83"
+        }
+      ]
+    },
+    {
+      "device_id": "device-mai40",
+      "family_id": "family-psc-01",
+      "label": "MAI 40 mol% comparison device",
+      "variant": "MAI 40 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MAI concentration",
+          "raw_value": "40 mol%",
+          "value_number": 40.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 40 mol% | 22.94 | 0.9925 | 53.49 | 12.18"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 40 mol% | 22.94 | 0.9925 | 53.49 | 12.18"
+        }
+      ]
+    },
+    {
+      "device_id": "device-mai50",
+      "family_id": "family-psc-01",
+      "label": "MAI 50 mol% comparison device",
+      "variant": "MAI 50 mol%",
+      "champion_status": "not_reported",
+      "selection_basis": "other",
+      "reported_properties": [
+        {
+          "name": "MAI concentration",
+          "raw_value": "50 mol%",
+          "value_number": 50.0,
+          "unit": "mol%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 50 mol% | 20.67 | 0.969 | 57.13 | 11.45"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 50 mol% | 20.67 | 0.969 | 57.13 | 11.45"
+        }
+      ]
+    },
+    {
+      "device_id": "device-certified-best",
+      "family_id": "family-psc-01",
+      "label": "Newport-certified best perovskite device",
+      "variant": null,
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [
+        {
+          "name": "device serial number",
+          "raw_value": "10510-0054",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0031_text_e13b6e276e83",
+              "quote": "Device S/N: 10510-0054"
+            }
+          ]
+        },
+        {
+          "name": "material",
+          "raw_value": "Perovskite",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0022_text_0aa22075451b",
+              "quote": "Material (single junction): Perovskite"
+            }
+          ]
+        },
+        {
+          "name": "junction topology",
+          "raw_value": "single junction",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0022_text_0aa22075451b",
+              "quote": "Material (single junction): Perovskite"
+            }
+          ]
+        },
+        {
+          "name": "certified device area",
+          "raw_value": "0.0801",
+          "value_number": 0.0801,
+          "unit": "cm^2",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+            }
+          ]
+        },
+        {
+          "name": "certified device area uncertainty",
+          "raw_value": "± 0.0004",
+          "value_number": 0.0004,
+          "unit": "cm^2",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p7_0020_heading_93562630f523",
+          "quote": "5. Certification of a best device from Newport Corp."
+        },
+        {
+          "block_id": "supplement_p7_0022_text_0aa22075451b",
+          "quote": "Material (single junction): Perovskite"
+        },
+        {
+          "block_id": "supplement_p7_0031_text_e13b6e276e83",
+          "quote": "Device S/N: 10510-0054"
+        },
+        {
+          "block_id": "supplement_p7_0026_table_3381c6a33f03",
+          "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+        }
+      ]
+    }
+  ],
+  "performance_observations": [
+    {
+      "observation_id": "obs-ma-pristine-jv",
+      "device_id": "device-ma-pristine",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "24.84",
+          "value_number": 24.84,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "0 | 24.84 | 1.027 | 77.08 | 19.66"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.027",
+          "value_number": 1.027,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "0 | 24.84 | 1.027 | 77.08 | 19.66"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "77.08",
+          "value_number": 77.08,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "0 | 24.84 | 1.027 | 77.08 | 19.66"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "19.66",
+          "value_number": 19.66,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "0 | 24.84 | 1.027 | 77.08 | 19.66"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "0 | 24.84 | 1.027 | 77.08 | 19.66"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-ma10-jv",
+      "device_id": "device-ma10",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "24.99",
+          "value_number": 24.99,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-10 | 24.99 | 1.034 | 78.50 | 20.30"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.034",
+          "value_number": 1.034,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-10 | 24.99 | 1.034 | 78.50 | 20.30"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "78.50",
+          "value_number": 78.5,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-10 | 24.99 | 1.034 | 78.50 | 20.30"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "20.30",
+          "value_number": 20.3,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-10 | 24.99 | 1.034 | 78.50 | 20.30"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-10 | 24.99 | 1.034 | 78.50 | 20.30"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-ma20-jv",
+      "device_id": "device-ma20",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "25.23",
+          "value_number": 25.23,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-20 | 25.23 | 1.083 | 79.61 | 21.74"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.083",
+          "value_number": 1.083,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-20 | 25.23 | 1.083 | 79.61 | 21.74"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "79.61",
+          "value_number": 79.61,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-20 | 25.23 | 1.083 | 79.61 | 21.74"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "21.74",
+          "value_number": 21.74,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-20 | 25.23 | 1.083 | 79.61 | 21.74"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-20 | 25.23 | 1.083 | 79.61 | 21.74"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-ma30-jv",
+      "device_id": "device-ma30",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "25.45",
+          "value_number": 25.45,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-30 | 25.45 | 1.101 | 80.38 | 22.52"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.101",
+          "value_number": 1.101,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-30 | 25.45 | 1.101 | 80.38 | 22.52"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "80.38",
+          "value_number": 80.38,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-30 | 25.45 | 1.101 | 80.38 | 22.52"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "22.52",
+          "value_number": 22.52,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-30 | 25.45 | 1.101 | 80.38 | 22.52"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-30 | 25.45 | 1.101 | 80.38 | 22.52"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-ma40-jv",
+      "device_id": "device-ma40",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "25.92",
+          "value_number": 25.92,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-40 | 25.92 | 1.130 | 82.02 | 24.02"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.130",
+          "value_number": 1.13,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-40 | 25.92 | 1.130 | 82.02 | 24.02"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "82.02",
+          "value_number": 82.02,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-40 | 25.92 | 1.130 | 82.02 | 24.02"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "24.02",
+          "value_number": 24.02,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-40 | 25.92 | 1.130 | 82.02 | 24.02"
+            },
+            {
+              "block_id": "main_p3_0033_text_025068410b31",
+              "quote": "Using density functional theory (DFT), we provide a theoretical framework for understanding the interaction of MACl with a perovskite active layer. The formation energy of the resulting perovskite structure is related to the amount of incorporated MACl. Consequently, MACl additive induces intermediate phase stabilization for over 24% efficiency. The highest efficiency achieved was 24.02%, which was obtained with the addition of 40 mol% MACl. These results suggest that the MACl additive is a promising material for high-quality film formation and high-performance device that offers great opportunities for the practical applications."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-40 | 25.92 | 1.130 | 82.02 | 24.02"
+        },
+        {
+          "block_id": "main_p3_0033_text_025068410b31",
+          "quote": "Using density functional theory (DFT), we provide a theoretical framework for understanding the interaction of MACl with a perovskite active layer. The formation energy of the resulting perovskite structure is related to the amount of incorporated MACl. Consequently, MACl additive induces intermediate phase stabilization for over 24% efficiency. The highest efficiency achieved was 24.02%, which was obtained with the addition of 40 mol% MACl. These results suggest that the MACl additive is a promising material for high-quality film formation and high-performance device that offers great opportunities for the practical applications."
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-ma50-jv",
+      "device_id": "device-ma50",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "25.38",
+          "value_number": 25.38,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-50 | 25.38 | 1.123 | 81.97 | 23.36"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.123",
+          "value_number": 1.123,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-50 | 25.38 | 1.123 | 81.97 | 23.36"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "81.97",
+          "value_number": 81.97,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-50 | 25.38 | 1.123 | 81.97 | 23.36"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "23.36",
+          "value_number": 23.36,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p23_0072_table_80c9b69cce33",
+              "quote": "MA-50 | 25.38 | 1.123 | 81.97 | 23.36"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p23_0072_table_80c9b69cce33",
+          "quote": "MA-50 | 25.38 | 1.123 | 81.97 | 23.36"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-comparison-pristine-jv",
+      "device_id": "device-comparison-pristine",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "24.90",
+          "value_number": 24.9,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            },
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.016",
+          "value_number": 1.016,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            },
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "76.27",
+          "value_number": 76.27,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            },
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "19.29",
+          "value_number": 19.29,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            },
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+        },
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "Pristine | 24.90 | 1.016 | 76.27 | 19.29"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-facl10-jv",
+      "device_id": "device-facl10",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "23.46",
+          "value_number": 23.46,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 10 mol% | 23.46 | 7.039 | 74.62 | 18.19"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "7.039",
+          "value_number": 7.039,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 10 mol% | 23.46 | 7.039 | 74.62 | 18.19"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "74.62",
+          "value_number": 74.62,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 10 mol% | 23.46 | 7.039 | 74.62 | 18.19"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "18.19",
+          "value_number": 18.19,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 10 mol% | 23.46 | 7.039 | 74.62 | 18.19"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 10 mol% | 23.46 | 7.039 | 74.62 | 18.19"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-facl20-jv",
+      "device_id": "device-facl20",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "23.97",
+          "value_number": 23.97,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 20 mol% | 23.97 | 1.030 | 78.25 | 19.32"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.030",
+          "value_number": 1.03,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 20 mol% | 23.97 | 1.030 | 78.25 | 19.32"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "78.25",
+          "value_number": 78.25,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 20 mol% | 23.97 | 1.030 | 78.25 | 19.32"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "19.32",
+          "value_number": 19.32,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 20 mol% | 23.97 | 1.030 | 78.25 | 19.32"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 20 mol% | 23.97 | 1.030 | 78.25 | 19.32"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-facl30-jv",
+      "device_id": "device-facl30",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "24.36",
+          "value_number": 24.36,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 30 mol% | 24.36 | 1.092 | 76.27 | 20.28"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.092",
+          "value_number": 1.092,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 30 mol% | 24.36 | 1.092 | 76.27 | 20.28"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "76.27",
+          "value_number": 76.27,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 30 mol% | 24.36 | 1.092 | 76.27 | 20.28"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "20.28",
+          "value_number": 20.28,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 30 mol% | 24.36 | 1.092 | 76.27 | 20.28"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 30 mol% | 24.36 | 1.092 | 76.27 | 20.28"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-facl40-jv",
+      "device_id": "device-facl40",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "24.34",
+          "value_number": 24.34,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 40 mol% | 24.34 | 0.993 | 77.59 | 18.75"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.993",
+          "value_number": 0.993,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 40 mol% | 24.34 | 0.993 | 77.59 | 18.75"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "77.59",
+          "value_number": 77.59,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 40 mol% | 24.34 | 0.993 | 77.59 | 18.75"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "18.75",
+          "value_number": 18.75,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 40 mol% | 24.34 | 0.993 | 77.59 | 18.75"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 40 mol% | 24.34 | 0.993 | 77.59 | 18.75"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-facl50-jv",
+      "device_id": "device-facl50",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "22.52",
+          "value_number": 22.52,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 50 mol% | 22.52 | 0.995 | 74.37 | 16.66"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.995",
+          "value_number": 0.995,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 50 mol% | 22.52 | 0.995 | 74.37 | 16.66"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "74.37",
+          "value_number": 74.37,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 50 mol% | 22.52 | 0.995 | 74.37 | 16.66"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "16.66",
+          "value_number": 16.66,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+              "quote": "FACl 50 mol% | 22.52 | 0.995 | 74.37 | 16.66"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0041_table_8eaca9f44f67",
+          "quote": "FACl 50 mol% | 22.52 | 0.995 | 74.37 | 16.66"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-mai10-jv",
+      "device_id": "device-mai10",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "23.89",
+          "value_number": 23.89,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 10 mol% | 23.89 | 1.032 | 74.5 | 18.38"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.032",
+          "value_number": 1.032,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 10 mol% | 23.89 | 1.032 | 74.5 | 18.38"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "74.5",
+          "value_number": 74.5,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 10 mol% | 23.89 | 1.032 | 74.5 | 18.38"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "18.38",
+          "value_number": 18.38,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 10 mol% | 23.89 | 1.032 | 74.5 | 18.38"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 10 mol% | 23.89 | 1.032 | 74.5 | 18.38"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-mai20-jv",
+      "device_id": "device-mai20",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "23.51",
+          "value_number": 23.51,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 20 mol% | 23.51 | 0.999 | 74.21 | 17.44"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.999",
+          "value_number": 0.999,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 20 mol% | 23.51 | 0.999 | 74.21 | 17.44"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "74.21",
+          "value_number": 74.21,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 20 mol% | 23.51 | 0.999 | 74.21 | 17.44"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "17.44",
+          "value_number": 17.44,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 20 mol% | 23.51 | 0.999 | 74.21 | 17.44"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 20 mol% | 23.51 | 0.999 | 74.21 | 17.44"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-mai30-jv",
+      "device_id": "device-mai30",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "23.34",
+          "value_number": 23.34,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 30 mol% | 23.34 | 0.974 | 74.05 | 16.83"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.974",
+          "value_number": 0.974,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 30 mol% | 23.34 | 0.974 | 74.05 | 16.83"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "74.05",
+          "value_number": 74.05,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 30 mol% | 23.34 | 0.974 | 74.05 | 16.83"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "16.83",
+          "value_number": 16.83,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 30 mol% | 23.34 | 0.974 | 74.05 | 16.83"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 30 mol% | 23.34 | 0.974 | 74.05 | 16.83"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-mai40-jv",
+      "device_id": "device-mai40",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "22.94",
+          "value_number": 22.94,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 40 mol% | 22.94 | 0.9925 | 53.49 | 12.18"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.9925",
+          "value_number": 0.9925,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 40 mol% | 22.94 | 0.9925 | 53.49 | 12.18"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "53.49",
+          "value_number": 53.49,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 40 mol% | 22.94 | 0.9925 | 53.49 | 12.18"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "12.18",
+          "value_number": 12.18,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 40 mol% | 22.94 | 0.9925 | 53.49 | 12.18"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 40 mol% | 22.94 | 0.9925 | 53.49 | 12.18"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-mai50-jv",
+      "device_id": "device-mai50",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "Jsc",
+          "raw_value": "20.67",
+          "value_number": 20.67,
+          "unit": "mA cm -2",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 50 mol% | 20.67 | 0.969 | 57.13 | 11.45"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "0.969",
+          "value_number": 0.969,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 50 mol% | 20.67 | 0.969 | 57.13 | 11.45"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "57.13",
+          "value_number": 57.13,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 50 mol% | 20.67 | 0.969 | 57.13 | 11.45"
+            }
+          ]
+        },
+        {
+          "name": "Efficiency",
+          "raw_value": "11.45",
+          "value_number": 11.45,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p9_0043_table_807e4bb870fe",
+              "quote": "MAI 50 mol% | 20.67 | 0.969 | 57.13 | 11.45"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "supplement_p9_0043_table_807e4bb870fe",
+          "quote": "MAI 50 mol% | 20.67 | 0.969 | 57.13 | 11.45"
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-certified-best",
+      "device_id": "device-certified-best",
+      "measurement_type": "certified_measurement",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "certified efficiency",
+          "raw_value": "23.48%",
+          "value_number": 23.48,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p2_0021_text_ba3af8209742",
+              "quote": "The formation energy is related to the amount of incorporated MACl. By tuning the incorporation of MACl, the perovskite film quality can be significantly improved, exhibiting a 6 3 increase in grain size, a 3 3 increase in phase crystallinity, and a 4.3 3 increase in photoluminescence lifetime. The optimized solar cells achieved a certified efficiency of 23.48%."
+            }
+          ]
+        },
+        {
+          "name": "certified efficiency uncertainty as parser-extracted",
+          "raw_value": "干 0.92",
+          "value_number": 0.92,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "Efficency [%] | 23.48+ | 干 0.92 | V oc [V] | 1.145 | ± 0.010 | 1 sc [A] | 0.002053 | 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Voc",
+          "raw_value": "1.145",
+          "value_number": 1.145,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "Efficency [%] | 23.48+ | 干 0.92 | V oc [V] | 1.145 | ± 0.010 | 1 sc [A] | 0.002053 | 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Voc uncertainty",
+          "raw_value": "± 0.010",
+          "value_number": 0.01,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "Efficency [%] | 23.48+ | 干 0.92 | V oc [V] | 1.145 | ± 0.010 | 1 sc [A] | 0.002053 | 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Isc",
+          "raw_value": "0.002053",
+          "value_number": 0.002053,
+          "unit": "A",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "Efficency [%] | 23.48+ | 干 0.92 | V oc [V] | 1.145 | ± 0.010 | 1 sc [A] | 0.002053 | 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Isc uncertainty as parser-extracted",
+          "raw_value": "0.000043",
+          "value_number": 4.3e-05,
+          "unit": "A",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "Efficency [%] | 23.48+ | 干 0.92 | V oc [V] | 1.145 | ± 0.010 | 1 sc [A] | 0.002053 | 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Pmax",
+          "raw_value": "1.882",
+          "value_number": 1.882,
+          "unit": "mW",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "P max [mW] | 1.882 | ± 0.071 | V_max [V] | 0.990 | ± 0.024 | I max [A] | 0.001901 | ± 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Pmax uncertainty",
+          "raw_value": "± 0.071",
+          "value_number": 0.071,
+          "unit": "mW",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "P max [mW] | 1.882 | ± 0.071 | V_max [V] | 0.990 | ± 0.024 | I max [A] | 0.001901 | ± 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Vmax",
+          "raw_value": "0.990",
+          "value_number": 0.99,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "P max [mW] | 1.882 | ± 0.071 | V_max [V] | 0.990 | ± 0.024 | I max [A] | 0.001901 | ± 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Vmax uncertainty",
+          "raw_value": "± 0.024",
+          "value_number": 0.024,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "P max [mW] | 1.882 | ± 0.071 | V_max [V] | 0.990 | ± 0.024 | I max [A] | 0.001901 | ± 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Imax",
+          "raw_value": "0.001901",
+          "value_number": 0.001901,
+          "unit": "A",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "P max [mW] | 1.882 | ± 0.071 | V_max [V] | 0.990 | ± 0.024 | I max [A] | 0.001901 | ± 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "Imax uncertainty",
+          "raw_value": "± 0.000043",
+          "value_number": 4.3e-05,
+          "unit": "A",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "P max [mW] | 1.882 | ± 0.071 | V_max [V] | 0.990 | ± 0.024 | I max [A] | 0.001901 | ± 0.000043"
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "80.1",
+          "value_number": 80.1,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+            }
+          ]
+        },
+        {
+          "name": "FF uncertainty",
+          "raw_value": "± 2.2",
+          "value_number": 2.2,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+            }
+          ]
+        },
+        {
+          "name": "M",
+          "raw_value": "1.009",
+          "value_number": 1.009,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+            }
+          ]
+        },
+        {
+          "name": "M uncertainty as parser-extracted",
+          "raw_value": "干 0.015",
+          "value_number": 0.015,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0026_table_3381c6a33f03",
+              "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+            }
+          ]
+        },
+        {
+          "name": "measurement date",
+          "raw_value": "06-Dec-2018",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0023_text_fcca15509473",
+              "quote": "Measurement Date: 06-Dec-2018"
+            }
+          ]
+        },
+        {
+          "name": "DUT temperature",
+          "raw_value": "25.0 ± 0.8 C",
+          "value_number": 25.0,
+          "unit": "C",
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0024_text_c6341abc1326",
+              "quote": "Temperature Sensor: TC-K, DUT Temperature: 25.0 ± 0.8 C"
+            }
+          ]
+        },
+        {
+          "name": "I-V method",
+          "raw_value": "ASTM E948-16 Standard Test Method for Electrical Performance of Photovoltaic Cells Using Reference Cells Under Simulated Sunlight",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "supplement_p7_0028_text_86a18dfed5dd",
+              "quote": "ASTM E948-16 Standard Test Method for Electrical Performance of Photovoltaic Cells Using Reference Cells Under Simulated Sunlight"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0021_text_ba3af8209742",
+          "quote": "The formation energy is related to the amount of incorporated MACl. By tuning the incorporation of MACl, the perovskite film quality can be significantly improved, exhibiting a 6 3 increase in grain size, a 3 3 increase in phase crystallinity, and a 4.3 3 increase in photoluminescence lifetime. The optimized solar cells achieved a certified efficiency of 23.48%."
+        },
+        {
+          "block_id": "supplement_p7_0026_table_3381c6a33f03",
+          "quote": "Efficency [%] | 23.48+ | 干 0.92 | V oc [V] | 1.145 | ± 0.010 | 1 sc [A] | 0.002053 | 0.000043"
+        },
+        {
+          "block_id": "supplement_p7_0026_table_3381c6a33f03",
+          "quote": "P max [mW] | 1.882 | ± 0.071 | V_max [V] | 0.990 | ± 0.024 | I max [A] | 0.001901 | ± 0.000043"
+        },
+        {
+          "block_id": "supplement_p7_0026_table_3381c6a33f03",
+          "quote": "FF[%] | 80.1 | ± 2.2 | Area [cm^2] | 0.0801 | ± 0.0004 | M | 1.009 | 干 0.015"
+        },
+        {
+          "block_id": "supplement_p7_0023_text_fcca15509473",
+          "quote": "Measurement Date: 06-Dec-2018"
+        },
+        {
+          "block_id": "supplement_p7_0024_text_c6341abc1326",
+          "quote": "Temperature Sensor: TC-K, DUT Temperature: 25.0 ± 0.8 C"
+        },
+        {
+          "block_id": "supplement_p7_0028_text_86a18dfed5dd",
+          "quote": "ASTM E948-16 Standard Test Method for Electrical Performance of Photovoltaic Cells Using Reference Cells Under Simulated Sunlight"
+        }
+      ]
+    }
+  ],
+  "population_statistics": [
+    {
+      "population_id": "population-ma-efficiency-distributions",
+      "family_id": "family-psc-01",
+      "label": "Efficiency distributions for devices with different amounts of MACl",
+      "statistic_type": "distribution",
+      "sample_size": null,
+      "metrics": [
+        {
+          "name": "efficiency distribution",
+          "raw_value": "Efficiency distribution of perovskite solar cells with different amounts of MACl",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p7_0069_text_bee1c513efde",
+              "quote": "(A) Efficiency distribution of perovskite solar cells with different amounts of MACl."
+            }
+          ]
+        },
+        {
+          "name": "distribution-efficiency comparison",
+          "raw_value": "Comparison of distribution efficiencies for pristine, MA-20, and MA-40 devices",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p7_0071_text_a4123447a044",
+              "quote": "(C) Comparison of distribution efficiencies for pristine, MA-20, and MA-40 devices."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p7_0069_text_bee1c513efde",
+          "quote": "(A) Efficiency distribution of perovskite solar cells with different amounts of MACl."
+        },
+        {
+          "block_id": "main_p7_0071_text_a4123447a044",
+          "quote": "(C) Comparison of distribution efficiencies for pristine, MA-20, and MA-40 devices."
+        }
+      ]
+    }
+  ],
+  "stability_tests": [
+    {
+      "test_id": "stability-storage-rt",
+      "family_id": "family-psc-01",
+      "device_id": null,
+      "specimen_label": "Room-temperature storage-stability device; additive arm not identified",
+      "link_status": "explicit_family_link",
+      "conditions": [
+        {
+          "name": "aging temperature",
+          "raw_value": "room temperature (RT)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p8_0079_text_469a2fa44168",
+              "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "aging apparatus",
+          "raw_value": "aging on a hot plate at RT",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "periodic performance-measurement illumination",
+          "raw_value": "AM 1.5 G",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_id": "stability-storage-rt-1200h",
+          "time": {
+            "name": "storage duration",
+            "raw_value": "1,200 h",
+            "value_number": 1200.0,
+            "unit": "h",
+            "evidence": [
+              {
+                "block_id": "main_p8_0079_text_469a2fa44168",
+                "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+              }
+            ]
+          },
+          "conditions": [],
+          "outcomes": [
+            {
+              "name": "retained initial performance",
+              "raw_value": "90% retaining of its initial performance",
+              "value_number": 90.0,
+              "unit": "%",
+              "evidence": [
+                {
+                  "block_id": "main_p8_0079_text_469a2fa44168",
+                  "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p8_0079_text_469a2fa44168",
+              "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p8_0079_text_469a2fa44168",
+          "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "test_id": "stability-thermal-comparison",
+      "family_id": "family-psc-01",
+      "device_id": null,
+      "specimen_label": "Pristine and MA-40 device thermal-stability comparison",
+      "link_status": "explicit_family_link",
+      "conditions": [
+        {
+          "name": "thermal aging temperature",
+          "raw_value": "40 ° C",
+          "value_number": 40.0,
+          "unit": "° C",
+          "evidence": [
+            {
+              "block_id": "main_p8_0079_text_469a2fa44168",
+              "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "aging apparatus",
+          "raw_value": "aging on a hot plate",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "periodic performance-measurement illumination",
+          "raw_value": "AM 1.5 G",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "measurement temperature preparation",
+          "raw_value": "after cooling the devices to RT",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_id": "stability-thermal-comparison-300h",
+          "time": {
+            "name": "thermal aging duration",
+            "raw_value": "300 h",
+            "value_number": 300.0,
+            "unit": "h",
+            "evidence": [
+              {
+                "block_id": "main_p8_0079_text_469a2fa44168",
+                "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+              }
+            ]
+          },
+          "conditions": [],
+          "outcomes": [
+            {
+              "name": "pristine-device retained initial performance",
+              "raw_value": "60% of its initial performance",
+              "value_number": 60.0,
+              "unit": "%",
+              "evidence": [
+                {
+                  "block_id": "main_p8_0079_text_469a2fa44168",
+                  "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+                }
+              ]
+            },
+            {
+              "name": "MA-40-device retained initial performance",
+              "raw_value": "90% of its initial performances",
+              "value_number": 90.0,
+              "unit": "%",
+              "evidence": [
+                {
+                  "block_id": "main_p8_0079_text_469a2fa44168",
+                  "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p8_0079_text_469a2fa44168",
+              "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p8_0079_text_469a2fa44168",
+          "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        }
+      ]
+    },
+    {
+      "test_id": "stability-photo-comparison",
+      "family_id": "family-psc-01",
+      "device_id": null,
+      "specimen_label": "Pristine and MA-40 device photostability comparison",
+      "link_status": "explicit_family_link",
+      "conditions": [
+        {
+          "name": "encapsulation condition",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            },
+            {
+              "block_id": "main_p8_0079_text_469a2fa44168",
+              "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+            }
+          ]
+        },
+        {
+          "name": "photostability protocol",
+          "raw_value": "maximum power point tracking and continuous light irradiation (AM 1.5G)",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "photostability temperature",
+          "raw_value": "25 ° C",
+          "value_number": 25.0,
+          "unit": "° C",
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "relative humidity reported in methods",
+          "raw_value": "below 30% RH",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+              "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+            }
+          ]
+        },
+        {
+          "name": "relative humidity reported in results",
+          "raw_value": "25% relative humidity (RH)",
+          "value_number": 25.0,
+          "unit": "% RH",
+          "evidence": [
+            {
+              "block_id": "main_p8_0079_text_469a2fa44168",
+              "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+            }
+          ]
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_id": "stability-photo-comparative-outcome",
+          "time": null,
+          "conditions": [],
+          "outcomes": [
+            {
+              "name": "MA-40 comparative photostability versus pristine",
+              "raw_value": "higher stability",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p8_0079_text_469a2fa44168",
+                  "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p8_0079_text_469a2fa44168",
+              "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p8_0079_text_469a2fa44168",
+          "quote": "The 40 \u000e C thermal stability test showed that the pristine device degraded to 60% of its initial performance over 300 h, but the MA-40 were more stable, retaining 90% of its initial performances (Figure S11B). The photostabilities of the pristine and MA-40 devices also give higher stability in conditions of continuous illumination, as shown in Figure S11C. The improved stability against thermal and light illumination was attributed to the large grain size and high crystallinity of the perovskite films. Perovskite degradation appears to initiate at grain boundaries and surface defects upon exposure to moisture or constant light."
+        },
+        {
+          "block_id": "main_p11_0108_text_c2d6fbf36a7a",
+          "quote": "The cells were masked using a metal mask in order to limit the active cell area to 0.0804 cm 2 . EQE measurements were obtained using a QEX7 system (PV Measurement). The stability test was conducted without encapsulation. The thermal stability test was performed by aging on a hot plate at RT and 40 \u000e C, respectively. The performances of the devices were periodically measured under illumination AM 1.5 G after cooling the devices to RT. The photostability test was performed under a maximum power point tracking and continuous light irradiation (AM 1.5G) at 25 \u000e C and below 30% RH."
+        },
+        {
+          "block_id": "main_p8_0079_text_469a2fa44168",
+          "quote": "Although inorganic-organic hybrid perovskites have displayed dramatic advances in photovoltaic applications, overcoming instabilities against light, heat, and moisture remains a challenge in the development of commercial applications. Device stability tests were conducted under room temperature (RT) and 40 \u000e C, and photo stabilities were conducted under constant AM 1.5G illumination at 25% relative humidity (RH) and without encapsulation. The stability at RT showed 90% retaining of its initial performance over 1,200 h as shown in Figure S11A."
+        }
+      ]
+    }
+  ],
+  "unresolved_notes": [
+    "MACl, FACl, and MAI labels are additive-processing arms. Although MA substitution for FA is reported for the MACl series, exact finished bulk absorber formulae are not reported for every concentration. The evidence therefore does not support reliably splitting these concentration arms into separate composition-defined device families; they are retained as specimen variants within one reported stack.",
+    "The reported MA-ion substitution for FA and absence of anion-site Cl substitution cannot be assigned family-wide without incorrectly applying those MACl-arm findings to pristine, FACl, and MAI specimens. The schema has no group-only composition-claim record, so this distinction remains unresolved rather than being written into one universal absorber formula.",
+    "The 24.02% Table S3 MA-40 device and the 23.48% Newport-certified best device are kept as separate individual devices because the supplied evidence does not establish that they are the same physical specimen.",
+    "The Table S3 J-V outcomes do not identify whether each row is from the reverse or forward scan, although the methods report both protocols. Their scan_direction is therefore not_reported. The plotted forward/reverse curves contain no extractable numeric outcomes and were not digitized.",
+    "The methods report Class AAA solar-simulator measurement at 100 mA cm -2 under AM 1.5 G, no pre-scan light soaking, and a 100 mV step voltage. The schema has no dedicated performance-observation condition field, and these method-level conditions were not inserted as outcome metrics or used to infer a scan direction for the table rows.",
+    "The stabilized steady-state-current passage reports a maximum-power-point voltage of 0.98 V and a duration of 100 min but no current, power, efficiency, or other stabilized outcome. No stabilized-power-output observation was created, and these protocol values were not treated as intrinsic device properties.",
+    "The EQE passage states that integrated Jsc was shown but supplies no numeric integrated-current result, so no EQE-integrated-current observation was created.",
+    "The room-temperature storage specimen's additive arm is not identified in the supplied text. The thermal and photostability comparisons are linked only to the shared family and their reported pristine and MA-40 arms, not to the Table S3 physical devices.",
+    "Photostability humidity is reported as both 25% relative humidity in the results and below 30% RH in the methods; both source distinctions are preserved.",
+    "The FACl 10 mol% Voc is preserved exactly as reported as 7.039 V despite its anomalous appearance; it was not corrected.",
+    "The certified table contains parser-corrupted uncertainty symbols for efficiency and M and lacks an explicit sign before the Isc uncertainty. Those strings are preserved as reported rather than silently regularized.",
+    "The pristine, MA-10, MA-20, MA-30, MA-40, and MA-50 films used only for structural, morphological, compositional, and photophysical characterization, including the MA-40 annealing-time series, were excluded as photovoltaic device records."
+  ]
+}

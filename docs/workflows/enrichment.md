@@ -65,8 +65,8 @@ omits an absorber, one additional call retries only the omitted targets; a call 
 skipped when there is no corresponding extracted record. Requests use local parser
 text/table evidence rather than the complete paper or rendered pages and share the
 normal content-addressed model cache. Use
-`--enrichment-model` to select a different schema-capable model or `--no-enrichment`
-for a cost or ablation run.
+`[stages.enrich]` to select a different schema-capable deployment or `--no-enrichment`
+to disable this stage.
 
 Enrichment never rewrites `extraction.json`. This separation keeps reported facts,
 model interpretation, deterministic acceptance, and later human correction distinct.

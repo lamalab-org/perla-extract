@@ -2,153 +2,34 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from pathlib import Path
 
 import click
 from pydantic import ValidationError
 
-from .artifacts import write_json_atomic
+from .artifacts import write_json_exclusive
 from .evaluation import (
-    BenchmarkProvenance,
     EvaluationConfig,
     PredictionValidation,
     RunEfficiency,
     evaluate_study,
+    evaluate_study_with_explanations,
 )
-from .models import EvidenceBlock, StudyExtraction, study_schema_sha256
+from .models import EvidenceBlock, StudyExtraction
+from .reference_io import load_reference
+from .reference_io import load_study as _study
+from .reference_io import read_json as _json
+from .run_artifacts import (
+    load_run_efficiency,
+    verify_run_manifest,
+    verify_source_hashes,
+)
+from .scoring_explanation import FactSelection
+from .scoring_fields import IMPORTANT_FIELDS
 from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
 OUTPUT = click.Path(path_type=Path, dir_okay=False, resolve_path=True)
-SUPPORTED_GROUND_TRUTH_FORMAT_VERSION = 2
-
-
-def _json(path: Path) -> object:
-    """Load one UTF-8 JSON artifact and keep its path in parse errors."""
-
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise click.ClickException(f"cannot read {path}: {exc}") from exc
-
-
-def _canonical_digest(value: object) -> str:
-    """Reproduce the ground-truth exporter's content hash."""
-
-    encoded = (
-        json.dumps(
-            value,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        )
-        + "\n"
-    ).encode()
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def _study(payload: object, path: Path) -> StudyExtraction:
-    """Convert schema failures into concise CLI errors that retain the source path."""
-
-    try:
-        return StudyExtraction.model_validate(payload)
-    except ValidationError as exc:
-        raise click.ClickException(f"invalid StudyExtraction in {path}: {exc}") from exc
-
-
-def _truth(
-    path: Path,
-) -> tuple[StudyExtraction, list[str], BenchmarkProvenance | None]:
-    """Load a truth file or verify a complete frozen benchmark directory."""
-
-    if path.is_file():
-        return _study(_json(path), path), [], None
-    truth_path = path / "ground_truth.json"
-    manifest_path = path / "manifest.json"
-    if not truth_path.is_file() or not manifest_path.is_file():
-        raise click.ClickException(
-            f"{path} must contain ground_truth.json and manifest.json"
-        )
-    payload = _json(truth_path)
-    manifest = _json(manifest_path)
-    if not isinstance(manifest, dict):
-        raise click.ClickException(f"{manifest_path} is not a JSON object")
-    if manifest.get("artifact_format_version") != SUPPORTED_GROUND_TRUTH_FORMAT_VERSION:
-        raise click.ClickException(
-            "ground-truth artifact format is unsupported; regenerate or migrate it"
-        )
-    expected_schema = manifest.get("study_schema_sha256")
-    if expected_schema != study_schema_sha256():
-        raise click.ClickException(
-            "ground-truth schema hash differs from the installed evaluator"
-        )
-    files = manifest.get("files")
-    expected_truth = files.get("ground_truth.json") if isinstance(files, dict) else None
-    if expected_truth != _canonical_digest(payload):
-        raise click.ClickException("ground_truth.json does not match its manifest hash")
-    review = manifest.get("review")
-    if not isinstance(review, dict):
-        raise click.ClickException("manifest review must be a JSON object")
-    uncertain = review.get("uncertain_record_keys")
-    if not isinstance(uncertain, list) or not all(
-        isinstance(item, str) for item in uncertain
-    ):
-        raise click.ClickException("manifest uncertainty mask is invalid")
-    paper_id = manifest.get("paper_id")
-    split = manifest.get("split")
-    source_manifest = manifest.get("source_manifest")
-    if not isinstance(paper_id, str) or not isinstance(split, str):
-        raise click.ClickException("manifest paper_id and split must be strings")
-    if not isinstance(source_manifest, dict):
-        raise click.ClickException("manifest source_manifest must be a JSON object")
-    source_hashes = source_manifest.get("source_sha256", [])
-    if not isinstance(source_hashes, list) or not all(
-        isinstance(item, str) for item in source_hashes
-    ):
-        raise click.ClickException(
-            "source_manifest source_sha256 must be a string list"
-        )
-    return (
-        _study(payload, truth_path),
-        uncertain,
-        BenchmarkProvenance(
-            paper_id=paper_id,
-            split=split,
-            ground_truth_sha256=expected_truth,
-            source_manifest_sha256=_canonical_digest(source_manifest),
-            source_sha256=source_hashes,
-        ),
-    )
-
-
-def _run_efficiency(path: Path) -> RunEfficiency:
-    """Validate measured token, cost, request, and latency totals from report.json."""
-
-    payload = _json(path)
-    if not isinstance(payload, dict):
-        raise click.ClickException(f"{path} is not a JSON object")
-    usage = payload.get("usage")
-    budget = payload.get("budget")
-    if not isinstance(usage, dict):
-        raise click.ClickException(f"{path} has no usage object")
-    budget = budget if isinstance(budget, dict) else {}
-    try:
-        return RunEfficiency(
-            status=payload.get("status"),
-            live_calls=usage.get("live_calls"),
-            cache_hits=usage.get("cache_hits"),
-            prompt_tokens=usage.get("prompt_tokens"),
-            completion_tokens=usage.get("completion_tokens"),
-            total_tokens=usage.get("total_tokens"),
-            cost_usd=usage.get("cost"),
-            provider_requests=budget.get("provider_requests"),
-            cost_tracking_complete=budget.get("cost_tracking_complete"),
-            elapsed_seconds=payload.get("elapsed_seconds"),
-        )
-    except ValidationError as exc:
-        raise click.ClickException(f"invalid run accounting in {path}: {exc}") from exc
 
 
 def _prediction(
@@ -187,7 +68,7 @@ def _prediction(
     return (
         study,
         PredictionValidation.model_validate(validation),
-        _run_efficiency(report_path),
+        load_run_efficiency(report_path),
     )
 
 
@@ -199,40 +80,215 @@ def _prediction(
     "--prediction", type=INPUT, required=True, help="Extraction run directory or JSON."
 )
 @click.option("--output", type=OUTPUT, default="evaluation.json")
-@click.option("--minimum-record-similarity", type=click.FloatRange(0, 1), default=0.35)
 @click.option(
-    "--numeric-relative-tolerance", type=click.FloatRange(min=0), default=0.01
+    "--explain-truth",
+    multiple=True,
+    help="Scored reference JSON path to explain; repeatable.",
 )
 @click.option(
-    "--numeric-absolute-tolerance", type=click.FloatRange(min=0), default=1e-9
+    "--explain-prediction",
+    multiple=True,
+    help="Scored prediction JSON path to explain; repeatable.",
+)
+@click.option(
+    "--explanation-output",
+    type=OUTPUT,
+    help="Write selected fact explanations to a separate JSON artifact.",
+)
+@click.option("--explanation-candidates", type=click.IntRange(1, 20), default=5)
+@click.option(
+    "--explain-view",
+    type=click.Choice(["attributed", "recovery"]),
+    default="attributed",
+)
+@click.option(
+    "--minimum-record-similarity",
+    type=click.FloatRange(0, 1),
+    default=EvaluationConfig().minimum_record_similarity,
+)
+@click.option(
+    "--numeric-relative-tolerance",
+    type=click.FloatRange(min=0),
+    default=EvaluationConfig().numeric_relative_tolerance,
+    help="Relative numeric allowance after unit conversion; 0.01 means 1%. Use 1e-6 for strict comparison.",
+)
+@click.option(
+    "--numeric-absolute-tolerance",
+    type=click.FloatRange(min=0),
+    default=EvaluationConfig().numeric_absolute_tolerance,
+    help="Absolute allowance in base units; disabled by default because scales differ.",
+)
+@click.option(
+    "--operation-aliases",
+    type=INPUT,
+    help="JSON operation-to-canonical-name mapping; replaces defaults.",
+)
+@click.option(
+    "--descriptor-equivalences",
+    type=INPUT,
+    help="JSON list of reviewed cohort/specimen label equivalences, scoped to reference hashes.",
+)
+@click.option(
+    "--fail-on-scoring-issues",
+    is_flag=True,
+    help="Save diagnostics, then fail if scientific attribution is ambiguous.",
 )
 def main(
     truth: Path,
     prediction: Path,
     output: Path,
+    explain_truth: tuple[str, ...],
+    explain_prediction: tuple[str, ...],
+    explanation_output: Path | None,
+    explanation_candidates: int,
+    explain_view: str,
     minimum_record_similarity: float,
     numeric_relative_tolerance: float,
     numeric_absolute_tolerance: float,
+    operation_aliases: Path | None,
+    descriptor_equivalences: Path | None,
+    fail_on_scoring_issues: bool,
 ) -> None:
     """Score one extraction without using an LLM or run-local identifiers."""
 
-    expected, uncertain, benchmark = _truth(truth)
-    actual, prediction_validation, run_efficiency = _prediction(prediction)
-    report = evaluate_study(
-        expected,
-        actual,
-        ignored_truth_record_keys=uncertain,
-        benchmark=benchmark,
-        prediction_validation=prediction_validation,
-        run_efficiency=run_efficiency,
-        config=EvaluationConfig(
+    if bool(explain_truth or explain_prediction) != bool(explanation_output):
+        raise click.ClickException(
+            "Provide fact paths and --explanation-output together"
+        )
+    if (
+        explanation_output is not None
+        and explanation_output.resolve() == output.resolve()
+    ):
+        raise click.ClickException(
+            "Score and explanation outputs must be different files"
+        )
+    if explanation_output is not None and explanation_output.exists():
+        raise click.ClickException(
+            f"Cannot create {explanation_output}; choose a new explanation output path"
+        )
+    try:
+        expected, benchmark = load_reference(truth)
+        actual, prediction_validation, run_efficiency = _prediction(prediction)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    try:
+        config = EvaluationConfig(
             minimum_record_similarity=minimum_record_similarity,
             numeric_relative_tolerance=numeric_relative_tolerance,
             numeric_absolute_tolerance=numeric_absolute_tolerance,
-        ),
-    )
-    write_json_atomic(output, report.model_dump(mode="json"))
-    click.echo(str(output))
+            **(
+                {"operation_aliases": _json(operation_aliases)}
+                if operation_aliases
+                else {}
+            ),
+            **(
+                {"descriptor_equivalences": _json(descriptor_equivalences)}
+                if descriptor_equivalences
+                else {}
+            ),
+        )
+    except ValueError as exc:
+        raise click.ClickException(f"invalid scoring configuration: {exc}") from exc
+    try:
+        manifest_digest = None
+        run_id = None
+        if prediction.is_dir():
+            manifest, manifest_digest = verify_run_manifest(prediction)
+            run_id = manifest.run_id
+            if benchmark is not None:
+                verify_source_hashes(
+                    benchmark.source_sha256,
+                    _json(prediction / "run_configuration.json"),
+                )
+        explanation = None
+        if explanation_output is not None:
+            report, explanation = evaluate_study_with_explanations(
+                expected,
+                actual,
+                facts=[
+                    FactSelection(side=side, path=path, view=explain_view)
+                    for side, paths in (
+                        ("truth", explain_truth),
+                        ("prediction", explain_prediction),
+                    )
+                    for path in paths
+                ],
+                max_candidates=explanation_candidates,
+                benchmark=benchmark,
+                prediction_validation=prediction_validation,
+                run_efficiency=run_efficiency,
+                run_manifest_sha256=manifest_digest,
+                run_id=run_id,
+                config=config,
+            )
+        else:
+            report = evaluate_study(
+                expected,
+                actual,
+                benchmark=benchmark,
+                prediction_validation=prediction_validation,
+                run_efficiency=run_efficiency,
+                run_manifest_sha256=manifest_digest,
+                run_id=run_id,
+                config=config,
+            )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    artifacts = [(output, report.model_dump(mode="json"))]
+    if explanation_output is not None and explanation is not None:
+        artifacts.append((explanation_output, explanation.model_dump(mode="json")))
+    for destination, payload in artifacts:
+        try:
+            write_json_exclusive(destination, payload)
+        except OSError as exc:
+            raise click.ClickException(
+                f"Cannot create {destination}; choose a new output path: {exc}"
+            ) from exc
+        click.echo(str(destination))
+    click.echo("Field  TP  FP  FN  Precision  Recall  F1")
+    for key, label in IMPORTANT_FIELDS.items():
+        score = report.core_facts.fields.get(key)
+        if score is None or not (score.predicted or score.truth):
+            continue
+        rates = "  ".join(
+            f"{v:.1%}" if v is not None else "—"
+            for v in (score.precision, score.recall, score.f1)
+        )
+        click.echo(
+            f"{label}  {score.matched}  {score.predicted - score.matched}  {score.truth - score.matched}  {rates}"
+        )
+    for warning in report.input_warnings:
+        click.echo(f"Input warning: {warning}", err=True)
+    missing_units = {
+        side: sum(
+            d.unit_source == "missing" and d.rule_id.endswith("-photovoltaic")
+            for d in facts
+        )
+        for side, facts in report.core_facts.diagnostics.facts.items()
+    }
+    if any(missing_units.values()):
+        click.echo(
+            f"PV unit evidence missing: {missing_units['truth']} reference, "
+            f"{missing_units['prediction']} predicted field(s). "
+            "Inspect diagnostics.unit_source.",
+            err=True,
+        )
+    percentage_points = {
+        side: sum(d.unit_source == "percentage_points" for d in facts)
+        for side, facts in report.core_facts.diagnostics.facts.items()
+    }
+    if any(percentage_points.values()):
+        click.echo(
+            "Unitless PCE/FF treated as percentage points: "
+            f"{percentage_points['truth']} reference, "
+            f"{percentage_points['prediction']} predicted field(s). "
+            "Recorded as diagnostics.unit_source=percentage_points.",
+            err=True,
+        )
+    if fail_on_scoring_issues and report.core_facts.issues:
+        raise click.ClickException(
+            f"{len(report.core_facts.issues)} scoring issue(s) require review; diagnostics saved to {output}"
+        )
 
 
 if __name__ == "__main__":

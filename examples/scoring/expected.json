@@ -1,0 +1,35 @@
+{
+  "format_version": 17,
+  "matcher_version": "rich-study-hungarian-v22",
+  "profile": "core-scientific-facts-v19",
+  "config": {
+    "minimum_record_similarity": 0.35,
+    "numeric_relative_tolerance": 0.01,
+    "numeric_absolute_tolerance": 0.0,
+    "operation_aliases": {
+      "thermal annealing": "annealing",
+      "spincoating": "spin coating",
+      "spin_coating": "spin coating",
+      "spin-coating": "spin coating"
+    },
+    "descriptor_equivalences": []
+  },
+  "cases": {
+    "seed": {
+      "material_device_identity": {"truth": 1, "predicted": 1, "matched": 0},
+      "performance": {"truth": 2, "predicted": 1, "matched": 0}
+    },
+    "corrected": {
+      "material_device_identity": {"truth": 1, "predicted": 1, "matched": 1},
+      "performance": {"truth": 2, "predicted": 2, "matched": 2}
+    },
+    "equivalent_units": {
+      "material_device_identity": {"truth": 1, "predicted": 1, "matched": 1},
+      "performance": {"truth": 2, "predicted": 2, "matched": 2}
+    },
+    "wrong_scan": {
+      "material_device_identity": {"truth": 1, "predicted": 1, "matched": 1},
+      "performance": {"truth": 2, "predicted": 2, "matched": 0}
+    }
+  }
+}

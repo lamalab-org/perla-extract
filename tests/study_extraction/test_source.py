@@ -6,11 +6,44 @@ import pytest
 from perla_extract.study_extraction.models import EvidenceBlock
 from perla_extract.study_extraction.source import (
     _cache_identity,
+    _deduplicate_evidence_blocks,
     _scientific_evidence_blocks,
     parse_pdf,
 )
 
 FIXTURE = Path(__file__).parents[1] / "test_files" / "nat_comm_7139.pdf"
+
+
+@pytest.mark.parametrize("damaged", [False, True])
+def test_table_adapter_keeps_native_decimals_when_detector_splits_them(
+    tmp_path, monkeypatch, damaged
+):
+    from types import SimpleNamespace
+
+    import pymupdf
+
+    from perla_extract.study_extraction.source import _pymupdf_layout_items
+
+    path = tmp_path / "table.pdf"
+    with pymupdf.open() as document:
+        page = document.new_page()
+        page.insert_text((50, 60), "Control 3.9 0.67")
+        page.insert_text((50, 80), "Treated 19.72 29.7")
+        document.save(path)
+    rows = [["Control", "3.9", "0.67"], ["Treated", "19.72", "29.7"]]
+    if damaged:
+        rows = [["Control", "39\n.", "067\n."], ["Treated", "1972\n.", "297\n."]]
+    table = SimpleNamespace(bbox=(40, 40, 250, 90), extract=lambda: rows)
+    monkeypatch.setattr(
+        pymupdf.Page,
+        "find_tables",
+        lambda *args, **kwargs: SimpleNamespace(tables=[table]),
+    )
+    items = _pymupdf_layout_items(path)
+    text = "\n".join(item["text"] for item in items)
+    for number in ("3.9", "0.67", "19.72", "29.7"):
+        assert number in text
+    assert any(item["kind"] == "table" for item in items) is not damaged
 
 
 def test_pymupdf_parser_preserves_blocks_and_uses_cache(tmp_path):
@@ -107,3 +140,46 @@ def test_evidence_view_uses_parser_semantics_without_section_name_rules():
 
     assert [item.block_id for item in evidence] == ["body", "unknown"]
     assert excluded == 2
+
+
+@pytest.mark.parametrize("first, second", [("Co", "CO"), ("cm²", "cm2"), ("mM", "mm")])
+def test_duplicate_supplement_detection_preserves_scientific_case_and_notation(
+    first, second
+):
+    template = (
+        "The precursor contains {} and was added before the final annealing step."
+    )
+    blocks = [
+        EvidenceBlock(
+            block_id="main",
+            source="main",
+            page=1,
+            kind="text",
+            text=template.format(first),
+        ),
+        EvidenceBlock(
+            block_id="si",
+            source="supplement",
+            page=1,
+            kind="text",
+            text=template.format(second),
+        ),
+    ]
+    retained, skipped = _deduplicate_evidence_blocks(blocks)
+    assert retained == blocks
+    assert skipped == 0
+
+
+def test_duplicate_supplement_retains_original_source_location():
+    text = "The precursor contains Co and was added before the final annealing step."
+    blocks = [
+        EvidenceBlock(block_id="main", source="main", page=1, kind="text", text=text),
+        EvidenceBlock(
+            block_id="si", source="supplement", page=4, kind="text", text=text
+        ),
+    ]
+    retained, skipped = _deduplicate_evidence_blocks(blocks)
+    assert len(retained) == skipped == 1
+    assert retained[0].metadata["duplicate_locations"] == [
+        {"source": "supplement", "page": 4, "block_id": "si"}
+    ]

@@ -1,7 +1,18 @@
 import json
 from pathlib import Path
 
+import pytest
+
+from perla_extract.study_extraction.candidate_selection import (
+    _gate_final_candidate_against_draft,
+    _select_refinement_candidate,
+)
 from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
+from perla_extract.study_extraction.configuration import ExtractionConfig
+from perla_extract.study_extraction.extraction_prompts import (
+    _claim_ledger_prompt,
+    prompt_sha256,
+)
 from perla_extract.study_extraction.guidance import (
     COMPOSITION_BOUNDARY_POLICY,
     DEVICE_FAMILY_POLICY,
@@ -19,19 +30,8 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
-from perla_extract.study_extraction.refinement import REFINEMENT_PROMPT
 from perla_extract.study_extraction.repair import REPAIR_PROMPT
-from perla_extract.study_extraction.workflow import (
-    CLAIM_LEDGER_PROMPT,
-    EXTRACTION_PROMPT,
-    ExtractionConfig,
-    _claim_ledger_prompt,
-    _gate_final_candidate_against_draft,
-    _run_model_calls,
-    _select_refinement_candidate,
-    prompt_sha256,
-    run_extraction,
-)
+from perla_extract.study_extraction.workflow import _run_model_calls, run_extraction
 
 FIXTURE = Path(__file__).parents[1] / "test_files" / "nat_comm_7139.pdf"
 
@@ -42,8 +42,10 @@ class RecordingClient:
     def __init__(self) -> None:
         self.prompts: list[str] = []
         self.kinds: list[str] = []
+        self.requests: list[dict] = []
 
     def complete(self, **request):
+        self.requests.append(request)
         self.prompts.append(request["prompt"])
         self.kinds.append(request["kind"])
         return StudyExtraction(
@@ -57,45 +59,30 @@ class RecordingClient:
         )
 
 
-def test_every_semantic_pass_uses_the_same_device_family_boundary():
-    """Keep high-recall passes from silently reintroducing treatment-arm families."""
-
-    for prompt in (
-        EXTRACTION_PROMPT,
-        CLAIM_LEDGER_PROMPT,
-        REFINEMENT_PROMPT,
-        REPAIR_PROMPT,
-    ):
-        assert DEVICE_FAMILY_POLICY in prompt
-    assert "processing/composition variant" not in EXTRACTION_PROMPT
-    assert "processing/composition variants" not in CLAIM_LEDGER_PROMPT
-    assert "characterization-only partial structures" in REFINEMENT_PROMPT
-
-
-def test_every_semantic_pass_uses_shared_record_and_evidence_boundaries():
-    """Keep record typing and source interpretation consistent across model calls."""
-
-    for prompt in (
-        EXTRACTION_PROMPT,
-        CLAIM_LEDGER_PROMPT,
-        REFINEMENT_PROMPT,
-        REPAIR_PROMPT,
-    ):
-        assert RECORD_BOUNDARY_POLICY in prompt
-        assert COMPOSITION_BOUNDARY_POLICY in prompt
-        assert EVIDENCE_INTERPRETATION_POLICY in prompt
-
-
-def test_value_producing_passes_share_the_atomic_shared_quantity_rule():
-    """Keep equal list-scoped values distinct without inferring missing quantities."""
-
-    for prompt in EXTRACTION_PROMPT, REFINEMENT_PROMPT, REPAIR_PROMPT:
-        assert SHARED_QUANTITY_POLICY in prompt
-    assert (
-        "Equal values for different materials are not duplicates" in EXTRACTION_PROMPT
+def test_model_requests_include_shared_scientific_policies_once(tmp_path):
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text="Control device reached 20%.",
     )
-    assert "kind=reported_quantity" in CLAIM_LEDGER_PROMPT
-    assert 'raw_value="1.4 M"' in CLAIM_LEDGER_PROMPT
+    client = RecordingClient()
+    _run_model_calls(
+        ExtractionConfig(pdf=FIXTURE, output_dir=tmp_path),
+        client,
+        [block],
+        ClaimLedger(objects=[], claims=[]),
+    )
+    for prompt in [*client.prompts, _claim_ledger_prompt([block]), REPAIR_PROMPT]:
+        for policy in (
+            DEVICE_FAMILY_POLICY,
+            RECORD_BOUNDARY_POLICY,
+            COMPOSITION_BOUNDARY_POLICY,
+            EVIDENCE_INTERPRETATION_POLICY,
+            SHARED_QUANTITY_POLICY,
+        ):
+            assert prompt.count(policy) == 1
 
 
 def test_recall_pass_repeats_source_without_treating_prior_model_as_evidence():
@@ -255,7 +242,7 @@ def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
         kind="text",
         text="Device A used a 40 ms delay.",
     )
-    citation = EvidenceCitation(block_id="result", quote="Device A")
+    citation = EvidenceCitation(block_id="result", quote="Device A used a 40 ms delay.")
 
     def candidate(values: list[tuple[str, float]]) -> StudyExtraction:
         return StudyExtraction(
@@ -300,7 +287,17 @@ def test_refinement_is_rejected_when_the_grounded_draft_strictly_dominates():
     assert audit["refinement_quality"]["reported_values"] == 2
 
 
-def test_refinement_may_remove_grounded_values_to_correct_entity_precision():
+@pytest.mark.parametrize(
+    "original,revised,accepted,lost",
+    [
+        (["40 ms", "80 ms"], ["40 ms"], False, 1),
+        (["40 ms"], ["80 ms"], False, 1),
+        (["40 ms", "40 ms"], ["40 ms"], True, 0),
+    ],
+)
+def test_refinement_preserves_distinct_source_values_but_allows_exact_deduplication(
+    original, revised, accepted, lost
+):
     block = EvidenceBlock(
         block_id="result",
         source="main",
@@ -341,18 +338,22 @@ def test_refinement_may_remove_grounded_values_to_correct_entity_precision():
             unresolved_notes=[],
         )
 
-    draft = candidate(["40 ms", "80 ms"])
-    refinement = candidate(["40 ms"])
+    draft = candidate(original)
+    refinement = candidate(revised)
 
     selected, selection = _select_refinement_candidate(draft, refinement, [block], None)
     final, audit = _gate_final_candidate_against_draft(
         draft, selected, [block], None, selection
     )
 
-    assert final == refinement
-    assert audit["selected"] == "refinement"
-    assert audit["draft_quality"]["source_verified_values"] == 2
-    assert audit["final_candidate_quality"]["source_verified_values"] == 1
+    assert final == (refinement if accepted else draft)
+    assert audit["selected"] == ("refinement" if accepted else "draft")
+    assert selection["refinement_quality"]["lost_verified_values"] == lost
+    # The final gate also protects callers that provisionally selected a bad edit.
+    guarded, _ = _gate_final_candidate_against_draft(
+        draft, refinement, [block], None, {"selected": "refinement"}
+    )
+    assert guarded == final
 
 
 def test_final_candidate_cannot_trade_validation_for_more_values():
@@ -469,3 +470,332 @@ def test_final_candidate_is_kept_when_all_grounded_signals_are_non_worsening():
     assert selected == richer
     assert audit["selected"] == "refinement"
     assert audit["final_candidate_quality"]["source_verified_values"] == 2
+
+
+@pytest.mark.parametrize("use_claim_ledger", [False, True])
+def test_direct_and_empty_reading_send_full_source_at_provider_boundary(
+    tmp_path, monkeypatch, use_claim_ledger
+):
+    from perla_extract.study_extraction import workflow
+    from perla_extract.study_extraction.client import ModelClient
+    from perla_extract.study_extraction.run_artifacts import verify_run_manifest
+    from perla_extract.study_extraction.spans import build_evidence_spans
+
+    blocks = [
+        EvidenceBlock(
+            block_id="title",
+            source="main",
+            page=1,
+            kind="text",
+            text="Photovoltaic study title.",
+        ),
+        EvidenceBlock(
+            block_id="result",
+            source="main",
+            page=2,
+            kind="text",
+            text="Control efficiency was 20.1%.",
+        ),
+        EvidenceBlock(
+            block_id="recipe",
+            source="supplement",
+            page=9,
+            kind="text",
+            text="Annealing lasted 45 minutes.",
+        ),
+    ]
+    monkeypatch.setattr(
+        workflow, "parse_documents", lambda *args, **kwargs: (blocks, [])
+    )
+    outgoing = []
+
+    def live(self, body, failure):
+        outgoing.append(body)
+        properties = body["response_format"]["json_schema"]["schema"]["properties"]
+        if "claims" in properties:
+            value = {"objects": [], "claims": []}
+        else:
+            value = StudyExtraction(
+                paper=PaperMetadata(title=None, doi=None),
+                device_families=[],
+                individual_devices=[],
+                performance_observations=[],
+                population_statistics=[],
+                stability_tests=[],
+                unresolved_notes=[],
+            ).model_dump(mode="json")
+        return value, {
+            "prompt_tokens": 10,
+            "completion_tokens": 10,
+            "total_tokens": 20,
+            "cost": 0.01,
+        }
+
+    monkeypatch.setattr(ModelClient, "_live", live)
+    output = tmp_path / "output"
+    report = run_extraction(
+        ExtractionConfig(
+            pdf=FIXTURE,
+            output_dir=output,
+            use_claim_ledger=use_claim_ledger,
+            use_targeted_repair=False,
+            use_enrichment=False,
+            model_cache_dir=tmp_path / "cache",
+            heartbeat_seconds=0,
+        )
+    )
+    study_calls = [
+        body
+        for body in outgoing
+        if "device_families"
+        in body["response_format"]["json_schema"]["schema"]["properties"]
+    ]
+    assert len(study_calls) == 2
+    span_ids = {span.span_id for span in build_evidence_spans(blocks)}
+    for body in study_calls:
+        for block in blocks:
+            assert block.text in body["messages"][1]["content"]
+        citation_schema = body["response_format"]["json_schema"]["schema"]["$defs"][
+            "EvidenceCitation"
+        ]
+        assert citation_schema["type"] == "integer"
+        assert "enum" not in citation_schema
+        assert citation_schema["minimum"] == min(span_ids)
+        assert citation_schema["maximum"] == max(span_ids)
+        payload, _ = json.JSONDecoder().raw_decode(
+            body["messages"][1]["content"].split("COMPLETE SOURCE EVIDENCE:\n", 1)[1]
+        )
+        assert {int(key) for block in payload for key in block["spans"]} == span_ids
+    manifest, _ = verify_run_manifest(output)
+    assert manifest.run_id == report["run_id"]
+    events = [
+        json.loads(line) for line in (output / "events.jsonl").read_text().splitlines()
+    ]
+    assert all(event["run_id"] == manifest.run_id for event in events)
+    assert [
+        event["strategy"] for event in events if event["event"] == "evidence.selected"
+    ] == ["complete_source"]
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_nonempty_run_directory_is_untouched_even_for_dry_run(
+    tmp_path, monkeypatch, dry_run
+):
+    from perla_extract.study_extraction import workflow
+
+    output = tmp_path / "output"
+    output.mkdir()
+    (output / "extraction.json").write_text('{"old": "prediction"}')
+    (output / "claim_ledger.json").write_text('{"old": "evidence"}')
+    before = {path.name: path.read_bytes() for path in output.iterdir()}
+    monkeypatch.setattr(
+        workflow,
+        "parse_documents",
+        lambda *a, **kw: pytest.fail("must reject before parsing"),
+    )
+    with pytest.raises(FileExistsError, match="new directory"):
+        run_extraction(
+            ExtractionConfig(pdf=FIXTURE, output_dir=output, dry_run=dry_run)
+        )
+    assert {path.name: path.read_bytes() for path in output.iterdir()} == before
+
+
+def test_claim_windows_fit_the_serialized_provider_payload(tmp_path):
+    from perla_extract.study_extraction.deployment import (
+        estimate_request_input,
+        strict_response_schema,
+    )
+    from perla_extract.study_extraction.source_reading import (
+        _collect_claim_ledger,
+        _plan_claim_collection,
+    )
+
+    blocks = [
+        EvidenceBlock(
+            block_id=f"b-{i}",
+            source="supplement",
+            page=i // 10 + 1,
+            kind="text",
+            text=f"Source record {i}: " + "long source passage " * 5,
+        )
+        for i in range(200)
+    ]
+    config = ExtractionConfig(
+        pdf=FIXTURE,
+        output_dir=tmp_path,
+        claim_mode="windowed",
+        claim_window_input_tokens=6_000,
+    )
+    _, _, plan = _plan_claim_collection(config, blocks)
+    assert len(plan) > 1
+    assert [block.block_id for _, primary, _ in plan for block in primary] == [
+        block.block_id for block in blocks
+    ]
+    requests = []
+
+    class Reader:
+        def complete(self, **request):
+            requests.append(request)
+            return ClaimLedger(objects=[], claims=[])
+
+    _collect_claim_ledger(config, Reader(), blocks)
+    for request in requests:
+        size = estimate_request_input(
+            request["system"],
+            request["prompt"],
+            strict_response_schema(
+                request["response_model"], request["request_schema"]
+            ),
+        )
+        assert size["estimated_input_tokens"] <= config.claim_window_input_tokens
+
+
+def test_indivisible_source_block_cannot_silently_exceed_reading_budget(tmp_path):
+    from perla_extract.study_extraction.source_reading import _plan_claim_collection
+
+    block = EvidenceBlock(
+        block_id="oversized-table",
+        source="supplement",
+        page=1,
+        kind="table",
+        text="A measured property\n" * 5_000,
+    )
+    config = ExtractionConfig(
+        pdf=FIXTURE,
+        output_dir=tmp_path,
+        claim_mode="windowed",
+        claim_window_input_tokens=6_000,
+    )
+    with pytest.raises(
+        ValueError, match="oversized-table.*exceeding the reading limit"
+    ):
+        _plan_claim_collection(config, [block])
+
+
+def test_unexpected_downstream_failure_preserves_known_charges(tmp_path, monkeypatch):
+    from perla_extract.study_extraction import workflow
+    from perla_extract.study_extraction.client import ModelClient
+    from perla_extract.study_extraction.run_artifacts import (
+        load_run_efficiency,
+        verify_run_manifest,
+    )
+
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text="Control device was measured.",
+    )
+    monkeypatch.setattr(workflow, "parse_documents", lambda *a, **kw: ([block], []))
+    value = StudyExtraction(
+        paper=PaperMetadata(title=None, doi=None),
+        device_families=[],
+        individual_devices=[],
+        performance_observations=[],
+        population_statistics=[],
+        stability_tests=[],
+        unresolved_notes=[],
+    ).model_dump(mode="json")
+    monkeypatch.setattr(
+        ModelClient,
+        "_live",
+        lambda *a, **kw: (value, {"total_tokens": 40, "cost": 0.25}),
+    )
+
+    def fail(*args):
+        raise RuntimeError("finalization failed")
+
+    monkeypatch.setattr(workflow, "remove_unsupported_optional_claims", fail)
+    output = tmp_path / "output"
+    with pytest.raises(RuntimeError, match="finalization failed"):
+        run_extraction(
+            ExtractionConfig(
+                pdf=FIXTURE,
+                output_dir=output,
+                use_claim_ledger=False,
+                use_refinement=False,
+                use_targeted_repair=False,
+                use_enrichment=False,
+                model_cache_dir=tmp_path / "cache",
+                heartbeat_seconds=0,
+            )
+        )
+    report = json.loads((output / "report.json").read_text())
+    assert report["status"] == "failed"
+    assert report["usage"]["cost"] == 0.25
+    assert report["usage"]["total_tokens"] == 40
+    verify_run_manifest(output)
+    efficiency = load_run_efficiency(output / "report.json")
+    assert efficiency.cost_usd == 0.25
+    assert efficiency.provider_requests == 1
+    assert efficiency.elapsed_seconds >= 0
+
+
+def test_dry_run_cli_fails_known_direct_context_overflow_without_a_provider_call(
+    tmp_path, monkeypatch
+):
+    from click.testing import CliRunner
+
+    from perla_extract.study_extraction import workflow
+    from perla_extract.study_extraction.cli import main
+
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device was measured.",
+    )
+    monkeypatch.setattr(workflow, "parse_documents", lambda *a, **kw: ([block], []))
+    monkeypatch.setattr(
+        workflow,
+        "ModelClient",
+        lambda *a, **kw: pytest.fail("dry run must not construct a model client"),
+    )
+    settings = tmp_path / "settings.toml"
+    settings.write_text(
+        "[stages.assemble]\nmax_input_tokens = 1\ncontext_tokens = 2\nmax_output_tokens = 1\n"
+    )
+    output = tmp_path / "direct"
+    result = CliRunner().invoke(
+        main,
+        [
+            "--pdf",
+            str(FIXTURE),
+            "--output-dir",
+            str(output),
+            "--config",
+            str(settings),
+            "--no-claims",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 1
+    report = json.loads((output / "report.json").read_text())
+    assert report["status"] == "failed"
+    assert report["request_feasibility"]["assembly"] == "infeasible"
+    assert report["errors"]
+    assert report["budget"]["provider_requests"] == 0
+    assert (output / "run_manifest.json").exists()
+    assert (output / "document.json").exists()
+
+
+def test_reader_dry_run_does_not_claim_unknown_assembly_input_fits(
+    tmp_path, monkeypatch
+):
+    from perla_extract.study_extraction import workflow
+
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device was measured.",
+    )
+    monkeypatch.setattr(workflow, "parse_documents", lambda *a, **kw: ([block], []))
+    report = run_extraction(
+        ExtractionConfig(pdf=FIXTURE, output_dir=tmp_path / "output", dry_run=True)
+    )
+    assert report["status"] == "dry_run"
+    assert report["request_feasibility"]["assembly"] == "conditional_on_reader_output"

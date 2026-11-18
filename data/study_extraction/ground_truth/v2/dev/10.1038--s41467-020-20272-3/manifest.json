@@ -1,0 +1,55 @@
+{
+  "artifact_format_version": 4,
+  "study_schema_version": 6,
+  "study_schema_sha256": "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db011413",
+  "paper_id": "10.1038--s41467-020-20272-3",
+  "split": "dev",
+  "revision": 38,
+  "evidence_version": 1,
+  "evidence_document_sha256": "016647f9bcadd203d33da564ecbd7013df0ac2a05ed97b34ae5165be59eb5e53",
+  "frozen_at": "2026-10-21T14:49:28.622040+00:00",
+  "source_manifest": {
+    "source_sha256": [
+      "6dd26d6887197a4eec5d675596bc2d8fc7193e5ad8d2c90bf4ec757ea457deeb",
+      "957b6b4657d9238f4370ccacc2c4558df9685dcba6efad1c42999b8d24e91bd2"
+    ],
+    "private_source_manifest_sha256": "6480aa969496a41e3660b2b57f68d94eacc8cc5a1d9830508755a651e69da1a0"
+  },
+  "review": {
+    "event_count": 38,
+    "completed_stage_names": [
+      "adjudication"
+    ],
+    "uncertain_record_keys": []
+  },
+  "validation": {
+    "status": "verified",
+    "counts": {
+      "device_families": 8,
+      "individual_devices": 5,
+      "performance_observations": 8,
+      "population_statistics": 9,
+      "stability_tests": 6,
+      "reported_values": 287,
+      "source_verified_values": 287,
+      "source_assembled_values": 0,
+      "issues_by_reason": {}
+    },
+    "issue_count": 0
+  },
+  "files": {
+    "ground_truth.json": "b1056b052bfdb6d274843446a45538967be77c49faa751d2d6874246dba51f3d"
+  },
+  "publication": {
+    "release": "public-v2-2026-10-23",
+    "private_export_manifest_sha256": "53af30ebbc438d63b4941c0e4e4d04cb95ef49fd8dbed5afbaf5dbeb797befcc",
+    "omitted": [
+      "historical_seed",
+      "review_events",
+      "reviewer_identities",
+      "private_source_metadata",
+      "pdfs",
+      "evidence_document"
+    ]
+  }
+}

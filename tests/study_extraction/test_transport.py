@@ -55,13 +55,14 @@ def study() -> StudyExtraction:
     )
 
 
-def test_schema_replaces_citations_with_known_span_ids():
+def test_schema_bounds_citations_without_document_sized_enum():
     spans = build_evidence_spans([block()])
     schema = span_citation_schema(StudyExtraction, spans)
 
     citation = schema["$defs"]["EvidenceCitation"]
-    assert citation["type"] == "string"
-    assert citation["enum"] == sorted(span.span_id for span in spans)
+    assert citation["type"] == "integer"
+    assert "enum" not in citation
+    assert citation["minimum"] == citation["maximum"] == 1
     assert (
         "separate ReportedValue objects"
         in schema["$defs"]["ReportedValue"]["properties"]["raw_value"]["description"]
@@ -114,10 +115,28 @@ def test_span_expansion_handles_singular_experimental_object_evidence():
 def test_span_response_rejects_an_unknown_reference():
     spans = build_evidence_spans([block()])
     compact = study().model_dump(mode="json")
-    compact["device_families"][0]["evidence"] = ["missing"]
+    compact["device_families"][0]["evidence"] = [2]
 
     with pytest.raises(ValueError, match="unknown evidence span"):
         expand_span_citations(compact, spans)
+
+
+def test_long_catalog_does_not_increase_schema_size_or_weaken_membership():
+    spans = build_evidence_spans([block()])
+    many = [spans[0].model_copy(update={"span_id": i}) for i in range(1, 1201)]
+    large = span_citation_schema(StudyExtraction, many)
+    assert large["$defs"]["EvidenceCitation"] == {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1200,
+    }
+    assert "enum" not in large["$defs"]["EvidenceCitation"]
+    with pytest.raises(ValueError, match="unknown evidence span"):
+        expand_span_citations({"evidence": [1201]}, many)
+    assert (
+        expand_span_citations({"evidence": [1200]}, many)["evidence"][0]["quote"]
+        == spans[0].text
+    )
 
 
 def test_compaction_rejects_a_quote_that_is_not_a_generated_span():
@@ -127,3 +146,20 @@ def test_compaction_rejects_a_quote_that_is_not_a_generated_span():
 
     with pytest.raises(ValueError, match="does not resolve"):
         compact_to_span_citations(payload, spans)
+
+
+@pytest.mark.parametrize("reference", [True, 1.0, "1"])
+def test_only_integer_citation_numbers_are_accepted(reference):
+    with pytest.raises(ValueError, match="integer span identifiers"):
+        expand_span_citations(
+            {"evidence": [reference]}, build_evidence_spans([block()])
+        )
+
+
+def test_selected_catalog_range_does_not_admit_an_invisible_passage():
+    span = build_evidence_spans([block()])[0]
+    selected = [span, span.model_copy(update={"span_id": 3})]
+    schema = span_citation_schema(StudyExtraction, selected)
+    assert schema["$defs"]["EvidenceCitation"]["maximum"] == 3
+    with pytest.raises(ValueError, match="unknown evidence span"):
+        expand_span_citations({"evidence": [2]}, selected)

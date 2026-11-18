@@ -1,4 +1,4 @@
-"""Build an administrator download of reviewer-authored feedback.
+"""Build an authenticated download of reviewer-authored feedback.
 
 The review state already keeps an immutable event stream.  This module packages that
 stream together with its derived current state, rather than inventing another mutable
@@ -9,6 +9,7 @@ analysis convenient for people who do not want to write code.
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import json
 import zipfile
@@ -54,9 +55,15 @@ def _zip_member(archive: zipfile.ZipFile, name: str, body: bytes) -> None:
 def _paper_feedback(
     store: StudyReviewStore, split: str, paper_id: str
 ) -> dict[str, Any]:
-    """Keep human events and the current state derived from them side by side."""
+    """Export one revision with its own evidence, even if another edit arrives.
+
+    Events alone cannot recover unchanged fields or a replacement model seed.
+    Read the head once and bind its study and evidence to the same revision;
+    do not re-read the current head through ``store.load_document``.
+    """
 
     revision = store.storage.load_revision(split, paper_id)
+    document = store.storage.load_evidence(split, paper_id, revision.evidence_version)
     events = [event for event in revision.events if event["kind"] != "seed_imported"]
     summary = store.summary(revision.ground_truth, revision.events)
     undone_ids = {
@@ -68,6 +75,15 @@ def _paper_feedback(
         "split": split,
         "paper_id": paper_id,
         "current_revision": revision.revision,
+        "review_snapshot": {
+            "study": revision.ground_truth,
+            "document": document,
+            "evidence_version": revision.evidence_version,
+            "study_sha256": hashlib.sha256(
+                _json_bytes(revision.ground_truth)
+            ).hexdigest(),
+            "document_sha256": hashlib.sha256(_json_bytes(document)).hexdigest(),
+        },
         "reviewer_ids": sorted({str(event["reviewer_id"]) for event in events}),
         "current_review_state": {
             "completed_stages": summary["completed_stages"],
@@ -304,7 +320,7 @@ def build_feedback_archive(
     figure_panel_rows = _figure_panel_rows(papers)
     comparison_rows = _comparison_rows(comparison_batches)
     snapshot = {
-        "format_version": 1,
+        "format_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "ground_truth_reviews": papers,
         "extractor_comparisons": comparison_batches,
@@ -327,6 +343,17 @@ def build_feedback_archive(
 
 feedback.json is the lossless export. It contains every reviewer-authored event and
 the current review state derived from those immutable events.
+
+In format 2, each paper also has review_snapshot: the complete saved study, its
+evidence document, and the evidence version used by that study. Start from this
+study; do not replay the events onto it. The snapshot is not an adjudicated reference.
+SHA-256 hashes cover JSON encoded as UTF-8 with ensure_ascii=False, sort_keys=True,
+indent=2, and one trailing newline. Null evidence is preserved as null, not replaced
+with another version. Each paper is consistent internally; papers may be read at
+different times while reviewers keep working. Format-1 exports lack these snapshots.
+
+This download now includes parsed source text as well as reviewer information.
+Keep it in access-controlled storage; do not commit it to a public repository.
 
 review_events.csv is one row per saved ground-truth review action. is_undone marks an
 edit that a later undo reversed. Reset events remain in history; feedback.json shows

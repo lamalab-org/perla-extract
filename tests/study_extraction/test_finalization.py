@@ -13,9 +13,9 @@ from perla_extract.study_extraction.models import (
 from perla_extract.study_extraction.validation import validate_study
 
 
-def _study_with_unsupported_optional_claims() -> (
-    tuple[StudyExtraction, list[EvidenceBlock]]
-):
+def _study_with_unsupported_optional_claims() -> tuple[
+    StudyExtraction, list[EvidenceBlock]
+]:
     block = EvidenceBlock(
         block_id="source",
         source="main",

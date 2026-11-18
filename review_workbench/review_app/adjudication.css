@@ -1,0 +1,35 @@
+.finalization-dialog { width: min(1160px, 96vw); max-width: 96vw; height: 90dvh; max-height: 96dvh; padding: 0; border: 1px solid #dce5e1; border-radius: 18px; color: #202d28; background: #fafcfb; }
+.finalization-dialog::backdrop { background: #13282070; backdrop-filter: blur(3px); }
+.finalization-shell { display: grid; grid-template-rows: auto auto 1fr; height: 100%; min-height: 0; }
+.finalization-header { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 20px 24px; border-bottom: 1px solid #dce5e1; background: white; }
+.finalization-header h2 { margin: 0; font-size: 22px; }
+.finalization-header p { margin: 5px 0 0; color: #63736b; font-size: 14px; }
+.finalization-status { margin: 0; padding: 8px 24px; min-height: 20px; font-size: 14px; }
+.finalization-status.error { color: #a5261f; background: #fff3f1; }
+.finalization-layout { display: grid; grid-template-columns: 240px minmax(0,1fr); min-height: 0; }
+.finalization-papers { overflow: auto; padding: 16px 12px; border-right: 1px solid #dce5e1; }
+.finalization-papers button { display: block; text-align: left; width: 100%; margin-bottom: 6px; overflow-wrap: anywhere; }
+.finalization-papers button[aria-current=true] { border-color: #176b53; background: #e6f2ed; color: #134a3b; }
+.finalization-papers input { max-width: 100%; font-size: 12px; }
+.finalization-content { overflow: auto; padding: 24px; min-width: 0; }
+.finalization-content h3 { font-size: 20px; line-height: 1.35; margin: 0 0 8px; }
+.finalization-summary { color: #5d6f65; margin: 0 0 24px; font-size: 14px; }
+.finalization-card { background: white; border: 1px solid #dce5e1; border-radius: 12px; padding: 22px; margin-top: 16px; }
+.finalization-card h4 { font-size: 19px; margin: 10px 0; }
+.finalization-reason { white-space: pre-wrap; line-height: 1.5; }
+.finalization-changes { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 14px; margin: 16px 0; }
+.finalization-changes td,.finalization-changes th { padding: 9px; vertical-align: top; text-align: left; border-bottom: 1px solid #e5eae7; overflow-wrap: anywhere; white-space: pre-wrap; }
+.finalization-changes th { color: #63736b; font-size: 12px; }
+.finalization-changes td:last-child { background: #f0f8f4; }
+.finalization-card blockquote { font-size: 14px; border-left: 3px solid #b7d9ca; padding: 8px 14px; margin: 12px 0; background: #f4f8f6; }
+.finalization-card details { margin: 12px 0; }
+.finalization-card pre { overflow: auto; white-space: pre-wrap; word-break: break-word; max-height: 380px; font-size: 12px; }
+.finalization-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.finalization-actions button { min-height: 42px; }
+.finalization-check { display: flex; align-items: start; gap: 10px; margin: 18px 0; line-height: 1.5; }
+.finalization-check input { width: auto; margin-top: 5px; }
+.finalization-header button { flex-shrink: 0; }
+.finalization-content textarea { width: 100%; min-height: 65px; box-sizing: border-box; }
+.finalization-content > select { width: 100%; min-width: 0; margin: 12px 0; }
+.finalization-content [hidden] { display: none !important; }
+@media(max-width: 760px) { .finalization-layout { grid-template-columns: 1fr; grid-template-rows: 110px 1fr; } .finalization-papers { display: flex; gap: 8px; border-right: 0; border-bottom: 1px solid #dce5e1; } .finalization-papers button { flex: 0 0 170px; } .finalization-content { padding: 14px; } .finalization-card { padding: 14px; } .finalization-header { padding: 14px; } }

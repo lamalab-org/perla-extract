@@ -1,198 +1,251 @@
-<!-- generated-by: gsd-doc-writer -->
 # Extract a study
 
-PERLA separates reading the paper from constructing database records. The first
-model pass writes a neutral ledger of source claims and the experimental objects
-they describe. A later pass assembles the final study schema from that ledger and
-the cited source passages. This distinction prevents every treatment, specimen, or
-measurement condition from becoming a separate device family.
+PERLA reads a paper and its supplement, builds records for the reported study, and
+checks those records against the parsed source. The result is `extraction.json`.
+Database interpretation and export happen afterward and do not rewrite that result.
 
-```mermaid
-flowchart TD
-    A["Parse and cache the paper and SI"] --> B["Collect experimental objects and atomic source claims"]
-    B --> C{"Claim evidence fits one request?"}
-    C -->|Yes| D["Independent claim readings of the complete evidence"]
-    C -->|No| E["Independent claim readings of section-aware windows"]
-    D --> F["Ground claims against parser text"]
-    E --> F
-    F --> G["One global study-assembly call"]
-    G --> H["Optional global reconciliation"]
-    H --> I["Validate records and audit claim coverage"]
-    I --> J{"Resolvable gaps or unsupported records?"}
-    J -->|Yes| K["Targeted repair from implicated evidence"]
-    J -->|No| L["Composition and processing enrichment"]
-    K --> L
-    L --> M["Atomic NOMAD archive export"]
+The [quick start](../getting-started.md) uses one direct extraction call. The Python
+API's defaults include two source readings and a second review of the complete
+draft. Extra stages are configurable attempts to improve recovery and attribution;
+compare them against the direct baseline rather than assuming more passes help.
+
+```text
+source = parse(main_paper, supplement)
+
+if source_reading_enabled:
+    windows = fit_reading_requests(source, instructions, citation_schema)
+    readings = read_each_window(windows, passes=2)
+    notes = combine_exact_repeats(readings, retain_provenance=True)
+    notes = check_quotes_subjects_and_raw_values(notes, source)
+    evidence = select_supporting_passages(notes, source) if notes else source
+else:
+    notes, evidence = [], source
+
+study = build_one_complete_study(evidence, notes)
+if draft_review_enabled:
+    candidate = review_complete_draft(study, evidence, notes)
+    study = select_without_increasing_technical_issues(study, candidate)
+if targeted_repair_enabled and a_resolvable_issue_exists(study):
+    candidate = repair_requested_records(study, relevant_source)
+    study = select_without_increasing_technical_issues(study, candidate)
+study = remove_optional_values_that_fail_source_checks(study, source)
+save(study, validation_findings, provenance)
+
+interpretations = []
+if interpretation_enabled:
+    interpretations = interpret_composition_and_processing(study, source)
+export(study, interpretations)
 ```
 
-## Source claims and experimental objects
+## What each stage means
 
-The claim ledger is deliberately less committed than the output schema. It records
-what the authors say, what real-world object the statement concerns, and whether
-that object is a study target, supporting context, or uncertain. Object roles are
-generic experimental roles such as device design, processing arm, characterization
-specimen, population, performance measurement, and stability experiment.
+| User task | Code terminology | Input and result | When it helps; limitation |
+| --- | --- | --- | --- |
+| Prepare source | parsing, evidence blocks, spans | PDF text and tables become located passages | Keeps exact source wording available; parser errors remain possible |
+| Read source statements | claims, atomic facts, claim ledger | Source becomes notes about subjects and individual values or outcomes | Can reduce long input and expose omissions; an omitted note can hide a fact from later stages |
+| Build the study | assembly | Notes plus original passages become one complete study | Resolves specimen identity across the paper and SI; remains the main global reasoning task |
+| Review the draft | refinement, reconciliation | Same evidence plus the draft produce a complete replacement candidate | May correct identity or omissions; can also damage correct fields |
+| Correct a visible issue | targeted repair | A worklist, affected records, and implicated passages produce bounded replacements | Limits edits to identified problems; cannot discover every unseen source fact |
+| Check final source support | validation, conservative finalization | Source checks produce findings and, in narrow cases, remove optional unsupported values | Provides technical integrity, not proof of scientific accuracy |
+| Interpret for a database | enrichment | Existing reported facts become composition and processing interpretations | Useful for export; needs a separate assessment from reported-fact extraction |
 
-Claims are atomic. Their `raw_value` contains one exact value or outcome rather than a
-whole procedure. For example, a sentence assigning one concentration to three named
-solutes becomes `raw_value: "1.4 M"` with three explicitly shared targets. A sentence
-with two different concentrations becomes two claims.
-Every object and claim cites parser-produced evidence spans. Python checks that the
-chosen spans occur in the named source blocks before the ledger can guide assembly.
-Unsupported ledger entries remain visible in `claim_grounding.json` but are not
-presented to the assembler as paper facts.
+A **source statement** is one assertion with source evidence. An **atomic value** is
+one semantic quantity, such as one concentration or one efficiency, including its
+reported range or uncertainty. A **claim ledger** is the collection of these notes
+and their subjects. It is a fallible intermediate result, not ground truth.
 
-Context objects do not imply top-level records. A film made only for XRD, a processing
-variant applied to one architecture, or a population mean may inform a device record
-without creating a new device family. The model may mark uncertain scope rather than
-guessing.
+A **scored fact** is different: it is a unit of evaluation credit derived from a
+field in the final study, with its scientific context. Scored facts need not map
+one-to-one to reader notes. See the [scoring rules](evaluation.md#what-is-scored)
+for the exact denominators.
 
-## Long papers and supplements
+A **device family** describes a photovoltaic design. An **individual device** is a
+particular specimen. A **performance observation** describes a measurement, a
+**population statistic** describes an aggregate over devices, and a **stability
+test** describes an aging experiment. Equal values or a shared fabrication recipe
+do not establish that two measurements concern the same specimen.
 
-`--claim-mode auto` uses complete-document claim calls when the request fits
-`--single-call-max-input-tokens`; otherwise it uses section-aware windows. Windows are
-only a reading strategy: their grounded claims are combined before any final records
-are built. Study assembly and reconciliation always receive the combined ledger and
-run globally, so records are not independently invented in separate windows and
-merged afterward.
+## Reading and source selection
 
-Window planning follows parser blocks, pages, and section paths. It does not search
-for domain-specific field names. Oversized blocks stay intact instead of being
-truncated. `--dry-run` reports the claim mode and planned semantic calls without
-calling a model.
+Every reader sees original parser text, never an earlier reader's response. The
+second reading changes its attention instructions. Readers share the model, source,
+and scientific rules, so their errors may be correlated. Agreement is not independent
+confirmation of the paper.
 
-By default, `--claim-recall-passes 2` reads every complete document or window twice
-with independently worded instructions. The second pass receives the same bounded
-parser evidence—not the first model response—and the grounded union guides assembly.
-This costs another claim call per window, but prevents one omitted ledger entry from
-being an unrecoverable single point of failure. Use one pass only as an evaluated cost
-ablation.
+Repeated notes are coalesced only when subject descriptions, scope, values, targets,
+and exact citations agree. Distinct subjects with equal concentrations remain
+separate. Ambiguous repeated subject descriptions inside one reading are not merged.
+`claim_readings.json` retains the original reading IDs behind each retained entry;
+the number of supporting readings is not a confidence score.
 
-## Global assembly and reconciliation
+Before notes guide assembly, Python checks that cited quotations occur in their
+source blocks, referenced subjects exist, and a claimed raw value occurs inside its
+cited quotation. Scientific case and numeric boundaries matter: `Co` is not `CO`,
+and `20` is not `120`. This establishes textual support, not correct attribution.
+`claim_grounding.json` records rejected entries and reasons.
 
-The assembler receives the grounded ledger plus the passages cited by its entries and
-a one-span local neighborhood needed to interpret their grammar.
-It constructs the complete `StudyExtraction` in one response, keeping device
-families, individual devices, performance observations, populations, and stability
-tests distinct. It must leave a field unreported when no source claim supports it.
+The final reported-value checks also preserve case, charge, superscripts, and
+subscripts. A value must occur inside its cited quotation; another sentence in the
+same block cannot supply it. Reusing a unit explicitly printed in a table header is
+a separate source-supported exception. Layout whitespace and an observed PDF
+uncertainty-glyph artifact have narrow matching rules; they do not permit changing
+chemical notation or a number's sign.
 
-By default, a second global pass re-reads the same compact evidence and returns a
-complete corrected study. It may recover missed records or values and remove
-unsupported duplicates. A failed reconciliation cannot destroy the valid first
-draft, which remains in `draft_extraction.json`. Use `--no-refinement` only for a
-measured cost/quality ablation.
+For usable notes, assembly receives their supporting passages, one neighboring span
+on each side within the same block, and the main paper's opening page for metadata.
+This neighborhood is a cost-control heuristic. A distant table header, footnote, or
+cross-reference may still be needed to interpret a value. Facts omitted from both
+the notes and selected text cannot reliably be recovered during draft review.
 
-The estimate for this global request is checked against
-`--assembly-max-input-tokens`. Exceeding it produces an explicit failed run and an
-inspectable empty result instead of relying on provider-side truncation. Raising the
-limit is a conscious model-context decision recorded in `run_configuration.json`.
+With `--no-claims`, or when no usable notes remain, assembly and draft review receive
+**the complete parsed source, including SI**. Their citation schemas include the
+same complete source. This is the direct-extraction baseline.
 
-## Claim-aware audit and targeted repair
+## Context limits and model choice
 
-`claim_coverage_audit.json` compares the assembled records with the grounded ledger.
-It reports:
+`--claim-mode auto` uses a complete-source reading when its serialized request fits
+`--single-call-max-input-tokens`; otherwise it uses windows. Each window covers
+complete parser blocks. Every source block is primary evidence once per reading.
+Small main papers may also accompany SI windows as context for resolving terms.
 
-- target objects or claims with matching records and evidence;
-- possible matches that require review;
-- unmatched target claims;
-- context and uncertain objects, which are not counted as missing records;
-- top-level records that no target object supports; and
-- shared quantities whose named targets did not each receive an atomic value.
+The planner measures the complete request: instructions, system text, source
+serialization, citation IDs, and strict response schema. It budgets for the longest
+configured reading prompt. It removes optional repeated context before splitting a
+window at block boundaries. An indivisible oversized block raises a planning error;
+it is not silently truncated or sent beyond the planned limit.
 
-A numerical claim is covered only when a linked record contains the claim's raw value
-in an atomic `ReportedValue` cited to the same local evidence. Sharing a citation with
-some other value is only a possible match.
+| Setting | Default | Meaning |
+| --- | ---: | --- |
+| `--single-call-max-input-tokens` | 90,000 | Input estimate threshold for one complete-source reading |
+| `--claim-window-input-tokens` | 60,000 | Input estimate cap for each windowed reading |
+| `--assembly-max-input-tokens` | 180,000 | Shared input cap for building, reviewing, repairing, and interpreting records |
+| `stages.read.max_output_tokens` | 30,000 | Reader output allowance |
+| `stages.assemble.max_output_tokens` / `stages.refine.max_output_tokens` | 80,000 | Study-building and draft-review output allowance |
+| `stages.repair.max_output_tokens` | 30,000 | Targeted-repair output allowance |
+| `stages.enrich.max_output_tokens` | 20,000 | Interpretation output allowance |
 
-The audit is a review queue, not an accuracy score. A model can still misunderstand
-scope, so final quality must be measured against reviewed ground truth.
+These are engineering defaults, not scientifically validated thresholds. A deployment
+can set smaller input and output limits and declare its total context capacity.
+The client checks each actual request, including a validation-correction follow-up,
+against those limits. When context capacity is declared, input plus reserved output
+must fit. Smaller reader windows alone cannot solve an oversized global study request.
 
-When the audit or local validation exposes a resolvable problem, one targeted repair
-call receives only the affected records and implicated passages. It may add or replace
-complete typed records. It may remove a record only when the worklist identifies that
-exact record as unsupported. The candidate is accepted only when validation and
-semantic claim-coverage issues do not increase. The gate intentionally does not
-reward a larger value count: unsupported extra records are defects, not recall.
+Without a local tokenizer, input sizes use an explicitly labeled UTF-8/3 heuristic
+plus a framing allowance. They are not actual provider token counts or a guarantee
+about the provider's internal formatting. Use a local tokenizer and explicit
+capabilities for the selected deployment where available; inspect recorded estimates
+and provider usage. Large advertised context capacity does not establish reliable
+extraction at that length.
 
-After the model passes, deterministic finalization handles the narrow case that no
-repair can make source-grounded: an optional atomic value or material-form label that
-does not occur in its cited evidence. A claim is removed only when the remaining
-Pydantic model is valid, the total evidence-issue count falls, and no issue category
-increases. `pre_conservative_extraction.json` retains the complete candidate and
-`conservative_finalization.json` records the exact path, reason, and removed content.
-Required records, invalid links, unknown evidence blocks, and ambiguous semantic
-relationships are never discarded by this step.
+An unspecified stage model inherits the main model. Stage deployments can supply
+explicit model and context settings; the applied choices are recorded in
+`run_configuration.json`. See the [CLI reference](../reference/cli.md) for options.
 
-## Evidence and atomic values
+## Choosing a configuration
 
-PERLA divides parser blocks into stable sentence, table-row, or bounded text spans.
-The model returns supplied `span_id` values; Python inserts exact quotations and
-`block_id` values before validation. The model therefore chooses evidence without
-spending output tokens copying it or being able to alter it. The complete catalog is
-written to `evidence_spans.json`.
+Use the current default when reproducing the existing method. To establish whether
+its extra stages help a new dataset, start with complete-source extraction and
+checks (`--no-claims --no-refinement --no-targeted-repair --no-enrichment`). Then
+compare one change at a time: conditional repair, one reading, a second reading,
+and complete-draft review. Keep source files, models, output allowances, reference
+annotations, and scoring rules fixed for the comparison under study.
 
-Each `ReportedValue` represents one semantic quantity. An uncertainty or range may
-remain attached to that quantity, but different metrics in one table row must remain
-separate values. Device-specific process coordinates belong to
-`IndividualDevice.reported_properties`; stage-specific aging conditions belong to
-`StabilityCheckpoint.conditions`.
+Use a reader for documents that do not fit directly, or when experiments show a
+useful gain. Use `--claim-recall-passes 1` to measure the value of the second reading.
+Use `--no-refinement` to measure the value of the full rewrite. Targeted repair is a
+separate intervention; it can be compared with or without global review. Record
+failed and rejected attempts alongside successful ones, including their costs.
 
-All semantic passes use the same record-boundary rules. A device area is a device
-property, not a population; a group comparison is not an aggregate unless the paper
-reports a statistic over multiple devices; and an aged film prepared only for
-characterization is not a photovoltaic stability test. Processing solvents do not
-become layers, surface modifiers do not silently become part of a bulk formula, and a
-concentration or treatment label alone does not create another device family.
+Interpretation serves a different output task. Disable it for a reported-fact study,
+or retain it and evaluate its correctness separately when database export matters.
+The fact score cannot establish the correctness of an interpretation that does not
+change `extraction.json`.
 
-The extractor also separates reporting from inference. It retains atomic qualitative
-claims such as `over 80%`, but does not replace them with a more precise estimate.
-Likely scan directions, circuit conditions, and shared specimen identities remain
-unknown unless the supplied text or table states them. Such cases are review items,
-not ordinary extracted facts.
+## Checks, corrections, and their limits
 
-This workflow is text-only. It never sends rendered PDF pages or images to a model.
-Formula recovery is limited to what the selected parser preserves in text and tables;
-unreadable chemistry remains a review item rather than a vision-assisted guess.
+`claim_coverage_audit.json` compares the study with the admitted source notes. It
+lists matched, possible, and unmatched statements; records without matching notes; and shared
+quantities whose targets were not represented individually. A matching citation
+alone does not establish that the correct value was extracted. Missing notes are
+outside this audit's view, so it is a review queue, not a recall or precision score.
+An uncertain reader object remains linked to matching records for review. It does
+not count as a confirmed target and does not authorize deletion of those records.
 
-## Artifacts and failure behavior
+A targeted repair request includes only the record types and existing IDs needed by
+its worklist. New records or removals require an explicit corresponding work item.
+The model returns complete typed replacements, so dependent fields are validated
+together. Python restores omitted collections as empty and filters changes against
+the worklist. Unrequested records remain unchanged.
 
-The run directory contains the complete scientific parse in `document.json`, the
-claim ledger and its schema, grounding decisions, the assembled draft, validation
-results, claim-coverage audits, repair and finalization artifacts, and the final
-`extraction.json`.
-Raw requests and failures remain under `requests/`.
+Global review and local repair preserve distinct source-supported values and may
+not increase validation issues or reader-note coverage gaps. Removing an unlinked
+record cannot compensate for losing a target statement. The value check compares
+specimen labels, value names, raw text and cited blocks, independently of local IDs;
+exact repetitions can be removed, but an empty replacement cannot erase supported
+data just to reduce the error count. `lost_verified_values` in the candidate audit
+reports rejected source-value losses. Notes describing discarded edits stay out of
+the final extraction; the original response remains in the request artifacts.
 
-Every response must first satisfy the provider's strict JSON Schema and then the richer
-Pydantic model. A retryable transport failure is resubmitted once; output truncation is
-not retried. If JSON passes the provider schema but fails Pydantic relationship checks,
-one validation-repair request receives the rejected JSON and the compact validation
-errors. That exact follow-up is preserved as
-`requests/<call>.validation-repair.request.json`, and usage totals include both paid
-responses. No open-ended correction loop is used.
+This conservative gate may defer legitimate relabelling or deletion to human review.
+Source presence still does not establish correct units or attribution. Assess
+accepted corrections, newly introduced errors and rejected proposals against reviewed
+references. Rejected model work still costs money.
 
-Provider usage is captured before JSON decoding. A charged malformed response is
-therefore included in token and cost totals, and a monetary budget fails closed before
-another request when the provider did not return usable cost information.
+After corrections, finalization may remove an optional atomic value or material-form
+label that fails its source-support check. Removal must leave the typed study valid,
+reduce the total issue count, and increase no issue category. It does not remove
+required records or guess ambiguous relationships. The original candidate and exact
+removed paths are retained whenever this happens.
 
-Parser and ledger failures fail open where safe: the full scientific evidence remains
-available, and an empty ledger falls back to complete source evidence. A failed initial
-study assembly produces a valid empty extraction with an unresolved note. A failed optional
-reconciliation or rejected repair preserves the preceding valid result. The only
-deterministic removal is an unsupported optional atomic claim, and both the unabridged
-candidate and an exact removal audit are retained.
+The workflow is text-only. It does not digitize plots or send rendered PDF pages to a
+model. Unreadable formulas remain review items rather than guessed chemistry.
 
-After validation, compact semantic passes interpret composition and processing roles
-from existing records and their cited evidence. These enrichments write separate
-audits and do not rewrite `extraction.json`. The workflow then exports one pinned
-NOMAD archive per atomic source record. The adapter revalidates accepted enrichment
-against the original parser blocks before applying it. See
-[Interpret composition and processing](enrichment.md) and
+## Runs and failures
+
+Use a **new output directory for every attempt**, including `--dry-run`. An existing
+nonempty directory is rejected before parsing or writing. A dry run records its own
+parse, configuration, and request plan; use another directory for the live run.
+This prevents an old prediction from acquiring new source or model metadata.
+
+Dry-run estimates cover the known source and request contracts. Reader notes and
+future drafts do not exist yet, so later input sizes and conditional model calls
+cannot be known exactly. Actual calls are checked again at the provider boundary.
+For direct extraction, the complete assembly request is already known: a request
+that exceeds its declared input or context limits produces a failed dry-run report
+and a nonzero CLI exit, without contacting a model. Reader-mediated assembly is
+explicitly marked conditional on the generated notes.
+
+A failed first assembly produces a valid empty study and a failed report. A failed
+optional draft review retains the valid initial draft; rejected repairs retain their
+input. Partial reader failures remain explicit. If all notes are unusable, the
+complete-source fallback is attempted within its input budget. Unexpected downstream
+failures retain known model charges and a failure report rather than disappearing
+from evaluation.
+
+`events.jsonl` records stages, actual attempts, cache hits, source selection, and
+candidate decisions under one run ID. Optional Langfuse tracing observes this same
+execution; local events remain available if telemetry fails. `run_manifest.json`
+binds configuration, report, source, and prediction bytes so evaluation can detect
+changed or mismatched artifacts.
+
+| Artifact | What to inspect |
+| --- | --- |
+| `extraction.json` | Final reported study |
+| `document.json`, `evidence_spans.json` | Parsed source and exact citation passages |
+| `run_configuration.json`, `claim_window_plan.json` | Applied settings, source identity, and reader plan |
+| `claim_ledger.json`, `claim_readings.json`, `claim_grounding.json` | Notes, repeated-reading provenance, and rejection reasons |
+| `validation.json`, `claim_coverage_audit.json` | Technical source and coverage findings |
+| `draft_extraction.json`, `refinement_audit.json`, `refinement_selection.json` | Draft-review changes and candidate decision |
+| `targeted_repair.json` | Repair worklist and acceptance decision |
+| `conservative_finalization.json`, `pre_conservative_extraction.json` | Removed optional values and the preceding candidate |
+| `requests/`, `events.jsonl`, `report.json` | Exact requests, attempts, outcomes, usage, and cost |
+| `run_manifest.json` | Integrity binding used when scoring a run directory |
+| `enrichment.json`, `nomad/` | Separate interpretations and database export |
+
+Files depend on enabled stages and their outcomes. For interpretation and export,
+see [Interpret composition and processing](enrichment.md) and
 [Export to NOMAD](nomad-export.md).
 
-## Model choice
-
-Any LiteLLM model used here must support the requested structured response. Model
-choice affects recall, scope classification, and semantic linking; schema conformance
-alone is not evidence of extraction quality. Compare models against independently
-reviewed ground truth, especially for device identity and chemical composition.
-
-For runtime settings, see the [CLI reference](../reference/cli.md).
+Interpretation has at most three semantic calls: composition, an optional composition
+retry for unresolved components, and processing. Provider or schema-validation
+retries are additional attempts and are recorded separately.

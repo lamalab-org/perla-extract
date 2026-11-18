@@ -1,7 +1,13 @@
-"""Conservative unit conversion shared by downstream projections."""
+"""Conservative unit conversion shared by downstream projections.
+
+Pint versions supported on older Python releases can raise AssertionError for
+malformed expressions such as ``Ω/``. Catch it only at these conversion boundaries,
+like other parser errors, so callers retain the source label instead of aborting.
+"""
 
 from __future__ import annotations
 
+import math
 import re
 from functools import lru_cache
 from tokenize import TokenError
@@ -36,7 +42,9 @@ def _pint_unit(unit: str) -> str:
     """
 
     superscript = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+")
-    printable_unit = "".join(" " if ord(character) < 32 else character for character in unit)
+    printable_unit = "".join(
+        " " if ord(character) < 32 else character for character in unit
+    )
     value = (
         printable_unit.strip()
         .replace("℃", "degree_Celsius")
@@ -52,10 +60,30 @@ def _pint_unit(unit: str) -> str:
         lambda match: "**" + match.group(0).translate(superscript),
         value,
     )
+    if value.casefold() in {"percent", "percentage"}:
+        value = "%"
     value = value.replace("^", "**")
     value = re.sub(r"([+-])\s+(?=\d)", r"\1", value)
+    # Plain-text exports often lose superscripting: cm2 and mm3 are unit powers.
+    value = re.sub(r"([A-Za-z]+)(\d+)(?=\s|$|[/)*])", r"\1**\2", value)
     value = re.sub(r"(?<=[A-Za-z])([+-]\d+)(?=\s|$|[/)*])", r"**\1", value)
-    return re.sub(r"(?<=[A-Za-z])\s+([+-]?\d+)(?=\s|$|[/)*])", r"**\1", value)
+    value = re.sub(r"(?<=[A-Za-z])\s+([+-]?\d+)(?=\s|$|[/)*])", r"**\1", value)
+    # Sheet resistance uses ohms per square, not ohms per square metre. Restrict
+    # this notation rule to a complete resistance unit so area/volume resistivity
+    # and unrelated uses of "square" retain their dimensions. Property names are
+    # checked separately by the scorer.
+    sheet = re.fullmatch(
+        r"([kMmµμu]?(?:Ω|Ω|ohms?))\s*"
+        r"(?:(?:/|per)\s*(?:sq|square|□)|(?:sq|square)\s*\*\*-1)",
+        value,
+    )
+    value = sheet[1].replace("Ω", "Ω") if sheet else value
+    # Accept unit names and arithmetic only. Pint releases differ in whether they
+    # ignore comments, braces and other punctuation. Unsupported notation must
+    # remain literal, not acquire a meaning that depends on the installed parser.
+    if not value or re.fullmatch(r"[\w\s%°/()*+.^-]+", value) is None:
+        raise ValueError("Unsupported unit notation")
+    return value
 
 
 def convert_reported_value(value: ReportedValue, target_unit: str) -> float | None:
@@ -66,17 +94,91 @@ def convert_reported_value(value: ReportedValue, target_unit: str) -> float | No
     if value.value_number is None or value.unit is None:
         return None
     unit = value.unit.strip()
-    if target_unit == "percent":
-        return (
-            value.value_number
-            if _unit_key(unit) in {"percent", "percentage"} or unit == "%"
-            else None
-        )
-    try:
-        quantity = _unit_registry().Quantity(value.value_number, _pint_unit(unit))
-        return float(quantity.to(target_unit).magnitude)
-    except (PintError, TokenError, TypeError, ValueError):
+    if not unit or not target_unit.strip():
         return None
+    try:
+        source, target = _pint_unit(unit), _pint_unit(target_unit)
+        if target_unit == "percent":
+            return (
+                value.value_number
+                if _unit_key(unit) in {"percent", "percentage"} or unit == "%"
+                else None
+            )
+        quantity = _unit_registry().Quantity(value.value_number, source)
+        return float(quantity.to(target).magnitude)
+    except (PintError, TokenError, AssertionError, TypeError, ValueError):
+        return None
+
+
+def canonical_reported_quantity(value: ReportedValue) -> tuple[float, str] | None:
+    """Put explicit quantities in base units for representation-independent scoring.
+
+    Unlike export conversion this has no destination-field conventions: percentages
+    become fractions and absolute temperatures become Kelvin. The caller must first
+    check that the raw claim is a plain number, not a range or qualified value.
+    """
+
+    if value.value_number is None or value.unit is None:
+        return None
+    return canonical_quantity(value.value_number, value.unit)
+
+
+def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
+    """Convert an explicit magnitude; callers retain bounds and other qualifiers."""
+
+    from pint.errors import PintError
+
+    unit = unit.strip()
+    if not unit:
+        return None
+    try:
+        quantity = _unit_registry().Quantity(number, _pint_unit(unit)).to_base_units()
+        magnitude = float(quantity.magnitude)
+        return (magnitude, str(quantity.units)) if math.isfinite(magnitude) else None
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        OverflowError,
+    ):
+        return None
+
+
+def equivalent_unit_spelling(left: str, right: str) -> bool:
+    """Recognize alternate spellings without accepting a changed scale or offset.
+
+    Used for a number's verbatim suffix versus its separate unit field. ``h`` and
+    ``hour`` agree; ``h`` and ``s`` do not, even though they have the same dimension.
+    Testing both zero and one also distinguishes Celsius from Kelvin.
+    """
+
+    from pint.errors import PintError
+
+    if not left.strip() or not right.strip():
+        return False
+    try:
+        registry = _unit_registry()
+        source, target = _pint_unit(left), _pint_unit(right)
+        return all(
+            math.isclose(
+                float(registry.Quantity(number, source).to(target).magnitude),
+                number,
+                rel_tol=1e-12,
+                abs_tol=1e-12,
+            )
+            for number in (0, 1)
+        )
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        OverflowError,
+    ):
+        return False
 
 
 def is_concentration_unit(unit: str | None) -> bool:
@@ -86,21 +188,22 @@ def is_concentration_unit(unit: str | None) -> bool:
 
     if unit is None:
         return False
-    compact = _unit_key(unit)
-    if unit.strip() == "%" or compact in {
-        "percent",
-        "percentage",
-        "wt",
-        "wtpercent",
-        "vol",
-        "volpercent",
-    }:
-        return True
     try:
-        quantity = _unit_registry().Quantity(1, _pint_unit(unit))
+        source = _pint_unit(unit)
+        compact = _unit_key(unit)
+        if unit.strip() == "%" or compact in {
+            "percent",
+            "percentage",
+            "wt",
+            "wtpercent",
+            "vol",
+            "volpercent",
+        }:
+            return True
+        quantity = _unit_registry().Quantity(1, source)
         return any(
             quantity.is_compatible_with(target)
             for target in ("mole / liter", "gram / liter")
         )
-    except (PintError, TokenError, TypeError, ValueError):
+    except (PintError, TokenError, AssertionError, TypeError, ValueError):
         return False

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
+from types import SimpleNamespace
 
 import fitz
 import pytest
@@ -9,6 +11,7 @@ import pytest
 from review_workbench.server import (
     REVISION_CONFLICT_RESPONSE,
     ReviewApplication,
+    make_handler,
     review_app_asset,
 )
 
@@ -284,3 +287,24 @@ def test_concatenated_supplement_is_exposed_as_logical_si(
     with fitz.open(stream=app.review_pdf("10.0000--example", "supplement")) as pdf:
         assert len(pdf) == 2
         assert pdf[0].get_text().startswith("Supporting information first page")
+
+
+def test_every_browser_module_is_served_without_exposing_backend_files():
+    """A new imported module must be reachable through the production handler."""
+
+    assets = Path(__file__).resolve().parents[1] / "review_app"
+    handler = object.__new__(make_handler(SimpleNamespace(static_dir=assets)))
+    handler.headers = {}
+    served, errors = [], []
+    handler.send_file = lambda path: served.append(path)
+    handler.send_error = lambda status: errors.append(status)
+    modules = sorted(assets.glob("*.js"))
+    for path in modules:
+        handler.path = f"/{path.name}"
+        handler.do_GET()
+    assert served == modules
+    assert not errors
+    handler.path = "/../server.py"
+    handler.do_GET()
+    assert errors == [404]
+    assert served == modules

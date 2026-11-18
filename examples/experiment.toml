@@ -1,0 +1,27 @@
+# Copy to the repository root as my-experiment.toml; set the source paths.
+# Question: does one refinement call improve a direct extraction?
+output = "results/refinement"
+repeats = 1
+
+[stages.default]
+model = "openai/gpt-6.1-sol"
+reasoning_effort = "medium"
+max_output_tokens = 40000
+
+[extraction]
+parser = "pymupdf"
+use_claim_ledger = false
+use_targeted_repair = false
+use_enrichment = false
+max_model_calls = 2
+
+[control]
+use_refinement = false
+
+[treatment]
+use_refinement = true
+
+[[papers]]
+pdf = "papers/10.1002--adfm.201904856.pdf"
+supplement = "papers/10.1002--adfm.201904856-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"

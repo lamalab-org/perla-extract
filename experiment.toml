@@ -1,0 +1,186 @@
+# All 30 included development references; start with the one-paper example first.
+# Supply the original PDFs or edit their paths. Each block links paper, SI and truth.
+output = "results/refinement"
+repeats = 1
+
+[stages.default]
+model = "openai/gpt-6.1-sol"
+reasoning_effort = "medium"
+max_output_tokens = 40000
+
+[extraction]
+parser = "pymupdf"
+use_claim_ledger = false
+use_targeted_repair = false
+use_enrichment = false
+max_model_calls = 2
+
+[control]
+use_refinement = false
+
+[treatment]
+use_refinement = true
+
+[[papers]] block links one main article, its SI, and their ground truth.
+output = "results/reading-passes-dev"
+repeats = 1
+
+[stages.default]
+model = "openai/gpt-5.2"
+
+[extraction]
+parser = "pymupdf"
+max_model_calls = 14
+
+[control]
+claim_recall_passes = 1
+
+[treatment]
+claim_recall_passes = 2
+
+[[papers]]
+pdf = "papers/10.1002--adfm.201500335.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201500335"
+
+[[papers]]
+pdf = "papers/10.1002--adfm.201904856.pdf"
+supplement = "papers/10.1002--adfm.201904856-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"
+
+[[papers]]
+pdf = "papers/10.1002--adfm.202212698.pdf"
+supplement = "papers/10.1002--adfm.202212698-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.202212698"
+
+[[papers]]
+pdf = "papers/10.1002--adma.202302143.pdf"
+supplement = "papers/10.1002--adma.202302143-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adma.202302143"
+
+[[papers]]
+pdf = "papers/10.1002--adma.202305822.pdf"
+supplement = "papers/10.1002--adma.202305822-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adma.202305822"
+
+[[papers]]
+pdf = "papers/10.1002--aenm.201500477.pdf"
+supplement = "papers/10.1002--aenm.201500477-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--aenm.201500477"
+
+[[papers]]
+pdf = "papers/10.1002--solr.201900370.pdf"
+supplement = "papers/10.1002--solr.201900370-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--solr.201900370"
+
+[[papers]]
+pdf = "papers/10.1002--solr.202100879.pdf"
+supplement = "papers/10.1002--solr.202100879-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--solr.202100879"
+
+[[papers]]
+pdf = "papers/10.1002--solr.202300817.pdf"
+supplement = "papers/10.1002--solr.202300817-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1002--solr.202300817"
+
+[[papers]]
+pdf = "papers/10.1016--j.jallcom.2023.170970.pdf"
+supplement = "papers/10.1016--j.jallcom.2023.170970-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.jallcom.2023.170970"
+
+[[papers]]
+pdf = "papers/10.1016--j.jmst.2021.03.045.pdf"
+supplement = "papers/10.1016--j.jmst.2021.03.045-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.jmst.2021.03.045"
+
+[[papers]]
+pdf = "papers/10.1016--j.joule.2019.06.014.pdf"
+supplement = "papers/10.1016--j.joule.2019.06.014-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.joule.2019.06.014"
+
+[[papers]]
+pdf = "papers/10.1016--j.joule.2022.03.005.pdf"
+supplement = "papers/10.1016--j.joule.2022.03.005-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.joule.2022.03.005"
+
+[[papers]]
+pdf = "papers/10.1016--j.matlet.2016.07.004.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.matlet.2016.07.004"
+
+[[papers]]
+pdf = "papers/10.1016--j.matt.2023.09.006.pdf"
+supplement = "papers/10.1016--j.matt.2023.09.006-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.matt.2023.09.006"
+
+[[papers]]
+pdf = "papers/10.1016--j.nanoen.2016.05.023.pdf"
+supplement = "papers/10.1016--j.nanoen.2016.05.023-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.nanoen.2016.05.023"
+
+[[papers]]
+pdf = "papers/10.1016--j.nanoen.2022.107416.pdf"
+supplement = "papers/10.1016--j.nanoen.2022.107416-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1016--j.nanoen.2022.107416"
+
+[[papers]]
+pdf = "papers/10.1021--acs.chemmater.8b01521.pdf"
+supplement = "papers/10.1021--acs.chemmater.8b01521-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1021--acs.chemmater.8b01521"
+
+[[papers]]
+pdf = "papers/10.1021--acsaem.9b01928.pdf"
+supplement = "papers/10.1021--acsaem.9b01928-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1021--acsaem.9b01928"
+
+[[papers]]
+pdf = "papers/10.1038--nature12340.pdf"
+supplement = "papers/10.1038--nature12340-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1038--nature12340"
+
+[[papers]]
+pdf = "papers/10.1038--nmat4014.pdf"
+supplement = "papers/10.1038--nmat4014-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1038--nmat4014"
+
+[[papers]]
+pdf = "papers/10.1038--s41467-020-20272-3.pdf"
+supplement = "papers/10.1038--s41467-020-20272-3-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1038--s41467-020-20272-3"
+
+[[papers]]
+pdf = "papers/10.1038--s41467-021-27740-4.pdf"
+supplement = "papers/10.1038--s41467-021-27740-4-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1038--s41467-021-27740-4"
+
+[[papers]]
+pdf = "papers/10.1038--s41467-023-36141-8.pdf"
+supplement = "papers/10.1038--s41467-023-36141-8-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1038--s41467-023-36141-8"
+
+[[papers]]
+pdf = "papers/10.1038--s41560-022-01102-w.pdf"
+supplement = "papers/10.1038--s41560-022-01102-w-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1038--s41560-022-01102-w"
+
+[[papers]]
+pdf = "papers/10.1038--s41563-025-02163-4.pdf"
+supplement = "papers/10.1038--s41563-025-02163-4-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1038--s41563-025-02163-4"
+
+[[papers]]
+pdf = "papers/10.1039--c5dt02388b.pdf"
+supplement = "papers/10.1039--c5dt02388b-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1039--c5dt02388b"
+
+[[papers]]
+pdf = "papers/10.1039--c5ta00568j.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1039--c5ta00568j"
+
+[[papers]]
+pdf = "papers/10.1039--c7nr04692h.pdf"
+supplement = "papers/10.1039--c7nr04692h-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1039--c7nr04692h"
+
+[[papers]]
+pdf = "papers/10.1126--science.adf0194.pdf"
+supplement = "papers/10.1126--science.adf0194-SI.pdf"
+reference = "data/study_extraction/ground_truth/v2/dev/10.1126--science.adf0194"

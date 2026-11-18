@@ -9,16 +9,12 @@ from typing import Any
 
 import click
 
+from .configuration import DEFAULT_EXTRACTION_MODEL, default, resolve_config
 from .logging import configure_logging, logger
 from .source import available_parsers
-from .workflow import (
-    DEFAULT_CLAIM_MODEL,
-    DEFAULT_EXTRACTION_MODEL,
-    ExtractionConfig,
-    run_extraction,
-)
+from .workflow import run_extraction
 
-REASONING_LEVELS = ("omit", "none", "minimal", "low", "medium", "high")
+REASONING_LEVELS = ("omit", "none", "minimal", "low", "medium", "high", "xhigh")
 
 
 def _load_env(path: Path | None) -> None:
@@ -29,8 +25,10 @@ def _load_env(path: Path | None) -> None:
     provider keys; LiteLLM interprets the variables for the selected model prefix.
     """
 
-    if path is None or not path.exists():
+    if path is None:
         return
+    if not path.is_file():
+        raise FileNotFoundError(f"environment file does not exist: {path}")
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or "=" not in line:
@@ -41,92 +39,26 @@ def _load_env(path: Path | None) -> None:
             os.environ.setdefault(name, value.strip().strip('"').strip("'"))
 
 
-def _reasoning(value: str) -> str | None:
-    """Translate the CLI-only ``omit`` sentinel into an absent API parameter."""
-
-    return None if value == "omit" else value
-
-
 def extract_study(
-    pdf: str | Path,
-    supplement: str | Path | None = None,
-    output_dir: str | Path = "study_extraction",
-    model: str = DEFAULT_EXTRACTION_MODEL,
-    reasoning_effort: str = "omit",
-    use_claim_ledger: bool = True,
-    claim_model: str | None = DEFAULT_CLAIM_MODEL,
-    claim_max_output_tokens: int = 30_000,
-    claim_recall_passes: int = 2,
-    use_enrichment: bool = True,
-    enrichment_model: str | None = None,
-    enrichment_max_output_tokens: int = 20_000,
-    use_refinement: bool = True,
-    refinement_model: str | None = None,
-    use_targeted_repair: bool = True,
-    repair_model: str | None = None,
-    repair_max_output_tokens: int = 30_000,
-    parser: str = "docling",
-    claim_mode: str = "auto",
-    single_call_max_input_tokens: int = 90_000,
-    claim_window_input_tokens: int = 60_000,
-    assembly_max_input_tokens: int = 180_000,
-    max_output_tokens: int = 80_000,
-    max_model_calls: int | None = None,
-    max_cost_usd: float | None = None,
-    temperature: float | None = None,
-    heartbeat_seconds: float = 20,
-    timeout_seconds: float = 600,
-    document_cache_dir: str | Path = ".perla-cache/documents",
-    model_cache_dir: str | Path = ".perla-cache/models",
-    refresh_document_cache: bool = False,
-    reduced_export: bool = False,
-    dry_run: bool = False,
+    pdf: str | Path | None = None,
+    *,
+    config_file: str | Path | None = None,
     env_file: str | Path | None = None,
+    **options: Any,
 ) -> dict[str, object]:
-    """Run the artifact-producing extraction workflow from Python.
+    """Apply shared configuration and execute one paper in a fresh output directory.
 
-    This is the programmatic counterpart of ``perla-extract``: it writes the rich
-    extraction, validation, provenance, report, and compatibility artifacts to
-    ``output_dir`` and returns the final report. LiteLLM resolves credentials for the
-    provider prefix in ``model``; ``dry_run`` parses and caches documents without
-    requiring any provider credential.
+    Keyword settings override the TOML file. The same defaults and validation apply
+    to Python, CLI and cohort runs. Explicit missing environment files fail before
+    parsing; automatic discovery of .env.local is optional. The returned report
+    describes the saved artifacts, scientific checks and resource accounting.
     """
-
-    _load_env(Path(env_file) if env_file else Path(".env.local"))
-    config = ExtractionConfig(
-        pdf=Path(pdf),
-        supplement=Path(supplement) if supplement else None,
-        output_dir=Path(output_dir),
-        model=model,
-        reasoning_effort=_reasoning(reasoning_effort),
-        use_claim_ledger=use_claim_ledger,
-        claim_model=claim_model,
-        claim_max_output_tokens=claim_max_output_tokens,
-        claim_recall_passes=claim_recall_passes,
-        use_enrichment=use_enrichment,
-        enrichment_model=enrichment_model,
-        enrichment_max_output_tokens=enrichment_max_output_tokens,
-        use_refinement=use_refinement,
-        refinement_model=refinement_model,
-        use_targeted_repair=use_targeted_repair,
-        repair_model=repair_model,
-        repair_max_output_tokens=repair_max_output_tokens,
-        parser=parser,
-        claim_mode=claim_mode,
-        single_call_max_input_tokens=single_call_max_input_tokens,
-        claim_window_input_tokens=claim_window_input_tokens,
-        assembly_max_input_tokens=assembly_max_input_tokens,
-        max_output_tokens=max_output_tokens,
-        max_model_calls=max_model_calls,
-        max_cost_usd=max_cost_usd,
-        temperature=temperature,
-        heartbeat_seconds=heartbeat_seconds,
-        timeout_seconds=timeout_seconds,
-        document_cache_dir=Path(document_cache_dir),
-        model_cache_dir=Path(model_cache_dir),
-        refresh_document_cache=refresh_document_cache,
-        reduced_export=reduced_export,
-        dry_run=dry_run,
+    discovered = Path(".env.local")
+    _load_env(
+        Path(env_file) if env_file else discovered if discovered.is_file() else None
+    )
+    config = resolve_config(
+        pdf, config_file=Path(config_file) if config_file else None, **options
     )
     return run_extraction(config)
 
@@ -138,85 +70,90 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
 
 
 @click.command(context_settings={"show_default": True})
-@click.option("--pdf", type=EXISTING_FILE, required=True, help="Main paper PDF.")
+@click.option(
+    "--config",
+    "config_file",
+    type=EXISTING_FILE,
+    help="TOML settings; explicit options override the file.",
+)
+@click.option(
+    "--pdf", type=EXISTING_FILE, help="Main paper PDF; may also be set in TOML."
+)
 @click.option("--supplement", type=EXISTING_FILE, help="Supplementary PDF.")
-@click.option("--output-dir", type=OUTPUT_DIRECTORY, default="study_extraction")
+@click.option("--output-dir", type=OUTPUT_DIRECTORY, default=default("output_dir"))
 @click.option(
     "--model",
     default=DEFAULT_EXTRACTION_MODEL,
-    help="LiteLLM provider-prefixed model name.",
+    help="Select the default deployment; stage model overrides remain explicit in TOML.",
+)
+@click.option(
+    "--base-url",
+    help="Default model endpoint; specify with --model when selecting a new endpoint.",
+)
+@click.option(
+    "--api-key-env", help="Environment variable containing the default endpoint key."
 )
 @click.option("--reasoning-effort", type=click.Choice(REASONING_LEVELS), default="omit")
 @click.option(
     "--claims/--no-claims",
     "use_claim_ledger",
-    default=True,
-    help="Collect neutral source claims before assembling study records.",
+    default=default("use_claim_ledger"),
+    help="Read source statements before building the linked study.",
 )
-@click.option(
-    "--claim-model",
-    default=DEFAULT_CLAIM_MODEL,
-    help="LiteLLM model for source-claim collection.",
-)
-@click.option("--claim-max-output-tokens", type=click.IntRange(min=1), default=30_000)
 @click.option(
     "--claim-recall-passes",
     type=click.IntRange(min=1, max=3),
-    default=2,
-    help="Read each claim window again for omissions before global assembly.",
+    default=default("claim_recall_passes"),
+    help="Number of source readings per window; repeated statements are consolidated.",
 )
 @click.option(
     "--enrichment/--no-enrichment",
     "use_enrichment",
-    default=True,
+    default=default("use_enrichment"),
     help="Interpret composition sites and processing roles in separate audited calls.",
-)
-@click.option(
-    "--enrichment-model",
-    default=None,
-    help="LiteLLM model for enrichment; defaults to --model.",
-)
-@click.option(
-    "--enrichment-max-output-tokens", type=click.IntRange(min=1), default=20_000
 )
 @click.option(
     "--refinement/--no-refinement",
     "use_refinement",
-    default=True,
-    help="Re-read the evidence to correct omissions and unsupported draft records.",
-)
-@click.option(
-    "--refinement-model",
-    default=None,
-    help="LiteLLM model for the quality pass; defaults to --model.",
+    default=default("use_refinement"),
+    help="Request a complete draft revision against the selected evidence.",
 )
 @click.option(
     "--targeted-repair/--no-targeted-repair",
     "use_targeted_repair",
-    default=True,
+    default=default("use_targeted_repair"),
     help="Retry only audit-visible gaps using their parser text and table evidence.",
 )
 @click.option(
-    "--repair-model",
-    default=None,
-    help="LiteLLM model for targeted repair; defaults to refinement model or --model.",
-)
-@click.option("--repair-max-output-tokens", type=click.IntRange(min=1), default=30_000)
-@click.option("--parser", type=click.Choice(available_parsers()), default="docling")
-@click.option(
-    "--claim-mode", type=click.Choice(("auto", "single", "windowed")), default="auto"
+    "--parser", type=click.Choice(available_parsers()), default=default("parser")
 )
 @click.option(
-    "--single-call-max-input-tokens", type=click.IntRange(min=1), default=90_000
+    "--claim-mode",
+    type=click.Choice(("auto", "single", "windowed")),
+    default=default("claim_mode"),
 )
-@click.option("--claim-window-input-tokens", type=click.IntRange(min=1), default=60_000)
+@click.option(
+    "--single-call-max-input-tokens",
+    type=click.IntRange(min=1),
+    default=default("single_call_max_input_tokens"),
+)
+@click.option(
+    "--claim-window-input-tokens",
+    type=click.IntRange(min=1),
+    default=default("claim_window_input_tokens"),
+)
 @click.option(
     "--assembly-max-input-tokens",
     type=click.IntRange(min=1),
-    default=180_000,
-    help="Fail visibly instead of sending an unexpectedly oversized assembly call.",
+    default=default("assembly_max_input_tokens"),
+    help="Default input cap for assembly, revision, repair and enrichment; stage deployments may lower it.",
 )
-@click.option("--max-output-tokens", type=click.IntRange(min=1), default=80_000)
+@click.option(
+    "--max-output-tokens",
+    type=click.IntRange(min=1),
+    default=None,
+    help="Set stages.default.max_output_tokens; otherwise use the documented per-stage defaults.",
+)
 @click.option(
     "--max-model-calls",
     type=click.IntRange(min=1),
@@ -227,17 +164,25 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     "--max-cost-usd",
     type=click.FloatRange(min=0, min_open=True),
     default=None,
-    help="Stop before the next call once provider-reported spend reaches this amount.",
+    help="Stop before the next call once adapter-reported cost reaches this amount.",
 )
 @click.option("--temperature", type=float, default=None)
-@click.option("--heartbeat-seconds", type=click.FloatRange(min=0), default=20.0)
 @click.option(
-    "--timeout-seconds", type=click.FloatRange(min=0, min_open=True), default=600.0
+    "--heartbeat-seconds",
+    type=click.FloatRange(min=0),
+    default=default("heartbeat_seconds"),
 )
 @click.option(
-    "--document-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/documents"
+    "--timeout-seconds",
+    type=click.FloatRange(min=0, min_open=True),
+    default=default("timeout_seconds"),
 )
-@click.option("--model-cache-dir", type=OUTPUT_DIRECTORY, default=".perla-cache/models")
+@click.option(
+    "--document-cache-dir", type=OUTPUT_DIRECTORY, default=default("document_cache_dir")
+)
+@click.option(
+    "--model-cache-dir", type=OUTPUT_DIRECTORY, default=default("model_cache_dir")
+)
 @click.option("--refresh-document-cache", is_flag=True)
 @click.option(
     "--reduced-export",
@@ -251,15 +196,38 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     type=click.Choice(("DEBUG", "INFO", "WARNING", "ERROR"), case_sensitive=False),
     default="INFO",
 )
+@click.option(
+    "--max-total-tokens",
+    type=click.IntRange(min=1),
+    help="Provider token budget, also usable for self-hosted models.",
+)
+@click.option(
+    "--max-elapsed-seconds",
+    type=click.FloatRange(min=0, min_open=True),
+    help="Stop starting requests after this elapsed-time budget.",
+)
+@click.option(
+    "--langfuse/--no-langfuse",
+    default=False,
+    help="Export run/stage/attempt traces using environment credentials.",
+)
 @click.option("--json-logs", is_flag=True, help="Write structured JSON logs to stderr.")
-def main(log_level: str, json_logs: bool, **options: Any) -> None:
+@click.pass_context
+def main(ctx: click.Context, log_level: str, json_logs: bool, **options: Any) -> None:
     """Extract devices, performance, processing, and stability from one study."""
 
     configure_logging(level=log_level, json_output=json_logs)
     logger.info("Starting study extraction")
     try:
-        report = extract_study(**options)
-    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        explicit = {
+            key: value
+            for key, value in options.items()
+            if ctx.get_parameter_source(key)
+            not in {click.core.ParameterSource.DEFAULT, None}
+        }
+        # Keep Click defaults out of the merge: only user-supplied values override TOML.
+        report = extract_study(**explicit)
+    except (OSError, RuntimeError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
     logger.info("Study extraction finished with status={}", report["status"])
     click.echo(json.dumps(report, indent=2, ensure_ascii=False))

@@ -1,6 +1,5 @@
 """Tests for command-line option translation."""
 
-import inspect
 import json
 import os
 from pathlib import Path
@@ -29,7 +28,7 @@ def test_omit_reasoning_leaves_parameter_out(monkeypatch, tmp_path: Path) -> Non
     )
 
     assert result == {"status": "complete"}
-    assert captured["config"].reasoning_effort is None
+    assert captured["config"].stage_policy("read").reasoning_effort in (None, "omit")
 
 
 def test_env_file_loads_any_provider_key_without_overwriting_process_env(
@@ -85,59 +84,59 @@ def test_click_help_exposes_frontier_default() -> None:
     assert "--json-logs" in result.stdout
 
 
-def test_public_entry_points_share_scientific_defaults() -> None:
-    """Catch drift without adding another configuration abstraction."""
+def test_python_and_cli_resolve_the_same_scientific_defaults(monkeypatch, tmp_path):
+    captured = []
+    monkeypatch.setattr(
+        cli,
+        "run_extraction",
+        lambda config: captured.append(config) or {"status": "complete"},
+    )
+    pdf = tmp_path / "paper.pdf"
+    pdf.touch()
+    cli.extract_study(pdf)
+    result = CliRunner().invoke(cli.main, ["--pdf", str(pdf)])
+    assert result.exit_code == 0, result.output
+    assert captured[0].scientific_settings() == captured[1].scientific_settings()
+    assert (
+        captured[0].scientific_settings()
+        == ExtractionConfig(pdf=pdf).scientific_settings()
+    )
 
-    names = {
-        "model",
-        "reasoning_effort",
-        "use_claim_ledger",
-        "claim_model",
-        "claim_max_output_tokens",
-        "claim_recall_passes",
-        "use_enrichment",
-        "enrichment_model",
-        "enrichment_max_output_tokens",
-        "use_refinement",
-        "refinement_model",
-        "parser",
-        "claim_mode",
-        "single_call_max_input_tokens",
-        "claim_window_input_tokens",
-        "assembly_max_input_tokens",
-        "max_output_tokens",
-        "temperature",
-        "heartbeat_seconds",
-        "timeout_seconds",
-        "document_cache_dir",
-        "model_cache_dir",
-    }
-    python_defaults = {
-        name: parameter.default
-        for name, parameter in inspect.signature(cli.extract_study).parameters.items()
-        if name in names
-    }
-    config_defaults = {
-        name: field.default
-        for name, field in ExtractionConfig.__dataclass_fields__.items()
-        if name in names
-    }
-    click_defaults = {
-        parameter.name: parameter.default
-        for parameter in cli.main.params
-        if parameter.name in names
-    }
 
-    def comparable(name, value):
-        if name == "reasoning_effort" and value == "omit":
-            return None
-        return Path(value).parts if name.endswith("_dir") else value
+def test_explicit_cli_settings_override_toml_without_resetting_other_options(
+    monkeypatch, tmp_path
+):
+    captured = []
+    monkeypatch.setattr(
+        cli,
+        "run_extraction",
+        lambda config: captured.append(config) or {"status": "complete"},
+    )
+    (tmp_path / "paper.pdf").touch()
+    config = tmp_path / "method.toml"
+    config.write_text("""[extraction]
+pdf = "paper.pdf"
+claim_recall_passes = 1
+use_refinement = false
+[stages.default]
+model = "openai/local-model"
+[stages.read]
+model = "openai/local-reader"
+base_url = "http://localhost:8000/v1"
+""")
+    result = CliRunner().invoke(
+        cli.main, ["--config", str(config), "--claim-recall-passes", "3"]
+    )
+    assert result.exit_code == 0, result.output
+    resolved = captured[0]
+    assert resolved.pdf == tmp_path / "paper.pdf"
+    assert resolved.claim_recall_passes == 3
+    assert not resolved.use_refinement
+    assert resolved.effective_model("read") == "openai/local-reader"
+    assert resolved.effective_model("assemble") == "openai/local-model"
 
-    assert {key: comparable(key, value) for key, value in python_defaults.items()} == {
-        key: comparable(key, value) for key, value in config_defaults.items()
-    }
-    assert {key: comparable(key, value) for key, value in click_defaults.items()} == {
-        key: comparable(key, value) for key, value in config_defaults.items()
-    }
-    assert config_defaults["parser"] == "docling"
-    assert config_defaults["reasoning_effort"] is None
+
+def test_explicit_missing_env_file_is_an_error(tmp_path):
+    result = CliRunner().invoke(cli.main, ["--env-file", str(tmp_path / "missing")])
+    assert result.exit_code != 0
+    assert "environment file does not exist" in result.output

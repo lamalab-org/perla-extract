@@ -1,0 +1,1965 @@
+{
+  "base_revision": 34,
+  "study_sha256": "54fb8349f3c93526ecd6d1b594a8e833b2be7f1d0fa2fe4408c52d2069e24b6e",
+  "proposals": [
+    {
+      "id": "nmat4014-microlitre-transcription",
+      "title": "Restore micro prefix in two HTL additive volumes",
+      "reason": "Original PDF DOI 10.1038/nmat4014, Methods, PDF pages 6–7 (printed 902–903), shows 15 µl lithium salt solution and 7.5 µl 4-tert-butylpyridine. Assistant visually checked the rendered pages. Archived text and citation lost the micro glyph. Only the two raw values and units change; amounts, identities and historical evidence are retained. Independent adjudication is pending. This proposal does not establish reference completeness.",
+      "review_lane": "scientific",
+      "changes": [
+        {
+          "collection": "device_families",
+          "record_id": "family-bilayer",
+          "before": {
+            "family_id": "family-bilayer",
+            "label": "Bilayered perovskite solar cell",
+            "variant": "bilayer structure comprising mesoscopic and planar structures",
+            "architecture": "bilayer architecture comprising mesoscopic and planar structures",
+            "polarity": "not_reported",
+            "full_stack_raw": "glass/FTO/bl-TiO2/mp-TiO2-perovskite nanocomposite layer/perovskite upper layer/PTAA/Au",
+            "layers": [
+              {
+                "layer_id": "bilayer-glass",
+                "sequence": 1,
+                "role": "substrate",
+                "material": "glass",
+                "constituents": [
+                  {
+                    "name": "glass",
+                    "role": "substrate",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0016_text_aba209246c23",
+                        "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-fto",
+                "sequence": 2,
+                "role": "transparent_electrode",
+                "material": "FTO",
+                "constituents": [
+                  {
+                    "name": "F-doped SnO2",
+                    "role": "transparent electrode",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-bl-tio2",
+                "sequence": 3,
+                "role": "electron_transport_layer",
+                "material": "bl-TiO2",
+                "constituents": [
+                  {
+                    "name": "TiO2",
+                    "role": "dense blocking layer",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": "dense blocking layer",
+                "material_form": "other",
+                "reported_properties": [
+                  {
+                    "name": "thickness",
+                    "raw_value": "70 nm in thickness",
+                    "value_number": 70.0,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-mp-nanocomposite",
+                "sequence": 4,
+                "role": "absorber",
+                "material": "mp-TiO2-perovskite nanocomposite layer",
+                "constituents": [
+                  {
+                    "name": "TiO2",
+                    "role": "mesoporous scaffold",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0016_text_aba209246c23",
+                        "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                      },
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3 (x=0.1–0.15)",
+                    "role": "light absorber infiltrated into mp-TiO2",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      },
+                      {
+                        "block_id": "main_p4_0036_text_e1d43b6beff9",
+                        "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": "mesoporous TiO2",
+                "material_form": "mesoporous_layer",
+                "reported_properties": [
+                  {
+                    "name": "method-reported mesoporous TiO2 thickness",
+                    "raw_value": "200–300-nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "mesoporous TiO2 particle size",
+                    "raw_value": "about 50 nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "mesoporous TiO2 crystalline phase",
+                    "raw_value": "anatase",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "perovskite infiltration",
+                    "raw_value": "fully infiltrated into the pores of the mp-TiO2 film",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p4_0036_text_e1d43b6beff9",
+                        "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  },
+                  {
+                    "block_id": "main_p4_0036_text_e1d43b6beff9",
+                    "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-upper-perovskite",
+                "sequence": 5,
+                "role": "absorber",
+                "material": "perovskite upper layer",
+                "constituents": [
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3 (x=0.1–0.15)",
+                    "role": "absorbing layer",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [
+                  {
+                    "name": "perovskite active upper-layer thickness",
+                    "raw_value": "100–300 nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0017_text_9957b6cf6104",
+                        "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "surface coverage atop mp-TiO2",
+                    "raw_value": "100% surface coverage",
+                    "value_number": 100.0,
+                    "unit": "%",
+                    "evidence": [
+                      {
+                        "block_id": "main_p4_0036_text_e1d43b6beff9",
+                        "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p2_0017_text_9957b6cf6104",
+                    "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                  },
+                  {
+                    "block_id": "main_p4_0036_text_e1d43b6beff9",
+                    "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-ptaa",
+                "sequence": 6,
+                "role": "hole_transport_layer",
+                "material": "PTAA",
+                "constituents": [
+                  {
+                    "name": "poly(triarylamine)",
+                    "role": "hole-transporting material",
+                    "amount": {
+                      "name": "PTAA amount in coating solution",
+                      "raw_value": "15 mg",
+                      "value_number": 15.0,
+                      "unit": "mg",
+                      "evidence": [
+                        {
+                          "block_id": "main_p6_0060_text_b4a510b12270",
+                          "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0005_text_f6b1cfedf4c0",
+                        "quote": "Organolead trihalide perovskite materials have been successfully used as light absorbers in efficient photovoltaic cells. Two different cell structures, based on mesoscopic metal oxides and planar heterojunctions have already demonstrated very impressive advances in performance. Here, we report a bilayer architecture comprising the key features of mesoscopic and planar structures obtained by a fully solution-based process. We used CH 3NH3 Pb(I 1 x Br x ) 3 ( x D 0.1-0.15) as the absorbing layer and poly(triarylamine) as a hole-transporting material."
+                      },
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "lithium bistrifluoromethanesulphonimidate",
+                    "role": null,
+                    "amount": {
+                      "name": "solution volume added",
+                      "raw_value": "15 l",
+                      "value_number": 15.0,
+                      "unit": "l",
+                      "evidence": [
+                        {
+                          "block_id": "main_p6_0060_text_b4a510b12270",
+                          "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "4-tert-butylpyridine",
+                    "role": null,
+                    "amount": {
+                      "name": "volume added",
+                      "raw_value": "7.5 l",
+                      "value_number": 7.5,
+                      "unit": "l",
+                      "evidence": [
+                        {
+                          "block_id": "main_p6_0060_text_b4a510b12270",
+                          "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p1_0005_text_f6b1cfedf4c0",
+                    "quote": "Organolead trihalide perovskite materials have been successfully used as light absorbers in efficient photovoltaic cells. Two different cell structures, based on mesoscopic metal oxides and planar heterojunctions have already demonstrated very impressive advances in performance. Here, we report a bilayer architecture comprising the key features of mesoscopic and planar structures obtained by a fully solution-based process. We used CH 3NH3 Pb(I 1 x Br x ) 3 ( x D 0.1-0.15) as the absorbing layer and poly(triarylamine) as a hole-transporting material."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-au",
+                "sequence": 7,
+                "role": "back_electrode",
+                "material": "Au",
+                "constituents": [
+                  {
+                    "name": "Au metal",
+                    "role": "photocathode",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0017_text_9957b6cf6104",
+                        "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [
+                  {
+                    "name": "active area of electrode",
+                    "raw_value": "0.16 cm 2",
+                    "value_number": 0.16,
+                    "unit": "cm2",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p2_0017_text_9957b6cf6104",
+                    "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              }
+            ],
+            "absorbers": [
+              {
+                "absorber_id": "absorber-bilayer-nanocomposite",
+                "layer_id": "bilayer-mp-nanocomposite",
+                "label": "perovskite in mp-TiO2-perovskite nanocomposite layer",
+                "formula": {
+                  "name": "absorber composition",
+                  "raw_value": "CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15)",
+                  "value_number": null,
+                  "unit": null,
+                  "evidence": [
+                    {
+                      "block_id": "main_p1_0103_typography_0b8e966ff119",
+                      "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                    }
+                  ]
+                },
+                "properties": [],
+                "constituents": [
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3",
+                    "role": "absorber",
+                    "amount": {
+                      "name": "Br substitution range x",
+                      "raw_value": "x=0.1–0.15",
+                      "value_number": null,
+                      "unit": null,
+                      "evidence": [
+                        {
+                          "block_id": "main_p1_0103_typography_0b8e966ff119",
+                          "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p1_0103_typography_0b8e966ff119",
+                    "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                  }
+                ]
+              },
+              {
+                "absorber_id": "absorber-bilayer-upper",
+                "layer_id": "bilayer-upper-perovskite",
+                "label": "perovskite upper layer",
+                "formula": {
+                  "name": "absorber composition",
+                  "raw_value": "CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15)",
+                  "value_number": null,
+                  "unit": null,
+                  "evidence": [
+                    {
+                      "block_id": "main_p1_0103_typography_0b8e966ff119",
+                      "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                    }
+                  ]
+                },
+                "properties": [
+                  {
+                    "name": "thickness",
+                    "raw_value": "100–300 nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0017_text_9957b6cf6104",
+                        "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                      }
+                    ]
+                  }
+                ],
+                "constituents": [
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3",
+                    "role": "absorber",
+                    "amount": {
+                      "name": "Br substitution range x",
+                      "raw_value": "x=0.1–0.15",
+                      "value_number": null,
+                      "unit": null,
+                      "evidence": [
+                        {
+                          "block_id": "main_p1_0103_typography_0b8e966ff119",
+                          "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p1_0103_typography_0b8e966ff119",
+                    "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                  },
+                  {
+                    "block_id": "main_p2_0017_text_9957b6cf6104",
+                    "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                  }
+                ]
+              }
+            ],
+            "processing_steps": [
+              {
+                "step_id": "bilayer-process-bl-tio2",
+                "sequence": 1,
+                "operation": "spray pyrolysis",
+                "target_layer_ids": [
+                  "bilayer-bl-tio2"
+                ],
+                "materials": [
+                  "20 mM titanium diisopropoxide bis(acetylacetonate) solution"
+                ],
+                "conditions": [
+                  {
+                    "name": "precursor concentration",
+                    "raw_value": "20 mM",
+                    "value_number": 20.0,
+                    "unit": "mM",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "deposition temperature",
+                    "raw_value": "450 C",
+                    "value_number": 450.0,
+                    "unit": "C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-mp-tio2",
+                "sequence": 2,
+                "operation": "spin-coating and calcining",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite"
+                ],
+                "materials": [
+                  "home-made pastes"
+                ],
+                "conditions": [
+                  {
+                    "name": "calcining temperature",
+                    "raw_value": "500 C",
+                    "value_number": 500.0,
+                    "unit": "C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "calcining duration",
+                    "raw_value": "1 h",
+                    "value_number": 1.0,
+                    "unit": "h",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "calcining atmosphere",
+                    "raw_value": "in air",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-precursor",
+                "sequence": 3,
+                "operation": "prepare and stir perovskite precursor solution",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [
+                  "MAI",
+                  "MABr",
+                  "PbI2",
+                  "PbBr2",
+                  "GBL",
+                  "DMSO"
+                ],
+                "conditions": [
+                  {
+                    "name": "precursor-solution concentration",
+                    "raw_value": "0.8 M",
+                    "value_number": 0.8,
+                    "unit": "M",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0108_typography_7b93ad3501b8",
+                        "quote": "MAI\nat 60 ^{◦}C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI_{2}\n(Aldrich) and PbBr_{2} (Aldrich) for 0.8 M MAPb(I_{1−x}Br_{x})_{3} (x =0.1–0.15) solution\nwere stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 ^{◦}C for 12 h. The\nresulting solution was coated onto the mp-TiO_{2}/bl-TiO_{2}/FTO substrate by a\ndried on a hot plate at 100 ^{◦}C for 10 min. A solution of poly(triarylamine) (15 mg,\nPTAA, EM Index, M_{w} =17,500 g mol^{−1}) in toluene (1.5 ml) was mixed with 15 µl"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "GBL mixing ratio",
+                    "raw_value": "7:3 v/v",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "DMSO mixing ratio",
+                    "raw_value": "7:3 v/v",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "stirring temperature",
+                    "raw_value": "60 ^{◦}C",
+                    "value_number": 60.0,
+                    "unit": "°C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0108_typography_7b93ad3501b8",
+                        "quote": "MAI\nat 60 ^{◦}C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI_{2}\n(Aldrich) and PbBr_{2} (Aldrich) for 0.8 M MAPb(I_{1−x}Br_{x})_{3} (x =0.1–0.15) solution\nwere stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 ^{◦}C for 12 h. The\nresulting solution was coated onto the mp-TiO_{2}/bl-TiO_{2}/FTO substrate by a\ndried on a hot plate at 100 ^{◦}C for 10 min. A solution of poly(triarylamine) (15 mg,\nPTAA, EM Index, M_{w} =17,500 g mol^{−1}) in toluene (1.5 ml) was mixed with 15 µl"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "stirring duration",
+                    "raw_value": "12 h",
+                    "value_number": 12.0,
+                    "unit": "h",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                  },
+                  {
+                    "block_id": "main_p6_0108_typography_7b93ad3501b8",
+                    "quote": "MAI\nat 60 ^{◦}C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI_{2}\n(Aldrich) and PbBr_{2} (Aldrich) for 0.8 M MAPb(I_{1−x}Br_{x})_{3} (x =0.1–0.15) solution\nwere stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 ^{◦}C for 12 h. The\nresulting solution was coated onto the mp-TiO_{2}/bl-TiO_{2}/FTO substrate by a\ndried on a hot plate at 100 ^{◦}C for 10 min. A solution of poly(triarylamine) (15 mg,\nPTAA, EM Index, M_{w} =17,500 g mol^{−1}) in toluene (1.5 ml) was mixed with 15 µl"
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-perovskite-spin",
+                "sequence": 4,
+                "operation": "consecutive two-step spin-coating",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [
+                  "MAPb(I1−xBrx)3 precursor solution"
+                ],
+                "conditions": [
+                  {
+                    "name": "first spin-coating speed",
+                    "raw_value": "1,000 r.p.m",
+                    "value_number": 1000.0,
+                    "unit": "r.p.m",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "first spin-coating duration",
+                    "raw_value": "10 s",
+                    "value_number": 10.0,
+                    "unit": "s",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "second spin-coating speed",
+                    "raw_value": "5,000 r.p.m",
+                    "value_number": 5000.0,
+                    "unit": "r.p.m",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "second spin-coating duration",
+                    "raw_value": "20 s",
+                    "value_number": 20.0,
+                    "unit": "s",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "substrate size",
+                    "raw_value": "around 1 cm 1 cm",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-toluene",
+                "sequence": 5,
+                "operation": "toluene drop-casting during the second spin-coating step",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [
+                  "toluene"
+                ],
+                "conditions": [
+                  {
+                    "name": "treatment timing",
+                    "raw_value": "During the second spin-coating step",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-anneal",
+                "sequence": 6,
+                "operation": "drying on a hot plate",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [],
+                "conditions": [
+                  {
+                    "name": "temperature",
+                    "raw_value": "100 C",
+                    "value_number": 100.0,
+                    "unit": "C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "duration",
+                    "raw_value": "10 min",
+                    "value_number": 10.0,
+                    "unit": "min",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-ptaa",
+                "sequence": 7,
+                "operation": "spin-coating",
+                "target_layer_ids": [
+                  "bilayer-ptaa"
+                ],
+                "materials": [
+                  "poly(triarylamine)",
+                  "toluene",
+                  "lithium bistrifluoromethanesulphonimidate",
+                  "acetonitrile",
+                  "4-tert-butylpyridine"
+                ],
+                "conditions": [
+                  {
+                    "name": "spin-coating speed",
+                    "raw_value": "3,000 r.p.m",
+                    "value_number": 3000.0,
+                    "unit": "r.p.m",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "spin-coating duration",
+                    "raw_value": "30 s",
+                    "value_number": 30.0,
+                    "unit": "s",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-au",
+                "sequence": 8,
+                "operation": "thermal evaporation",
+                "target_layer_ids": [
+                  "bilayer-au"
+                ],
+                "materials": [
+                  "Au"
+                ],
+                "conditions": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              }
+            ],
+            "evidence": [
+              {
+                "block_id": "main_p1_0005_text_f6b1cfedf4c0",
+                "quote": "Organolead trihalide perovskite materials have been successfully used as light absorbers in efficient photovoltaic cells. Two different cell structures, based on mesoscopic metal oxides and planar heterojunctions have already demonstrated very impressive advances in performance. Here, we report a bilayer architecture comprising the key features of mesoscopic and planar structures obtained by a fully solution-based process. We used CH 3NH3 Pb(I 1 x Br x ) 3 ( x D 0.1-0.15) as the absorbing layer and poly(triarylamine) as a hole-transporting material."
+              },
+              {
+                "block_id": "main_p2_0016_text_aba209246c23",
+                "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+              },
+              {
+                "block_id": "main_p2_0017_text_9957b6cf6104",
+                "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+              }
+            ]
+          },
+          "after": {
+            "family_id": "family-bilayer",
+            "label": "Bilayered perovskite solar cell",
+            "variant": "bilayer structure comprising mesoscopic and planar structures",
+            "architecture": "bilayer architecture comprising mesoscopic and planar structures",
+            "polarity": "not_reported",
+            "full_stack_raw": "glass/FTO/bl-TiO2/mp-TiO2-perovskite nanocomposite layer/perovskite upper layer/PTAA/Au",
+            "layers": [
+              {
+                "layer_id": "bilayer-glass",
+                "sequence": 1,
+                "role": "substrate",
+                "material": "glass",
+                "constituents": [
+                  {
+                    "name": "glass",
+                    "role": "substrate",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0016_text_aba209246c23",
+                        "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-fto",
+                "sequence": 2,
+                "role": "transparent_electrode",
+                "material": "FTO",
+                "constituents": [
+                  {
+                    "name": "F-doped SnO2",
+                    "role": "transparent electrode",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-bl-tio2",
+                "sequence": 3,
+                "role": "electron_transport_layer",
+                "material": "bl-TiO2",
+                "constituents": [
+                  {
+                    "name": "TiO2",
+                    "role": "dense blocking layer",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": "dense blocking layer",
+                "material_form": "other",
+                "reported_properties": [
+                  {
+                    "name": "thickness",
+                    "raw_value": "70 nm in thickness",
+                    "value_number": 70.0,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-mp-nanocomposite",
+                "sequence": 4,
+                "role": "absorber",
+                "material": "mp-TiO2-perovskite nanocomposite layer",
+                "constituents": [
+                  {
+                    "name": "TiO2",
+                    "role": "mesoporous scaffold",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0016_text_aba209246c23",
+                        "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                      },
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3 (x=0.1–0.15)",
+                    "role": "light absorber infiltrated into mp-TiO2",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      },
+                      {
+                        "block_id": "main_p4_0036_text_e1d43b6beff9",
+                        "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": "mesoporous TiO2",
+                "material_form": "mesoporous_layer",
+                "reported_properties": [
+                  {
+                    "name": "method-reported mesoporous TiO2 thickness",
+                    "raw_value": "200–300-nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "mesoporous TiO2 particle size",
+                    "raw_value": "about 50 nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "mesoporous TiO2 crystalline phase",
+                    "raw_value": "anatase",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "perovskite infiltration",
+                    "raw_value": "fully infiltrated into the pores of the mp-TiO2 film",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p4_0036_text_e1d43b6beff9",
+                        "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  },
+                  {
+                    "block_id": "main_p4_0036_text_e1d43b6beff9",
+                    "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-upper-perovskite",
+                "sequence": 5,
+                "role": "absorber",
+                "material": "perovskite upper layer",
+                "constituents": [
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3 (x=0.1–0.15)",
+                    "role": "absorbing layer",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [
+                  {
+                    "name": "perovskite active upper-layer thickness",
+                    "raw_value": "100–300 nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0017_text_9957b6cf6104",
+                        "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "surface coverage atop mp-TiO2",
+                    "raw_value": "100% surface coverage",
+                    "value_number": 100.0,
+                    "unit": "%",
+                    "evidence": [
+                      {
+                        "block_id": "main_p4_0036_text_e1d43b6beff9",
+                        "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p2_0017_text_9957b6cf6104",
+                    "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                  },
+                  {
+                    "block_id": "main_p4_0036_text_e1d43b6beff9",
+                    "quote": "3c, we can observe that the surface exhibits a dense-grained uniform morphology with grain sizes in the range 100 500 nm. The entire film is composed of a homogeneous, wellcrystallized perovskite layer. In addition, from a typical crosssectional SEM image of a real device, we can see two uniform layers consisting of a TiO2/perovskite nanocomposite and the pure perovskite (Fig. 3d); the perovskite materials are fully infiltrated into the pores of the mp-TiO2 film, and also deposited in a very uniform thick film with 100% surface coverage atop the mp-TiO2, compared with the conventional method 10,11 ."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-ptaa",
+                "sequence": 6,
+                "role": "hole_transport_layer",
+                "material": "PTAA",
+                "constituents": [
+                  {
+                    "name": "poly(triarylamine)",
+                    "role": "hole-transporting material",
+                    "amount": {
+                      "name": "PTAA amount in coating solution",
+                      "raw_value": "15 mg",
+                      "value_number": 15.0,
+                      "unit": "mg",
+                      "evidence": [
+                        {
+                          "block_id": "main_p6_0060_text_b4a510b12270",
+                          "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0005_text_f6b1cfedf4c0",
+                        "quote": "Organolead trihalide perovskite materials have been successfully used as light absorbers in efficient photovoltaic cells. Two different cell structures, based on mesoscopic metal oxides and planar heterojunctions have already demonstrated very impressive advances in performance. Here, we report a bilayer architecture comprising the key features of mesoscopic and planar structures obtained by a fully solution-based process. We used CH 3NH3 Pb(I 1 x Br x ) 3 ( x D 0.1-0.15) as the absorbing layer and poly(triarylamine) as a hole-transporting material."
+                      },
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "lithium bistrifluoromethanesulphonimidate",
+                    "role": null,
+                    "amount": {
+                      "name": "solution volume added",
+                      "raw_value": "15 µl",
+                      "value_number": 15.0,
+                      "unit": "µl",
+                      "evidence": [
+                        {
+                          "block_id": "main_p6_0060_text_b4a510b12270",
+                          "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "4-tert-butylpyridine",
+                    "role": null,
+                    "amount": {
+                      "name": "volume added",
+                      "raw_value": "7.5 µl",
+                      "value_number": 7.5,
+                      "unit": "µl",
+                      "evidence": [
+                        {
+                          "block_id": "main_p6_0060_text_b4a510b12270",
+                          "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p1_0005_text_f6b1cfedf4c0",
+                    "quote": "Organolead trihalide perovskite materials have been successfully used as light absorbers in efficient photovoltaic cells. Two different cell structures, based on mesoscopic metal oxides and planar heterojunctions have already demonstrated very impressive advances in performance. Here, we report a bilayer architecture comprising the key features of mesoscopic and planar structures obtained by a fully solution-based process. We used CH 3NH3 Pb(I 1 x Br x ) 3 ( x D 0.1-0.15) as the absorbing layer and poly(triarylamine) as a hole-transporting material."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              },
+              {
+                "layer_id": "bilayer-au",
+                "sequence": 7,
+                "role": "back_electrode",
+                "material": "Au",
+                "constituents": [
+                  {
+                    "name": "Au metal",
+                    "role": "photocathode",
+                    "amount": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0017_text_9957b6cf6104",
+                        "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                      }
+                    ]
+                  }
+                ],
+                "material_form_raw": null,
+                "material_form": "not_reported",
+                "reported_properties": [
+                  {
+                    "name": "active area of electrode",
+                    "raw_value": "0.16 cm 2",
+                    "value_number": 0.16,
+                    "unit": "cm2",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p2_0017_text_9957b6cf6104",
+                    "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                  },
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              }
+            ],
+            "absorbers": [
+              {
+                "absorber_id": "absorber-bilayer-nanocomposite",
+                "layer_id": "bilayer-mp-nanocomposite",
+                "label": "perovskite in mp-TiO2-perovskite nanocomposite layer",
+                "formula": {
+                  "name": "absorber composition",
+                  "raw_value": "CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15)",
+                  "value_number": null,
+                  "unit": null,
+                  "evidence": [
+                    {
+                      "block_id": "main_p1_0103_typography_0b8e966ff119",
+                      "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                    }
+                  ]
+                },
+                "properties": [],
+                "constituents": [
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3",
+                    "role": "absorber",
+                    "amount": {
+                      "name": "Br substitution range x",
+                      "raw_value": "x=0.1–0.15",
+                      "value_number": null,
+                      "unit": null,
+                      "evidence": [
+                        {
+                          "block_id": "main_p1_0103_typography_0b8e966ff119",
+                          "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p1_0103_typography_0b8e966ff119",
+                    "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                  }
+                ]
+              },
+              {
+                "absorber_id": "absorber-bilayer-upper",
+                "layer_id": "bilayer-upper-perovskite",
+                "label": "perovskite upper layer",
+                "formula": {
+                  "name": "absorber composition",
+                  "raw_value": "CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15)",
+                  "value_number": null,
+                  "unit": null,
+                  "evidence": [
+                    {
+                      "block_id": "main_p1_0103_typography_0b8e966ff119",
+                      "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                    }
+                  ]
+                },
+                "properties": [
+                  {
+                    "name": "thickness",
+                    "raw_value": "100–300 nm",
+                    "value_number": null,
+                    "unit": "nm",
+                    "evidence": [
+                      {
+                        "block_id": "main_p2_0017_text_9957b6cf6104",
+                        "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                      }
+                    ]
+                  }
+                ],
+                "constituents": [
+                  {
+                    "name": "CH3NH3Pb(I1−xBrx)3",
+                    "role": "absorber",
+                    "amount": {
+                      "name": "Br substitution range x",
+                      "raw_value": "x=0.1–0.15",
+                      "value_number": null,
+                      "unit": null,
+                      "evidence": [
+                        {
+                          "block_id": "main_p1_0103_typography_0b8e966ff119",
+                          "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                        }
+                      ]
+                    },
+                    "evidence": [
+                      {
+                        "block_id": "main_p1_0103_typography_0b8e966ff119",
+                        "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0016_text_aba209246c23",
+                    "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+                  },
+                  {
+                    "block_id": "main_p1_0103_typography_0b8e966ff119",
+                    "quote": "Typography-preserving source fragments:\nNam Joong Jeon^{1†}, Jun Hong Noh^{1†}, Young Chan Kim^{1}, Woon Seok Yang^{1}, Seungchan Ryu^{1}\nand Sang Il Seok^{1,2}*\nplanar structures obtained by a fully solution-based process. We used CH_{3}NH_{3} Pb(I_{1−x}Br_{x})_{3} (x=0.1–0.15) as the absorbing layer\n(DMSO) followed by toluene drop-casting leads to extremely uniform and dense perovskite layers via a CH_{3}NH_{3}I–PbI_{2}–DMSO\nperovskite layer having uniform thickness over a large area^{20},\nlayer^{10}, and proposed the importance of a homogeneous upper\nspinning conditions could not achieve 100% surface coverage^{20}."
+                  },
+                  {
+                    "block_id": "main_p2_0017_text_9957b6cf6104",
+                    "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+                  }
+                ]
+              }
+            ],
+            "processing_steps": [
+              {
+                "step_id": "bilayer-process-bl-tio2",
+                "sequence": 1,
+                "operation": "spray pyrolysis",
+                "target_layer_ids": [
+                  "bilayer-bl-tio2"
+                ],
+                "materials": [
+                  "20 mM titanium diisopropoxide bis(acetylacetonate) solution"
+                ],
+                "conditions": [
+                  {
+                    "name": "precursor concentration",
+                    "raw_value": "20 mM",
+                    "value_number": 20.0,
+                    "unit": "mM",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "deposition temperature",
+                    "raw_value": "450 C",
+                    "value_number": 450.0,
+                    "unit": "C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-mp-tio2",
+                "sequence": 2,
+                "operation": "spin-coating and calcining",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite"
+                ],
+                "materials": [
+                  "home-made pastes"
+                ],
+                "conditions": [
+                  {
+                    "name": "calcining temperature",
+                    "raw_value": "500 C",
+                    "value_number": 500.0,
+                    "unit": "C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "calcining duration",
+                    "raw_value": "1 h",
+                    "value_number": 1.0,
+                    "unit": "h",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "calcining atmosphere",
+                    "raw_value": "in air",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "Solar cell fabrication. A dense blocking layer of TiO2 (bl-TiO2 , 70 nm in thickness) was deposited onto a F-doped SnO2 (FTO, Pilkington, TEC8) substrate by spray pyrolysis, using a 20 mM titanium diisopropoxide bis(acetylacetonate) solution (Aldrich) at 450 C to prevent direct contact between the FTO and the hole-conducting layer. A 200 300-nm-thick mesoporous TiO2 (particle size: about 50 nm, crystalline phase: anatase) film was spin-coated onto the bl-TiO2/FTO substrate using home-made pastes 14 and calcining at 500 C for 1 h in air to remove organic components."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-precursor",
+                "sequence": 3,
+                "operation": "prepare and stir perovskite precursor solution",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [
+                  "MAI",
+                  "MABr",
+                  "PbI2",
+                  "PbBr2",
+                  "GBL",
+                  "DMSO"
+                ],
+                "conditions": [
+                  {
+                    "name": "precursor-solution concentration",
+                    "raw_value": "0.8 M",
+                    "value_number": 0.8,
+                    "unit": "M",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0108_typography_7b93ad3501b8",
+                        "quote": "MAI\nat 60 ^{◦}C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI_{2}\n(Aldrich) and PbBr_{2} (Aldrich) for 0.8 M MAPb(I_{1−x}Br_{x})_{3} (x =0.1–0.15) solution\nwere stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 ^{◦}C for 12 h. The\nresulting solution was coated onto the mp-TiO_{2}/bl-TiO_{2}/FTO substrate by a\ndried on a hot plate at 100 ^{◦}C for 10 min. A solution of poly(triarylamine) (15 mg,\nPTAA, EM Index, M_{w} =17,500 g mol^{−1}) in toluene (1.5 ml) was mixed with 15 µl"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "GBL mixing ratio",
+                    "raw_value": "7:3 v/v",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "DMSO mixing ratio",
+                    "raw_value": "7:3 v/v",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "stirring temperature",
+                    "raw_value": "60 ^{◦}C",
+                    "value_number": 60.0,
+                    "unit": "°C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0108_typography_7b93ad3501b8",
+                        "quote": "MAI\nat 60 ^{◦}C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI_{2}\n(Aldrich) and PbBr_{2} (Aldrich) for 0.8 M MAPb(I_{1−x}Br_{x})_{3} (x =0.1–0.15) solution\nwere stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 ^{◦}C for 12 h. The\nresulting solution was coated onto the mp-TiO_{2}/bl-TiO_{2}/FTO substrate by a\ndried on a hot plate at 100 ^{◦}C for 10 min. A solution of poly(triarylamine) (15 mg,\nPTAA, EM Index, M_{w} =17,500 g mol^{−1}) in toluene (1.5 ml) was mixed with 15 µl"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "stirring duration",
+                    "raw_value": "12 h",
+                    "value_number": 12.0,
+                    "unit": "h",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "CH3NH3I (MAI) and CH3NH3Br (MABr) were first synthesized by reacting 27.86 ml CH3NH2 (40% in methanol, Junsei Chemical) and 30 ml HI (57 wt% in water, Aldrich) or 44 ml HBr (48 wt% in water, Aldrich) in a 250 ml round-bottom flask at 0 C for 4 h with stirring, respectively. The precipitate was recovered by evaporation at 55 C for 1 h. MAI and MABr were dissolved in ethanol, recrystallized from diethyl ether, and dried at 60 C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI2 (Aldrich) and PbBr2 (Aldrich) for 0.8 M MAPb(I1 x Br x ) 3 ( x D 0.1 0.15) solution were stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 C for 12 h."
+                  },
+                  {
+                    "block_id": "main_p6_0108_typography_7b93ad3501b8",
+                    "quote": "MAI\nat 60 ^{◦}C in a vacuum oven for 24 h. The prepared MAI and MABr powders, PbI_{2}\n(Aldrich) and PbBr_{2} (Aldrich) for 0.8 M MAPb(I_{1−x}Br_{x})_{3} (x =0.1–0.15) solution\nwere stirred in a mixture of GBL and DMSO (7:3 v/v) at 60 ^{◦}C for 12 h. The\nresulting solution was coated onto the mp-TiO_{2}/bl-TiO_{2}/FTO substrate by a\ndried on a hot plate at 100 ^{◦}C for 10 min. A solution of poly(triarylamine) (15 mg,\nPTAA, EM Index, M_{w} =17,500 g mol^{−1}) in toluene (1.5 ml) was mixed with 15 µl"
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-perovskite-spin",
+                "sequence": 4,
+                "operation": "consecutive two-step spin-coating",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [
+                  "MAPb(I1−xBrx)3 precursor solution"
+                ],
+                "conditions": [
+                  {
+                    "name": "first spin-coating speed",
+                    "raw_value": "1,000 r.p.m",
+                    "value_number": 1000.0,
+                    "unit": "r.p.m",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "first spin-coating duration",
+                    "raw_value": "10 s",
+                    "value_number": 10.0,
+                    "unit": "s",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "second spin-coating speed",
+                    "raw_value": "5,000 r.p.m",
+                    "value_number": 5000.0,
+                    "unit": "r.p.m",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "second spin-coating duration",
+                    "raw_value": "20 s",
+                    "value_number": 20.0,
+                    "unit": "s",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "substrate size",
+                    "raw_value": "around 1 cm 1 cm",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-toluene",
+                "sequence": 5,
+                "operation": "toluene drop-casting during the second spin-coating step",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [
+                  "toluene"
+                ],
+                "conditions": [
+                  {
+                    "name": "treatment timing",
+                    "raw_value": "During the second spin-coating step",
+                    "value_number": null,
+                    "unit": null,
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-anneal",
+                "sequence": 6,
+                "operation": "drying on a hot plate",
+                "target_layer_ids": [
+                  "bilayer-mp-nanocomposite",
+                  "bilayer-upper-perovskite"
+                ],
+                "materials": [],
+                "conditions": [
+                  {
+                    "name": "temperature",
+                    "raw_value": "100 C",
+                    "value_number": 100.0,
+                    "unit": "C",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "duration",
+                    "raw_value": "10 min",
+                    "value_number": 10.0,
+                    "unit": "min",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "The resulting solution was coated onto the mp-TiO2/bl-TiO2/FTO substrate by a consecutive two-step spin-coating process at 1,000 and 5,000 r.p.m for 10 and 20 s, respectively. During the second spin-coating step, the substrate (around 1 cm 1 cm) was treated with toluene drop-casting. A detailed time-rotation profile for the spin-coating is represented in Supplementary Fig. 1c. The substrate was dried on a hot plate at 100 C for 10 min."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-ptaa",
+                "sequence": 7,
+                "operation": "spin-coating",
+                "target_layer_ids": [
+                  "bilayer-ptaa"
+                ],
+                "materials": [
+                  "poly(triarylamine)",
+                  "toluene",
+                  "lithium bistrifluoromethanesulphonimidate",
+                  "acetonitrile",
+                  "4-tert-butylpyridine"
+                ],
+                "conditions": [
+                  {
+                    "name": "spin-coating speed",
+                    "raw_value": "3,000 r.p.m",
+                    "value_number": 3000.0,
+                    "unit": "r.p.m",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  },
+                  {
+                    "name": "spin-coating duration",
+                    "raw_value": "30 s",
+                    "value_number": 30.0,
+                    "unit": "s",
+                    "evidence": [
+                      {
+                        "block_id": "main_p6_0060_text_b4a510b12270",
+                        "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                      }
+                    ]
+                  }
+                ],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              },
+              {
+                "step_id": "bilayer-process-au",
+                "sequence": 8,
+                "operation": "thermal evaporation",
+                "target_layer_ids": [
+                  "bilayer-au"
+                ],
+                "materials": [
+                  "Au"
+                ],
+                "conditions": [],
+                "evidence": [
+                  {
+                    "block_id": "main_p6_0060_text_b4a510b12270",
+                    "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+                  }
+                ]
+              }
+            ],
+            "evidence": [
+              {
+                "block_id": "main_p1_0005_text_f6b1cfedf4c0",
+                "quote": "Organolead trihalide perovskite materials have been successfully used as light absorbers in efficient photovoltaic cells. Two different cell structures, based on mesoscopic metal oxides and planar heterojunctions have already demonstrated very impressive advances in performance. Here, we report a bilayer architecture comprising the key features of mesoscopic and planar structures obtained by a fully solution-based process. We used CH 3NH3 Pb(I 1 x Br x ) 3 ( x D 0.1-0.15) as the absorbing layer and poly(triarylamine) as a hole-transporting material."
+              },
+              {
+                "block_id": "main_p2_0016_text_aba209246c23",
+                "quote": "Figure 1 | Device architecture, scheme of solvent engineering process, and XRD of perovskite layer. a , Device architecture of the bilayered perovskite solar cell (glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer/PTAA/Au). b , XRD pattern of the annealed perovskite coating on fused silica substrate. The inset shows a SEM image of a surface consisting of a glass/FTO/bl-TiO 2 /mp-TiO 2 -perovskite nanocomposite layer/perovskite upper layer. c , Solvent engineering procedure for preparing the uniform and dense perovskite film."
+              },
+              {
+                "block_id": "main_p2_0017_text_9957b6cf6104",
+                "quote": "reveals a bilayer structure comprising mesoscopic and planar structures, and is e ective for su ciently absorbing light and collecting charges. Atop the mp-TiO2 layer lies a highly uniform perovskite active layer (100 300 nm thick). Poly(triarylamine) (PTAA) and Au metal were next deposited on the active layer as a hole-transporting material and photocathode, respectively. For this architecture, the formation of a homogeneous thin perovskite layer is extremely important, and we developed our solvent-engineering technology as an e ective tool for creating such a layer. The process involves five stages, as depicted in Fig. 1c."
+              }
+            ]
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p6_0060_text_b4a510b12270",
+          "quote": "A solution of poly(triarylamine) (15 mg, PTAA, EM Index, M w D 17,500 g mol 1 ) in toluene (1.5 ml) was mixed with 15 l of a solution of lithium bistrifluoromethanesulphonimidate (170 mg) in acetonitrile (1 ml) and 7.5 l 4tert -butylpyridine and spin-coated on the MAPb(I1 x Br x ) 3 ( x D 0.1 0.15)/mp-TiO2/bl-TiO2/FTO substrate at 3,000 r.p.m for 30 s. Finally, a Au counterelectrode was deposited by thermal evaporation. The active area of this electrode was fixed at 0.16 cm 2 ."
+        }
+      ],
+      "feedback": []
+    }
+  ],
+  "supersedes": [],
+  "feedback_counts": {}
+}

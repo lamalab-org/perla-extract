@@ -9,7 +9,7 @@ for supplement windows.
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 
 from pydantic import Field, model_validator
 
@@ -26,7 +26,7 @@ class EvidenceWindow(StrictModel):
 
     @property
     def character_count(self) -> int:
-        """Count characters sent when this extraction window is evaluated."""
+        """Count source-text characters, excluding instructions and serialization."""
 
         return sum(block.character_count for block in self.request_blocks)
 
@@ -46,7 +46,11 @@ class EvidenceWindowPlan(StrictModel):
 
     @model_validator(mode="after")
     def validate_coverage(self) -> EvidenceWindowPlan:
-        """Fail if a source block is missing, duplicated, or exceeds the plan cap."""
+        """Check primary coverage and the preliminary source-text packing limit.
+
+        An indivisible oversized block may survive this structural plan. The final
+        serialized-request check must either fit it or reject it before a model call.
+        """
 
         expected = set(self.block_ids)
         if len(expected) != len(self.block_ids):
@@ -159,7 +163,7 @@ def plan_evidence_windows(
     main_source: str = "main",
     max_context_characters: int = 20_000,
 ) -> EvidenceWindowPlan:
-    """Create complete section-aware windows for a paper and arbitrarily long SI.
+    """Create an initial section-aware source partition for a paper and its SI.
 
     The entire main paper is repeated as context only when it fits the context
     allowance.  Context does not count as a second primary occurrence, so an
@@ -224,3 +228,52 @@ def plan_evidence_windows(
         windows=windows,
         max_characters=max_characters,
     )
+
+
+def fit_request_windows(
+    windows: Sequence[EvidenceWindow],
+    *,
+    max_input_tokens: int,
+    estimate: Callable[[list[EvidenceBlock], list[EvidenceBlock]], int],
+) -> list[EvidenceWindow]:
+    """Fit complete serialized requests while preserving every primary block.
+
+    Structural packing is only a first approximation. The caller measures the final
+    instructions, citation schema, source serialization, and system message here.
+    Optional repeated context is removed before splitting primary blocks. An
+    indivisible block that cannot fit raises an error instead of truncating evidence
+    or silently returning an over-budget request.
+    """
+
+    result: list[EvidenceWindow] = []
+
+    def fit(window: EvidenceWindow) -> None:
+        primary, context = window.primary_blocks, window.context_blocks
+        size = estimate(primary, context)
+        if size > max_input_tokens and context:
+            context = []
+            size = estimate(primary, context)
+        if size <= max_input_tokens:
+            result.append(window.model_copy(update={"context_blocks": context}))
+            return
+        if len(primary) == 1:
+            raise ValueError(
+                f"source block {primary[0].block_id!r} needs an estimated {size} input "
+                f"tokens, exceeding the reading limit {max_input_tokens}; use a larger "
+                "declared context/input budget or a parser that yields smaller blocks"
+            )
+        middle = len(primary) // 2
+        for suffix, subset in (("a", primary[:middle]), ("b", primary[middle:])):
+            fit(
+                window.model_copy(
+                    update={
+                        "window_id": f"{window.window_id}-{suffix}",
+                        "primary_blocks": subset,
+                        "context_blocks": context,
+                    }
+                )
+            )
+
+    for window in windows:
+        fit(window)
+    return result

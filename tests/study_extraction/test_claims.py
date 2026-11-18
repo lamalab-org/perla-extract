@@ -1,3 +1,5 @@
+import pytest
+
 from perla_extract.study_extraction.claims import (
     ClaimLedger,
     ExperimentalObject,
@@ -119,7 +121,7 @@ def test_assembly_includes_only_a_bounded_local_neighborhood():
     ]
 
 
-def test_window_ledgers_are_combined_without_colliding_local_ids():
+def test_exact_repeated_statements_coalesce_with_reading_provenance():
     evidence = citation("result", "Device A reached 20%")
     part = ClaimLedger(
         objects=[
@@ -145,16 +147,20 @@ def test_window_ledgers_are_combined_without_colliding_local_ids():
         ],
     )
 
-    combined = combine_ledgers([("main", part), ("si", part)])
+    provenance = {}
+    combined = combine_ledgers([("main", part), ("si", part)], provenance=provenance)
 
-    assert [item.object_id for item in combined.objects] == [
-        "main:device",
-        "si:device",
-    ]
-    assert [item.subject_object_ids for item in combined.claims] == [
-        ["main:device"],
-        ["si:device"],
-    ]
+    assert [item.object_id for item in combined.objects] == ["main:device"]
+    assert [item.subject_object_ids for item in combined.claims] == [["main:device"]]
+    assert provenance["origins"] == {
+        "main:device": ["main:device", "si:device"],
+        "main:efficiency": ["main:efficiency", "si:efficiency"],
+    }
+    different_subject = part.model_copy(
+        update={"objects": [part.objects[0].model_copy(update={"label": "Device B"})]}
+    )
+    distinct = combine_ledgers([("first", part), ("second", different_subject)])
+    assert len(distinct.objects) == len(distinct.claims) == 2
 
 
 def test_characterization_object_does_not_require_or_justify_a_device_family():
@@ -180,6 +186,27 @@ def test_characterization_object_does_not_require_or_justify_a_device_family():
     assert empty_audit["status"] == "complete"
     assert empty_audit["counts"]["context"] == 1
     assert overextracted_audit["counts"]["unclaimed_records"] == 1
+
+
+def test_uncertain_reader_object_is_linked_for_review_not_deletion():
+    evidence = citation("result", "The control solar cell was measured.")
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="control",
+                label="Control",
+                role="device_design",
+                scope="uncertain",
+                evidence=[evidence],
+            )
+        ],
+        claims=[],
+    )
+    audit = audit_claim_coverage(ledger, extraction(device_family(evidence)))
+    assert audit["status"] == "needs_review"
+    assert audit["counts"]["uncertain"] == 1
+    assert audit["counts"]["covered"] == audit["counts"]["unclaimed_records"] == 0
+    assert audit["items"][0]["candidate_record_ids"] == ["family-control"]
 
 
 def test_processing_arm_quantity_is_not_forced_into_a_top_level_record():
@@ -277,8 +304,17 @@ def test_shared_quantity_requires_one_atomic_value_per_named_target():
     assert audit["status"] == "needs_review"
 
 
-def test_atomic_claim_requires_its_value_not_only_a_shared_citation():
-    evidence = citation("recipe", "the precursor concentration was 11.4 M")
+@pytest.mark.parametrize(
+    "kind",
+    ["reported_quantity", "performance", "population", "stability", "processing"],
+)
+@pytest.mark.parametrize("separate_unit", [False, True])
+def test_atomic_claim_requires_its_value_not_only_a_shared_citation(
+    kind, separate_unit
+):
+    evidence = citation(
+        "recipe", "The stock was 11.4 M; the diluted precursor concentration was 1.4 M."
+    )
     ledger = ClaimLedger(
         objects=[
             ExperimentalObject(
@@ -292,7 +328,7 @@ def test_atomic_claim_requires_its_value_not_only_a_shared_citation():
         claims=[
             SourceClaim(
                 claim_id="concentration",
-                kind="reported_quantity",
+                kind=kind,
                 label="precursor concentration",
                 subject_object_ids=["solar-cell-design"],
                 scope="target",
@@ -316,7 +352,7 @@ def test_atomic_claim_requires_its_value_not_only_a_shared_citation():
                             role="precursor",
                             amount=ReportedValue(
                                 name="precursor concentration",
-                                raw_value="11.4 M",
+                                raw_value="11.4" if separate_unit else "11.4 M",
                                 value_number=11.4,
                                 unit="M",
                                 evidence=[evidence],
@@ -336,6 +372,33 @@ def test_atomic_claim_requires_its_value_not_only_a_shared_citation():
     claim = next(item for item in audit["items"] if item.get("claim_id"))
     assert claim["status"] == "possible_match"
     assert audit["issue_count"] == 1
+
+    # The existing repair path must see the gap, regardless of the model's kind tag.
+    from perla_extract.study_extraction.repair import build_repair_worklist
+
+    worklist = build_repair_worklist(
+        extraction(family_with_different_value), audit, {"issues": []}
+    )
+    assert any(item.reason == "claim_possible_match" for item in worklist.items)
+
+    amount = family_with_different_value.absorbers[0].constituents[0].amount
+    assert amount is not None
+    amount.raw_value = "1.4" if separate_unit else "1.4 M"
+    amount.value_number = 1.4
+    repaired = audit_claim_coverage(ledger, extraction(family_with_different_value))
+    assert (
+        next(item for item in repaired["items"] if item.get("claim_id"))["status"]
+        == "covered"
+    )
+    if separate_unit:
+        for wrong_unit in (None, "mM"):
+            amount.unit = wrong_unit
+            assert (
+                audit_claim_coverage(ledger, extraction(family_with_different_value))[
+                    "issue_count"
+                ]
+                == 1
+            )
 
 
 def test_only_source_grounded_objects_and_claims_can_guide_assembly():
@@ -373,3 +436,68 @@ def test_only_source_grounded_objects_and_claims_can_guide_assembly():
     assert [item.object_id for item in grounded.objects] == ["valid"]
     assert audit["grounded_object_count"] == 1
     assert audit["rejected_count"] == 1
+
+
+@pytest.mark.parametrize(
+    "raw_value, supported",
+    [
+        ("20%", True),
+        ("99%", False),
+        ("20", True),
+        ("0%", False),
+        ("Co", True),
+        ("CO", False),
+        ("2", False),
+    ],
+)
+def test_grounding_checks_value_inside_its_own_source_quote(raw_value, supported):
+    text = "The Co control device reached 20% efficiency."
+    block = EvidenceBlock(
+        block_id="result", source="main", page=1, kind="text", text=text
+    )
+    ledger = ClaimLedger(
+        objects=[],
+        claims=[
+            SourceClaim(
+                claim_id="value",
+                kind="reported_quantity",
+                label="reported value",
+                subject_object_ids=[],
+                scope="target",
+                raw_value=raw_value,
+                shared_targets=[],
+                evidence=[citation("result", text)],
+            )
+        ],
+    )
+    grounded, audit = grounded_ledger([block], ledger)
+    assert bool(grounded.claims) is supported
+    assert audit["rejected_count"] == int(not supported)
+
+
+def test_grounding_does_not_borrow_value_from_an_uncited_sentence():
+    block = EvidenceBlock(
+        block_id="result",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device A reached 20%. Device B reached 25%.",
+    )
+    ledger = ClaimLedger(
+        objects=[],
+        claims=[
+            SourceClaim(
+                claim_id="value",
+                kind="performance",
+                label="efficiency",
+                subject_object_ids=[],
+                scope="target",
+                raw_value="25%",
+                shared_targets=[],
+                evidence=[citation("result", "Device A reached 20%.")],
+            )
+        ],
+    )
+    grounded, audit = grounded_ledger([block], ledger)
+    assert grounded.claims == []
+    assert audit["rejected"][0]["reason"] == "raw value absent from cited evidence"

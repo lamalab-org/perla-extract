@@ -12,7 +12,7 @@ import hashlib
 import importlib.metadata
 import json
 import re
-import unicodedata
+from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 from statistics import median
@@ -211,6 +211,15 @@ def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
                 if not text:
                     continue
                 bbox = [float(value) for value in table.bbox]
+                native_text = page.get_text("text", clip=pymupdf.Rect(bbox), sort=True)
+                if not _table_preserves_numbers(text, native_text):
+                    # Leave the native region in the ordinary-text path below.
+                    # Never infer where a detached decimal should have been.
+                    logger.debug(
+                        "Retaining native text for table with changed numeric tokens on page {}",
+                        page_index,
+                    )
+                    continue
                 table_boxes.append(bbox)
                 layout_items.append(
                     {
@@ -275,6 +284,21 @@ def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
                     }
                 )
     return layout_items
+
+
+def _table_preserves_numbers(table_text: str, native_text: str) -> bool:
+    """Reject table renderings that alter native numbers or their multiplicity.
+
+    This is a loss detector, not a reconstruction or a guarantee of row alignment.
+    Native text remains available whenever the table detector changes numeric
+    tokens, including splitting a decimal point onto another line.
+    """
+    pattern = r"[+−-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+−-]?\d+)?"
+
+    def numbers(text: str) -> Counter[str]:
+        return Counter(re.findall(pattern, text.replace("−", "-")))
+
+    return numbers(table_text) == numbers(native_text)
 
 
 def _classify_headings(layout_items: list[dict[str, Any]]) -> None:
@@ -736,13 +760,13 @@ def parse_pdf(
 def _normalized_block_text_key(block: EvidenceBlock) -> str:
     """Create a conservative equality key for complete-block deduplication.
 
-    Unicode compatibility, case, and whitespace differences are ignored, but wording is
-    otherwise required to match exactly. This is intentionally not fuzzy similarity:
-    two tables or paragraphs with small scientific differences must remain separate.
+    Ignore repeated horizontal whitespace and line-ending conventions only. Case,
+    Unicode scientific notation, and table-row boundaries remain significant: Co is
+    not CO, and a superscript is not an ordinary digit.
     """
 
-    text = unicodedata.normalize("NFKC", block.text).casefold()
-    return re.sub(r"\s+", " ", text).strip()
+    text = block.text.replace("\r\n", "\n").replace("\r", "\n")
+    return re.sub(r"[ \t]+", " ", text).strip()
 
 
 def _deduplicate_evidence_blocks(

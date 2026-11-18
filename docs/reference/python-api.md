@@ -15,15 +15,16 @@ report = extract_study(
     pdf="paper.pdf",
     supplement="paper_si.pdf",
     output_dir="results/paper",
-    parser="docling",
+    parser="pymupdf",
 )
 ```
 
-The quality-first default performs a second evidence-complete refinement. Set
-`use_refinement=False` for a cost ablation, or set `refinement_model` to test a
-different model while keeping the primary draft fixed through the response cache.
-`use_targeted_repair=False` disables the bounded audit-driven recovery call;
-`repair_model` changes only that call.
+Refinement runs by default; `use_refinement=False` disables it.
+`use_targeted_repair=False` disables the audit-driven recovery call.
+Pass `config_file="method.toml"` to configure `[stages.default]` and stage overrides
+using the same format as experiments. Python callers can instead pass a `deployments`
+mapping from `"default"` and stage names to `DeploymentSettings` objects; it uses the
+same inheritance rules. The older per-step model keywords are no longer accepted.
 
 ::: perla_extract.study_extraction.cli.extract_study
     options:
@@ -67,8 +68,9 @@ adapter otherwise refuses to trust accepted semantic proposals.
 
 ## Evaluate rich extractions
 
-`evaluate_study` matches records without run-local IDs and reports inventory,
-relationships, scalar fields, and atomic values separately.
+`evaluate_study` matches records without comparing run-local IDs. Its primary
+score requires correct scientific values in the correct context; separate inventory,
+value-recovery and attribution reports explain mismatches.
 
 ::: perla_extract.study_extraction.evaluation.evaluate_study
     options:

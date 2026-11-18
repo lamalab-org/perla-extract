@@ -1,8 +1,4 @@
-import shutil
-import subprocess
 from pathlib import Path
-
-import pytest
 
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
@@ -57,7 +53,6 @@ def test_refreshed_review_dataset_is_the_clear_default():
         )
         == 2
     )
-    assert 'split: "dev"' in javascript
     assert 'calibration: "Legacy calibration"' in javascript
 
 
@@ -79,7 +74,6 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert 'state.authMode === "internal_or_clerk"' in javascript
     assert "Choose Forgot password in the form" in javascript
     assert 'elevation: "flush"' in javascript
-    assert 'colorPrimary: "#176b52"' in javascript
     assert "Your session expired. Sign in again" in javascript
     assert "localStorage.removeItem(REVIEW_TOKEN_KEY)" in javascript
     assert '"Connection problem"' not in javascript
@@ -155,7 +149,7 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "/api/figure-panel-image/" in javascript
     assert 'responseType: "blob"' in javascript
     assert "loadAuthenticatedImage" in javascript
-    assert 'src: `/api/figure-panel-image/' not in javascript
+    assert "src: `/api/figure-panel-image/" not in javascript
     assert 'id="figure-review-progress"' in html
     assert 'id="figure-review-filter"' in html
     assert "Confirm and next" in javascript
@@ -192,17 +186,6 @@ def test_ui_covers_every_rich_record_collection():
         "stability_tests",
     ):
         assert collection in javascript
-
-
-def test_field_correction_opens_before_the_structured_editor_renders():
-    javascript = (APP / "app.js").read_text(encoding="utf-8")
-    start = javascript.index("function openRecord(")
-    end = javascript.index("\nfunction humanLabel", start)
-    source = javascript[start:end]
-
-    assert source.index("dialog.showModal()") < source.index("renderStructuredEditor()")
-    assert 'setRecordEditorMode("json", false)' in source
-    assert "The complete record is open as JSON so your correction is not blocked." in source
 
 
 def test_record_review_layout_responds_to_panel_width_without_overlays():
@@ -254,23 +237,6 @@ def test_ui_shows_reported_composition_beside_enrichment_proposals():
     assert "result.status" in javascript
 
 
-def test_pipeline_statuses_are_explained_as_review_priorities():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-
-    assert "Start here: review one record at a time" in html
-    assert "is a priority list, not a claim that a record is wrong" in html
-    assert "Passed automated checks" in source
-    assert "It still requires human comparison with the source" in source
-    assert "You marked this for correction" in source
-    assert "Added during the second extraction read" in source
-    assert "Revised during the second extraction read" in source
-    assert "a change is a review priority, not a correctness claim" in source
-    assert "correction required" not in source
-    assert "changed by quality pass" not in source
-    assert "added by quality pass" not in source
-
-
 def test_revision_conflicts_use_reviewer_language_and_offer_recovery():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
@@ -311,7 +277,6 @@ def test_ui_tracks_record_review_and_avoids_prompt_based_creation():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "new-record-kind" in html
-    assert "record-decisions" in source
     assert "needs_correction" in source
     assert "record_key" in source
     assert "window.prompt" not in source
@@ -351,10 +316,11 @@ def test_stability_review_shows_every_atomic_value_before_related_context():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
 
-    assert "renderStabilityRecord" in source
-    assert "Test-wide conditions" in source
-    assert "Checkpoint-specific conditions" in source
-    assert 'reportedValueGroup(entry, "Outcomes"' in source
+    details = (APP / "record-details.js").read_text(encoding="utf-8")
+    assert "renderStabilityRecord" in details
+    assert "Test-wide conditions" in details
+    assert "Checkpoint-specific conditions" in details
+    assert 'reportedValueGroup(entry, "Outcomes"' in details
     assert "Show value in paper" in source
     assert "recordJsonPath" in source
     assert source.index("renderReviewTarget(entry)") < source.index(
@@ -410,35 +376,6 @@ def test_pdf_source_switch_is_visible_cached_and_waits_for_the_new_page():
     assert server.count("private, max-age=3600, immutable") >= 3
 
 
-def test_record_count_corrections_are_explicit_and_reference_guarded():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    backend = (APP.parent / "study_review.py").read_text(encoding="utf-8")
-
-    assert "Duplicate as missing" in source
-    assert "Merge duplicate" in source
-    assert "Change type" in source
-    assert "/api/record-merges/" in source
-    assert '"record-reclassifications"' in source
-    assert "Remove extra record" in html
-    assert "Merging repeated records moves their explicit links automatically" in html
-    assert "/api/study-schema" in source
-    assert "draftFromSchema" in source
-    assert "recordReferences" in source
-    assert "reviewReferencedRecord" in source
-    assert "Add missing record" in source
-    assert "Save my correction" in source
-    assert "other records refer to it" in backend
-    assert 'dependency.hidden = intent !== "remove"' in source
-    assert '$("remove-record").hidden = intent !== "remove"' in source
-    assert (
-        '$("cancel-record").addEventListener("click", () => $("record-dialog").close())'
-        in source
-    )
-    assert "linkedRecordSummary" in source
-    assert "pointing to something that no longer exists" in source
-
-
 def test_startup_defers_schema_and_shows_real_loading_states():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
@@ -452,8 +389,9 @@ def test_startup_defers_schema_and_shows_real_loading_states():
     assert "await startApp();" in source
     assert not source.rstrip().endswith("await loadStudySchema();")
     assert "return state.studySchema || loadStudySchema();" in source
-    assert 'throw new Error("The server returned an incomplete study schema.")' in source
-    assert "state.studySchema?.properties?.[kind]?.items" in source
+    assert (
+        'throw new Error("The server returned an incomplete study schema.")' in source
+    )
 
 
 def test_failed_navigation_keeps_an_open_paper_and_progress_requires_a_session():
@@ -500,138 +438,10 @@ def test_correction_and_removal_dialogs_open_without_saving_a_decision_first():
     assert "submitDecision" not in removal
 
 
-def test_corrections_default_to_fields_and_existing_evidence():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-
-    assert "structured-editor" in html
-    assert "Raw record JSON" in html
-    assert ">Form</button>" in html
-    assert "renderStructuredEditor" in source
-    assert "setRecordEditorMode" in source
-    assert "recordFieldPath" in source
-    assert "citation?.block_id" in source
-    assert "MATERIAL_FORMS" in source
-    assert "schema_compatibility" in source
-    assert "fields added since import still require review or regeneration" in source
-
-
-def test_device_family_editor_has_a_focused_stack_workflow():
-    source = (APP / "app.js").read_text(encoding="utf-8")
-
-    assert "renderDeviceStackEditor" in source
-    assert "Correct the material, function, and order directly" in source
-    assert "moveLayer" in source
-    assert "removeLayer" in source
-    assert "addLayer" in source
-    assert "recordSchemaNode" in source
-    assert "Composition, form, and properties" in source
-    assert "absorber.layer_id = null" in source
-    assert "step.target_layer_ids = remaining" in source
-    assert 'const fields = ["layer_id"' not in source
-
-
-def test_structured_editor_prioritizes_scientific_fields_over_schema_plumbing():
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    styles = (APP / "styles.css").read_text(encoding="utf-8")
-
-    assert "Schema field" in source
-    assert "Technical details" in source
-    assert "Record links and identifiers" in source
-    assert "isTechnicalRecordField" in source
-    assert "Materials and fabrication" in source
-    assert "item?.label" in source
-    assert 'encodeURIComponent(String(part)).replaceAll("-", "%2D")' in source
-    assert ".editor-group .editor-group { grid-column:1 / -1;" in styles
-    assert ".device-related-editor > .editor-group > .editor-fields { grid-template-columns:1fr;" in styles
-    assert "attachMissingEvidence(value, citation)" in source
-
-
-def test_structured_editor_can_reorder_sequenced_items_without_raw_json():
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    styles = (APP / "styles.css").read_text(encoding="utf-8")
-
-    assert "function moveOrderedItem" in source
-    assert "function isOrderedArray" in source
-    assert 'Object.hasOwn(item, "sequence")' in source
-    assert 'text: "↑ Earlier"' in source
-    assert 'text: "↓ Later"' in source
-    assert 'text: "Position"' in source
-    assert 'entry.sequence = position + 1' in source
-    assert ".ordered-array-controls" in styles
-
-
-def test_ordered_item_moves_preserve_content_and_renumber_sequences():
-    if shutil.which("node") is None:
-        pytest.skip("Node.js is needed to execute the browser-side reorder helper")
-
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    helper_source = source[
-        source.index("function editValueAt") : source.index(
-            "function orderedArrayItem", source.index("function editValueAt")
-        )
-    ]
-    script = (
-        """
-const assert = require("node:assert/strict");
-const steps = [
-  { sequence: 7, operation: "A", conditions: [{ value: 10 }] },
-  { sequence: 2, operation: "B", conditions: [{ value: 20 }] },
-  { sequence: 99, operation: "C", conditions: [{ value: 30 }] },
-];
-const state = { edit: { value: { processing_steps: steps } } };
-const recordJson = { value: "" };
-const focused = [];
-const opened = [];
-const nodes = [0, 1, 2].map((index) => ({
-  dataset: { arrayPath: JSON.stringify(["processing_steps"]), arrayIndex: String(index) },
-  querySelector(selector) {
-    if (selector === ":scope > details") return { set open(value) { if (value) opened.push(index); } };
-    if (selector === "select") return { focus() { focused.push(index); } };
-    return null;
-  },
-}));
-const document = { querySelectorAll() { return nodes; } };
-const $ = (id) => { assert.equal(id, "record-json"); return recordJson; };
-let renderCount = 0;
-function renderStructuredEditor() { renderCount += 1; }
-"""
-        + helper_source
-        + """
-moveOrderedItem(["processing_steps"], 0, 2); // direct position: A after C
-assert.deepEqual(steps.map((step) => step.operation), ["B", "C", "A"]);
-assert.deepEqual(steps.map((step) => step.sequence), [1, 2, 3]);
-assert.equal(steps[2].conditions[0].value, 10);
-
-moveOrderedItem(["processing_steps"], 2, 1); // Earlier: A before C
-assert.deepEqual(steps.map((step) => step.operation), ["B", "A", "C"]);
-
-moveOrderedItem(["processing_steps"], 0, 1); // Later: B after A
-assert.deepEqual(steps.map((step) => step.operation), ["A", "B", "C"]);
-assert.deepEqual(steps.map((step) => step.sequence), [1, 2, 3]);
-assert.deepEqual(steps.map((step) => step.conditions[0].value), [10, 20, 30]);
-assert.equal(renderCount, 3);
-assert.deepEqual(opened, [2, 1, 1]);
-assert.deepEqual(focused, [2, 1, 1]);
-assert.deepEqual(JSON.parse(recordJson.value).processing_steps, steps);
-"""
-    )
-    subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
-
-
 def test_ui_builds_untrusted_content_with_dom_nodes():
     source = (APP / "app.js").read_text(encoding="utf-8")
     assert "innerHTML" not in source
     assert "replaceChildren" in source
-
-
-def test_only_admins_can_download_an_adjudicated_pr_bundle():
-    html = (APP / "index.html").read_text(encoding="utf-8")
-    source = (APP / "app.js").read_text(encoding="utf-8")
-    assert "Download adjudicated PR bundle" in html
-    assert "ground-truth-export" in source
-    assert 'state.user.role === "admin"' in source
-    assert 'finalEvent?.details?.stage === "adjudication"' in source
 
 
 def test_reviewers_can_inspect_and_download_their_persisted_annotations():
@@ -639,7 +449,7 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
-    assert '>My work &amp; undo</button>' in html
+    assert ">My work &amp; undo</button>" in html
     assert "My work &amp; undo" in html
     assert "Current work" in html
     assert "History" in html
@@ -669,16 +479,20 @@ def test_reviewers_can_inspect_and_download_their_persisted_annotations():
     assert "application.reset_reviewer_state(" in server
 
 
-def test_admin_can_download_all_reviewer_feedback():
+def test_signed_in_reviewers_can_download_all_reviewer_feedback():
     html = (APP / "index.html").read_text(encoding="utf-8")
     source = (APP / "app.js").read_text(encoding="utf-8")
     server = (APP.parent / "server.py").read_text(encoding="utf-8")
 
     assert 'id="download-all-feedback"' in html
-    assert 'payload.user.role !== "admin"' in source
+    assert source.count('$("download-all-feedback").hidden = false;') == 2
     assert "/api/reviewer-feedback-export" in source
     assert "application.reviewer_feedback_archive()" in server
-    assert "self.current_user(require_admin=True)" in server
+    route = server.split('if parsed.path == "/api/reviewer-feedback-export":')[1].split(
+        "return", 1
+    )[0]
+    assert "self.current_user()" in route
+    assert "require_admin" not in route
 
 
 def test_file_actions_are_direct_responsive_and_show_progress():

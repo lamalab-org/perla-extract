@@ -45,6 +45,7 @@ erDiagram
         string family_id
         string champion_status
         string selection_basis
+        SubjectContext subject_context
         list reported_properties
     }
     PERFORMANCE_OBSERVATION {
@@ -52,6 +53,7 @@ erDiagram
         string device_id
         string measurement_type
         string scan_direction
+        list measurement_conditions
         list metrics
     }
     POPULATION_STATISTIC {
@@ -59,6 +61,11 @@ erDiagram
         string family_id
         string statistic_type
         int sample_size
+        list subjects
+        string error_bar_type
+        string measurement_type
+        string scan_direction
+        list measurement_conditions
         list metrics
     }
     STABILITY_TEST {
@@ -114,10 +121,6 @@ Version-1 inputs with one family-level absorber are read as one explicitly unsco
 component. That migration preserves data but does not guess how a historical tandem
 composition should be split. New output always uses the scoped `absorbers` array.
 
-This arrangement captures chemical detail without adding a Python field or regular
-expression for every possible material property, additive, treatment, or process
-condition.
-
 ## Reporting levels are not interchangeable
 
 | Source statement | Record type | Why |
@@ -136,6 +139,18 @@ during an aging sequence belongs to the corresponding checkpoint, while conditio
 that apply throughout the test remain on `StabilityTest`.
 
 ## Reported values and qualifiers
+
+Place a condition according to what happened in the experiment:
+
+| Condition | Location | Example |
+| --- | --- | --- |
+| Preparation or treatment that identifies a specimen or cohort | `IndividualDevice.subject_context` or `PopulationStatistic.subjects`; shared fabrication steps stay on the family | A perovskite film heated before device completion |
+| Conditions during a performance measurement | `measurement_conditions` on the observation or population | Irradiance, spectrum, scan rate or measurement temperature |
+| Aging of a completed device | `StabilityTest.conditions` or a checkpoint's `conditions` | Temperature during a 1000-hour stability test |
+
+An unreported condition remains absent. The scorer cannot treat an unknown protocol
+as equivalent to an explicitly different one. NOMAD and reduced exports retain these
+contexts in `additional_notes` when their native fields cannot represent them.
 
 `ReportedValue` keeps:
 

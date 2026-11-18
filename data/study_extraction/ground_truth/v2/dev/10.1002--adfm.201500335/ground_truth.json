@@ -1,0 +1,1174 @@
+{
+  "paper": {
+    "title": "Self-Powered Electronics by Integration of Flexible Solid-State Graphene-Based Supercapacitors with High Performance Perovskite Hybrid Solar Cells",
+    "doi": "10.1002/adfm.201500335"
+  },
+  "device_families": [
+    {
+      "family_id": "family-pero-hsc-01",
+      "label": "pero-HSC: ITO/PEDOT:PSS/CH3NH3PbI3−xClx/PC61BM/Al",
+      "variant": null,
+      "architecture": null,
+      "polarity": "not_reported",
+      "full_stack_raw": "ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al",
+      "layers": [
+        {
+          "layer_id": "layer-glass-01",
+          "sequence": 1,
+          "role": "substrate",
+          "material": "glass substrate",
+          "constituents": [
+            {
+              "name": "glass",
+              "role": "substrate",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-ito-01",
+          "sequence": 2,
+          "role": "transparent_electrode",
+          "material": "ITO",
+          "constituents": [
+            {
+              "name": "indium tin oxide",
+              "role": null,
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-pedot-pss-01",
+          "sequence": 3,
+          "role": "not_reported",
+          "material": "PEDOT:PSS",
+          "constituents": [
+            {
+              "name": "PEDOT:PSS",
+              "role": null,
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "PEDOT:PSS thickness",
+              "raw_value": "Approximately 35 nm",
+              "value_number": 35.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-perovskite-01",
+          "sequence": 4,
+          "role": "absorber",
+          "material": "CH3NH3PbI_{3- x}Cl _{x}",
+          "constituents": [
+            {
+              "name": "CH3NH3PbI_{3- x}Cl _{x}",
+              "role": "perovskite materials",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0167_typography_b558f055f5ff",
+                  "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            },
+            {
+              "block_id": "main_p7_0167_typography_b558f055f5ff",
+              "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-pc61bm-01",
+          "sequence": 5,
+          "role": "not_reported",
+          "material": "PC _{61} BM",
+          "constituents": [
+            {
+              "name": "PC _{61} BM",
+              "role": null,
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                },
+                {
+                  "block_id": "main_p7_0167_typography_b558f055f5ff",
+                  "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "PC61BM thickness",
+              "raw_value": "≈ 100 nm",
+              "value_number": 100.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            },
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            },
+            {
+              "block_id": "main_p7_0167_typography_b558f055f5ff",
+              "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+            }
+          ]
+        },
+        {
+          "layer_id": "layer-al-01",
+          "sequence": 6,
+          "role": "back_electrode",
+          "material": "Al",
+          "constituents": [
+            {
+              "name": "Aluminum",
+              "role": "electrode",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "Al electrode thickness",
+              "raw_value": "≈ 120 nm",
+              "value_number": 120.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            },
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        }
+      ],
+      "absorbers": [
+        {
+          "absorber_id": "absorber-perovskite-01",
+          "layer_id": "layer-perovskite-01",
+          "label": "perovskite materials",
+          "formula": {
+            "name": "perovskite absorber formula",
+            "raw_value": "CH _{3} NH _{3} PbI _{3- x} Cl _{x}",
+            "value_number": null,
+            "unit": null,
+            "evidence": [
+              {
+                "block_id": "main_p7_0167_typography_b558f055f5ff",
+                "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+              }
+            ]
+          },
+          "properties": [],
+          "constituents": [
+            {
+              "name": "CH _{3} NH _{3} PbI _{3- x} Cl _{x}",
+              "role": "perovskite materials",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0167_typography_b558f055f5ff",
+                  "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            },
+            {
+              "block_id": "main_p7_0167_typography_b558f055f5ff",
+              "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+            }
+          ]
+        }
+      ],
+      "processing_steps": [
+        {
+          "step_id": "process-precursor-mixing-01",
+          "sequence": 1,
+          "operation": "prepare the perovskite precursor solution by mixing CH3NH3I and PbCl2 powder in anhydrous dimethylformamide",
+          "target_layer_ids": [
+            "layer-perovskite-01"
+          ],
+          "materials": [
+            "CH 3 NH 3 I",
+            "PbCl 2 powder",
+            "anhydrous dimethylformamide"
+          ],
+          "conditions": [
+            {
+              "name": "CH3NH3I:PbCl2 molar ratio in precursor solution",
+              "raw_value": "3:1",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p5_0071_text_cdd8ff795875",
+                  "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+                }
+              ]
+            },
+            {
+              "name": "CH3NH3I concentration",
+              "raw_value": "2.64",
+              "value_number": 2.64,
+              "unit": "M L -1",
+              "evidence": [
+                {
+                  "block_id": "main_p5_0071_text_cdd8ff795875",
+                  "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+                },
+                {
+                  "block_id": "main_p6_0166_typography_90844394fe9d",
+                  "quote": "Typography-preserving source fragments:\nsolid-state supercapacitors at the current density of 1 A g ^{−1} after it was \nthe concentration of CH _{3} NH _{3} I and PbCl _{2} were 2.64 and 0.88 M L ^{−1} . \nﬂ ake graphite following the modiﬁ ed Hummers’ method. ^{[ 35 ]} A stable \nformed by using CCG dispersion through facile vacuum ﬁ ltration. ^{[ 21,31 ]} \nﬁ lms are schematically displayed in Scheme  1 ."
+                }
+              ]
+            },
+            {
+              "name": "PbCl2 concentration",
+              "raw_value": "0.88 M L -1",
+              "value_number": 0.88,
+              "unit": "M L -1",
+              "evidence": [
+                {
+                  "block_id": "main_p5_0071_text_cdd8ff795875",
+                  "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+                },
+                {
+                  "block_id": "main_p6_0166_typography_90844394fe9d",
+                  "quote": "Typography-preserving source fragments:\nsolid-state supercapacitors at the current density of 1 A g ^{−1} after it was \nthe concentration of CH _{3} NH _{3} I and PbCl _{2} were 2.64 and 0.88 M L ^{−1} . \nﬂ ake graphite following the modiﬁ ed Hummers’ method. ^{[ 35 ]} A stable \nformed by using CCG dispersion through facile vacuum ﬁ ltration. ^{[ 21,31 ]} \nﬁ lms are schematically displayed in Scheme  1 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p5_0071_text_cdd8ff795875",
+              "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+            },
+            {
+              "block_id": "main_p6_0166_typography_90844394fe9d",
+              "quote": "Typography-preserving source fragments:\nsolid-state supercapacitors at the current density of 1 A g ^{−1} after it was \nthe concentration of CH _{3} NH _{3} I and PbCl _{2} were 2.64 and 0.88 M L ^{−1} . \nﬂ ake graphite following the modiﬁ ed Hummers’ method. ^{[ 35 ]} A stable \nformed by using CCG dispersion through facile vacuum ﬁ ltration. ^{[ 21,31 ]} \nﬁ lms are schematically displayed in Scheme  1 ."
+            }
+          ]
+        },
+        {
+          "step_id": "process-precursor-stirring-01",
+          "sequence": 2,
+          "operation": "stir the perovskite precursor solution",
+          "target_layer_ids": [
+            "layer-perovskite-01"
+          ],
+          "materials": [
+            "perovskite precursor solution"
+          ],
+          "conditions": [
+            {
+              "name": "stirring temperature",
+              "raw_value": "60 ° C",
+              "value_number": 60.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p5_0071_text_cdd8ff795875",
+                  "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+                }
+              ]
+            },
+            {
+              "name": "stirring duration",
+              "raw_value": "6 h",
+              "value_number": 6.0,
+              "unit": "h",
+              "evidence": [
+                {
+                  "block_id": "main_p5_0071_text_cdd8ff795875",
+                  "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p5_0071_text_cdd8ff795875",
+              "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+            }
+          ]
+        },
+        {
+          "step_id": "process-precursor-standing-01",
+          "sequence": 3,
+          "operation": "placed for standstill overnight before device fabrication",
+          "target_layer_ids": [
+            "layer-perovskite-01"
+          ],
+          "materials": [
+            "perovskite precursor solution"
+          ],
+          "conditions": [
+            {
+              "name": "standing duration",
+              "raw_value": "overnight",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p5_0071_text_cdd8ff795875",
+                  "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p5_0071_text_cdd8ff795875",
+              "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+            }
+          ]
+        },
+        {
+          "step_id": "process-pedot-coating-01",
+          "sequence": 4,
+          "operation": "spin-coated on precleaned ITO glass substrates",
+          "target_layer_ids": [
+            "layer-pedot-pss-01"
+          ],
+          "materials": [
+            "PEDOT:PSS"
+          ],
+          "conditions": [
+            {
+              "name": "PEDOT:PSS thickness",
+              "raw_value": "Approximately 35 nm",
+              "value_number": 35.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            }
+          ]
+        },
+        {
+          "step_id": "process-pedot-annealing-01",
+          "sequence": 5,
+          "operation": "thermal annealing",
+          "target_layer_ids": [
+            "layer-pedot-pss-01"
+          ],
+          "materials": [
+            "PEDOT:PSS"
+          ],
+          "conditions": [
+            {
+              "name": "thermal-annealing temperature",
+              "raw_value": "150 ° C",
+              "value_number": 150.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            },
+            {
+              "name": "thermal-annealing duration",
+              "raw_value": "10 min",
+              "value_number": 10.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            }
+          ]
+        },
+        {
+          "step_id": "process-perovskite-spin-first-01",
+          "sequence": 6,
+          "operation": "first procedure of the two-step perovskite spin-coating process",
+          "target_layer_ids": [
+            "layer-perovskite-01"
+          ],
+          "materials": [
+            "perovskite precursor solution"
+          ],
+          "conditions": [
+            {
+              "name": "spin-coating atmosphere",
+              "raw_value": "glove box with nitrogen atmosphere",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+                }
+              ]
+            },
+            {
+              "name": "first-procedure spin time",
+              "raw_value": "20 s",
+              "value_number": 20.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            },
+            {
+              "name": "first-procedure rotating speed",
+              "raw_value": "2500 rpm",
+              "value_number": 2500.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            },
+            {
+              "name": "first-procedure acceleration time",
+              "raw_value": "10 s",
+              "value_number": 10.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            },
+            {
+              "name": "first-procedure rotating-speed increase",
+              "raw_value": "0 to 2500 rpm",
+              "value_number": null,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+            },
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        },
+        {
+          "step_id": "process-perovskite-spin-second-01",
+          "sequence": 7,
+          "operation": "second procedure of the two-step perovskite spin-coating process",
+          "target_layer_ids": [
+            "layer-perovskite-01"
+          ],
+          "materials": [
+            "wet perovskite thin film"
+          ],
+          "conditions": [
+            {
+              "name": "second-procedure acceleration time",
+              "raw_value": "8 s",
+              "value_number": 8.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            },
+            {
+              "name": "second-procedure spin-time wording",
+              "raw_value": "tuned from 20 s",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            },
+            {
+              "name": "second-procedure rotating speed",
+              "raw_value": "2500 rpm",
+              "value_number": 2500.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        },
+        {
+          "step_id": "process-wet-film-standing-01",
+          "sequence": 8,
+          "operation": "placed in petri-dish without cover",
+          "target_layer_ids": [
+            "layer-perovskite-01"
+          ],
+          "materials": [
+            "wet perovskite thin films"
+          ],
+          "conditions": [
+            {
+              "name": "wet-film standing duration",
+              "raw_value": "30 min",
+              "value_number": 30.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        },
+        {
+          "step_id": "process-perovskite-annealing-01",
+          "sequence": 9,
+          "operation": "annealed",
+          "target_layer_ids": [
+            "layer-perovskite-01"
+          ],
+          "materials": [
+            "perovskite thin films"
+          ],
+          "conditions": [
+            {
+              "name": "perovskite-film annealing temperature",
+              "raw_value": "90 ° C",
+              "value_number": 90.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            },
+            {
+              "name": "perovskite-film annealing duration",
+              "raw_value": "3 h",
+              "value_number": 3.0,
+              "unit": "h",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        },
+        {
+          "step_id": "process-pc61bm-coating-01",
+          "sequence": 10,
+          "operation": "spin-coated on the top of perovskite thin films",
+          "target_layer_ids": [
+            "layer-pc61bm-01"
+          ],
+          "materials": [
+            "PC 61 BM"
+          ],
+          "conditions": [
+            {
+              "name": "PC61BM thickness",
+              "raw_value": "≈ 100 nm",
+              "value_number": 100.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        },
+        {
+          "step_id": "process-al-evaporation-01",
+          "sequence": 11,
+          "operation": "evaporated under high vacuum through a shade mask",
+          "target_layer_ids": [
+            "layer-al-01"
+          ],
+          "materials": [
+            "Al electrode"
+          ],
+          "conditions": [
+            {
+              "name": "Al electrode thickness",
+              "raw_value": "≈ 120 nm",
+              "value_number": 120.0,
+              "unit": "nm",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            },
+            {
+              "name": "reported Al-evaporation vacuum",
+              "raw_value": "2 × 10 6 mbar",
+              "value_number": null,
+              "unit": "mbar",
+              "evidence": [
+                {
+                  "block_id": "main_p7_0090_text_045d48872f6c",
+                  "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p7_0090_text_045d48872f6c",
+          "quote": "Fabrication of the Perovskite Hybrid Solar Cells (Pero-HSCs) : The pero-HSCs were fabricated in the device with a confi guration of ITO/ PEDOT:PSS/CH 3 NH 3 PbI 3x Cl x /PC 61 BM/Al, where ITO is indium tin oxide, CH 3 NH 3 PbI 3x Cl x is perovskite materials, and Al is Aluminum. Approximately 35 nm of PEDOT:PSS was spin-coated on precleaned ITO glass substrates followed by thermal annealing at 150 ° C for 10 min. The perovskite fi lms were spin-coated on top of ITO/PEDOT:PSS from perovskite precursor solution in the glove box with nitrogen atmosphere. The perovskite thin fi lms were processed by two-step procedures."
+        },
+        {
+          "block_id": "main_p7_0167_typography_b558f055f5ff",
+          "quote": "Typography-preserving source fragments:\nIn this supercapacitor, the SSG ﬁ lm acts as the electrode, the H _{2} SO _{4} –\nmeasured in the frequency ranging from 10 ^{5} to 10 ^{−2} Hz. \nPEDOT:PSS/CH _{3} NH _{3} PbI _{3- x}  Cl _{x} /PC _{61} BM/Al, where ITO is indium tin \noxide, CH _{3} NH _{3} PbI _{3- x}  Cl _{x} is perovskite materials, and Al is Aluminum. \nannealed at 90 °C for 3 h. Next, ≈100 nm of PC _{61} BM was spin-coated \nevaporated under high vacuum (2 × 10 ^{6} mbar) through a shade mask. \nThe device area is deﬁ ned as 4.5 mm ^{2} . \n(AM) 1.5 illumination at the light intensity of 100 mW cm ^{−2} . The light"
+        },
+        {
+          "block_id": "main_p5_0071_text_cdd8ff795875",
+          "quote": "[ 2,3 ] To prepare the perovskite precursor solution, CH 3 NH 3 I and PbCl 2 powder were mixed in anhydrous dimethylformamide (Aldrich) with a molar ratio of 3:1. Specifi cally, www.MaterialsViews.com the concentration of CH 3 NH 3 I and PbCl 2 were 2.64 and 0.88 M L -1 . The solution was stirred at 60 ° C for 6 h and then placed for standstill overnight before device fabrication."
+        },
+        {
+          "block_id": "main_p7_0090_text_045d48872f6c",
+          "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+        }
+      ]
+    }
+  ],
+  "individual_devices": [
+    {
+      "device_id": "device-jv-figure8a-01",
+      "family_id": "family-pero-hsc-01",
+      "label": "pero-HSC represented by the Figure 8a J-V characteristics",
+      "variant": null,
+      "champion_status": "not_reported",
+      "selection_basis": "not_reported",
+      "reported_properties": [
+        {
+          "name": "device area",
+          "raw_value": "4.5 mm 2",
+          "value_number": 4.5,
+          "unit": "mm2",
+          "evidence": [
+            {
+              "block_id": "main_p7_0090_text_045d48872f6c",
+              "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0058_text_fd55d7c1e71b",
+          "quote": "In order to explore potential application as new clean energy-storage devices, www.afm-journal.de the solid-state supercapacitors is integrated with pero-HSCs. Figure 8 a presents the J -V characteristics of pero-HSCs. The more details in pero-HSCs fabrication and characterization are reported in refs. [ 43-45 ] . The pero-HSCs exhibits a shortcircuit current ( J SC ) of 22.59 mA cm -2 , an open-circuit voltage ( V OC ) of 0.90 V, a fi ll factor of 69.5%, with a corresponding PCE of 14.13%, which is comparable to that observed from the pero-HSCs fabricated by similar method and with the similar device structure."
+        },
+        {
+          "block_id": "main_p6_0076_text_65b2804fd31e",
+          "quote": "Figure 8. a) Current density-voltage characteristics of b) the IPCE spectrum of the pero-HSCs and c) photocurrents of pero-HSCs measured under forward and reversed directions."
+        },
+        {
+          "block_id": "main_p7_0090_text_045d48872f6c",
+          "quote": "In the fi rst procedure, the spin-time was kept at 20 s, with the rotating-speed of 2500 rpm, but the acceleration-time was 10 s with the rotating-peed increased from 0 to 2500 rpm in the acceleration-time. In the second procedure, the acceleration-time was kept at 8 s, but the spin-time was tuned from 20 s, with the rotating-speed of 2500 rpm. The wet perovskite thin fi lms were placed in petri-dish without cover for 30 min and then annealed at 90 ° C for 3 h. Next, ≈ 100 nm of PC 61 BM was spin-coated on the top of perovskite thin fi lms. Finally, ≈ 120 nm Al electrode was evaporated under high vacuum (2 × 10 6 mbar) through a shade mask. The device area is defi ned as 4.5 mm 2 ."
+        }
+      ]
+    }
+  ],
+  "performance_observations": [
+    {
+      "observation_id": "observation-jv-figure8a-01",
+      "device_id": "device-jv-figure8a-01",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "J-V instrumentation",
+          "raw_value": "Keithley 2400 Source Meter",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5 illumination",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+            }
+          ]
+        },
+        {
+          "name": "illumination intensity",
+          "raw_value": "100 mW cm -2",
+          "value_number": 100.0,
+          "unit": "mW cm−2",
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+            }
+          ]
+        },
+        {
+          "name": "light-intensity calibration",
+          "raw_value": "accurately calibrated by a standard Si photodiode",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+            }
+          ]
+        },
+        {
+          "name": "short-circuit current density (JSC)",
+          "raw_value": "22.59 mA cm -2",
+          "value_number": 22.59,
+          "unit": "mA cm−2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "In order to explore potential application as new clean energy-storage devices, www.afm-journal.de the solid-state supercapacitors is integrated with pero-HSCs. Figure 8 a presents the J -V characteristics of pero-HSCs. The more details in pero-HSCs fabrication and characterization are reported in refs. [ 43-45 ] . The pero-HSCs exhibits a shortcircuit current ( J SC ) of 22.59 mA cm -2 , an open-circuit voltage ( V OC ) of 0.90 V, a fi ll factor of 69.5%, with a corresponding PCE of 14.13%, which is comparable to that observed from the pero-HSCs fabricated by similar method and with the similar device structure."
+            },
+            {
+              "block_id": "main_p5_0165_typography_509fdd868932",
+              "quote": "Typography-preserving source fragments:\nkite ﬁ lms. ^{[ 48–51 ]} The photocurrent hysteresis of pero-HSCs is \ncan discharge from 0.75 V, which is smaller than  V _{OC} (0.90 V) \nof pero-HSCs, to 0 V at the current density 1 A g ^{−1} , and can \nable personal devices. ^{[ 52 ]} \ntors exhibit a high speciﬁ c capacitance of 245 F g ^{−1} at 1 A g ^{−1} \ncircuit current ( J _{SC} ) of 22.59 mA cm ^{−2} , an open-circuit voltage \n( V _{OC} ) of 0.90 V, a ﬁ ll factor of 69.5%, with a corresponding \ndevice structure. ^{[ 1,2 ]} The incident photon to current efﬁ ciency \nCH _{3} NH _{3} PbI _{3- x}  Cl _{x} observed from absorption spectrum. ^{[ 46,47 ]} \nBased on IPCE spectrum, the  J _{SC} of pero-HSCs is estimated \nto be 21.14 mA cm ^{−2} , which is consistent with that observed \n Figure 7.  a) CV curves with scan rate at 100 mV s ^{−1} and b) galvanostatic charge–discharge \n89 000–98 000 g mol ^{−1} ), ammonia methylamine \n(57 wt% in water), and lead chloride (PbCl _{2} ) were \nand PC _{61} BM were purchased from Clevious and \niodide (CH _{3} NH _{3} I) was synthesized according to \nreported reference. ^{[ 2,3 ]} To prepare the perovskite \nprecursor solution, CH _{3} NH _{3} I and PbCl"
+            }
+          ]
+        },
+        {
+          "name": "open-circuit voltage (VOC)",
+          "raw_value": "0.90 V",
+          "value_number": 0.9,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "In order to explore potential application as new clean energy-storage devices, www.afm-journal.de the solid-state supercapacitors is integrated with pero-HSCs. Figure 8 a presents the J -V characteristics of pero-HSCs. The more details in pero-HSCs fabrication and characterization are reported in refs. [ 43-45 ] . The pero-HSCs exhibits a shortcircuit current ( J SC ) of 22.59 mA cm -2 , an open-circuit voltage ( V OC ) of 0.90 V, a fi ll factor of 69.5%, with a corresponding PCE of 14.13%, which is comparable to that observed from the pero-HSCs fabricated by similar method and with the similar device structure."
+            },
+            {
+              "block_id": "main_p5_0165_typography_509fdd868932",
+              "quote": "Typography-preserving source fragments:\nkite ﬁ lms. ^{[ 48–51 ]} The photocurrent hysteresis of pero-HSCs is \ncan discharge from 0.75 V, which is smaller than  V _{OC} (0.90 V) \nof pero-HSCs, to 0 V at the current density 1 A g ^{−1} , and can \nable personal devices. ^{[ 52 ]} \ntors exhibit a high speciﬁ c capacitance of 245 F g ^{−1} at 1 A g ^{−1} \ncircuit current ( J _{SC} ) of 22.59 mA cm ^{−2} , an open-circuit voltage \n( V _{OC} ) of 0.90 V, a ﬁ ll factor of 69.5%, with a corresponding \ndevice structure. ^{[ 1,2 ]} The incident photon to current efﬁ ciency \nCH _{3} NH _{3} PbI _{3- x}  Cl _{x} observed from absorption spectrum. ^{[ 46,47 ]} \nBased on IPCE spectrum, the  J _{SC} of pero-HSCs is estimated \nto be 21.14 mA cm ^{−2} , which is consistent with that observed \n Figure 7.  a) CV curves with scan rate at 100 mV s ^{−1} and b) galvanostatic charge–discharge \n89 000–98 000 g mol ^{−1} ), ammonia methylamine \n(57 wt% in water), and lead chloride (PbCl _{2} ) were \nand PC _{61} BM were purchased from Clevious and \niodide (CH _{3} NH _{3} I) was synthesized according to \nreported reference. ^{[ 2,3 ]} To prepare the perovskite \nprecursor solution, CH _{3} NH _{3} I and PbCl"
+            }
+          ]
+        },
+        {
+          "name": "fill factor",
+          "raw_value": "69.5%",
+          "value_number": 69.5,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "In order to explore potential application as new clean energy-storage devices, www.afm-journal.de the solid-state supercapacitors is integrated with pero-HSCs. Figure 8 a presents the J -V characteristics of pero-HSCs. The more details in pero-HSCs fabrication and characterization are reported in refs. [ 43-45 ] . The pero-HSCs exhibits a shortcircuit current ( J SC ) of 22.59 mA cm -2 , an open-circuit voltage ( V OC ) of 0.90 V, a fi ll factor of 69.5%, with a corresponding PCE of 14.13%, which is comparable to that observed from the pero-HSCs fabricated by similar method and with the similar device structure."
+            },
+            {
+              "block_id": "main_p5_0165_typography_509fdd868932",
+              "quote": "Typography-preserving source fragments:\nkite ﬁ lms. ^{[ 48–51 ]} The photocurrent hysteresis of pero-HSCs is \ncan discharge from 0.75 V, which is smaller than  V _{OC} (0.90 V) \nof pero-HSCs, to 0 V at the current density 1 A g ^{−1} , and can \nable personal devices. ^{[ 52 ]} \ntors exhibit a high speciﬁ c capacitance of 245 F g ^{−1} at 1 A g ^{−1} \ncircuit current ( J _{SC} ) of 22.59 mA cm ^{−2} , an open-circuit voltage \n( V _{OC} ) of 0.90 V, a ﬁ ll factor of 69.5%, with a corresponding \ndevice structure. ^{[ 1,2 ]} The incident photon to current efﬁ ciency \nCH _{3} NH _{3} PbI _{3- x}  Cl _{x} observed from absorption spectrum. ^{[ 46,47 ]} \nBased on IPCE spectrum, the  J _{SC} of pero-HSCs is estimated \nto be 21.14 mA cm ^{−2} , which is consistent with that observed \n Figure 7.  a) CV curves with scan rate at 100 mV s ^{−1} and b) galvanostatic charge–discharge \n89 000–98 000 g mol ^{−1} ), ammonia methylamine \n(57 wt% in water), and lead chloride (PbCl _{2} ) were \nand PC _{61} BM were purchased from Clevious and \niodide (CH _{3} NH _{3} I) was synthesized according to \nreported reference. ^{[ 2,3 ]} To prepare the perovskite \nprecursor solution, CH _{3} NH _{3} I and PbCl"
+            }
+          ]
+        },
+        {
+          "name": "power conversion efficiency (PCE)",
+          "raw_value": "14.13%",
+          "value_number": 14.13,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "In order to explore potential application as new clean energy-storage devices, www.afm-journal.de the solid-state supercapacitors is integrated with pero-HSCs. Figure 8 a presents the J -V characteristics of pero-HSCs. The more details in pero-HSCs fabrication and characterization are reported in refs. [ 43-45 ] . The pero-HSCs exhibits a shortcircuit current ( J SC ) of 22.59 mA cm -2 , an open-circuit voltage ( V OC ) of 0.90 V, a fi ll factor of 69.5%, with a corresponding PCE of 14.13%, which is comparable to that observed from the pero-HSCs fabricated by similar method and with the similar device structure."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0058_text_fd55d7c1e71b",
+          "quote": "In order to explore potential application as new clean energy-storage devices, www.afm-journal.de the solid-state supercapacitors is integrated with pero-HSCs. Figure 8 a presents the J -V characteristics of pero-HSCs. The more details in pero-HSCs fabrication and characterization are reported in refs. [ 43-45 ] . The pero-HSCs exhibits a shortcircuit current ( J SC ) of 22.59 mA cm -2 , an open-circuit voltage ( V OC ) of 0.90 V, a fi ll factor of 69.5%, with a corresponding PCE of 14.13%, which is comparable to that observed from the pero-HSCs fabricated by similar method and with the similar device structure."
+        },
+        {
+          "block_id": "main_p7_0091_text_eb3d8ab5706b",
+          "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+        },
+        {
+          "block_id": "main_p6_0076_text_65b2804fd31e",
+          "quote": "Figure 8. a) Current density-voltage characteristics of b) the IPCE spectrum of the pero-HSCs and c) photocurrents of pero-HSCs measured under forward and reversed directions."
+        },
+        {
+          "block_id": "main_p5_0165_typography_509fdd868932",
+          "quote": "Typography-preserving source fragments:\nkite ﬁ lms. ^{[ 48–51 ]} The photocurrent hysteresis of pero-HSCs is \ncan discharge from 0.75 V, which is smaller than  V _{OC} (0.90 V) \nof pero-HSCs, to 0 V at the current density 1 A g ^{−1} , and can \nable personal devices. ^{[ 52 ]} \ntors exhibit a high speciﬁ c capacitance of 245 F g ^{−1} at 1 A g ^{−1} \ncircuit current ( J _{SC} ) of 22.59 mA cm ^{−2} , an open-circuit voltage \n( V _{OC} ) of 0.90 V, a ﬁ ll factor of 69.5%, with a corresponding \ndevice structure. ^{[ 1,2 ]} The incident photon to current efﬁ ciency \nCH _{3} NH _{3} PbI _{3- x}  Cl _{x} observed from absorption spectrum. ^{[ 46,47 ]} \nBased on IPCE spectrum, the  J _{SC} of pero-HSCs is estimated \nto be 21.14 mA cm ^{−2} , which is consistent with that observed \n Figure 7.  a) CV curves with scan rate at 100 mV s ^{−1} and b) galvanostatic charge–discharge \n89 000–98 000 g mol ^{−1} ), ammonia methylamine \n(57 wt% in water), and lead chloride (PbCl _{2} ) were \nand PC _{61} BM were purchased from Clevious and \niodide (CH _{3} NH _{3} I) was synthesized according to \nreported reference. ^{[ 2,3 ]} To prepare the perovskite \nprecursor solution, CH _{3} NH _{3} I and PbCl"
+        }
+      ]
+    },
+    {
+      "observation_id": "observation-ipce-figure8b-01",
+      "device_id": "device-jv-figure8a-01",
+      "measurement_type": "eqe_integrated_current",
+      "scan_direction": "not_applicable",
+      "metrics": [
+        {
+          "name": "IPCE measurement setup",
+          "raw_value": "IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+            }
+          ]
+        },
+        {
+          "name": "IPCE source light",
+          "raw_value": "300 W steadystate xenon lamp",
+          "value_number": 300.0,
+          "unit": "W",
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+            }
+          ]
+        },
+        {
+          "name": "number of available filters",
+          "raw_value": "Up to 64 filters",
+          "value_number": null,
+          "unit": "filters",
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Up to 64 fi lters (8-20 nm width, range from 300 to 1200 nm) are available on four fi lter-wheels to produce the monochromatic input, which is chopped at 75 Hz, superimposed on the bias light and measured via the usual lock-in technique."
+            }
+          ]
+        },
+        {
+          "name": "filter width",
+          "raw_value": "8-20 nm width",
+          "value_number": null,
+          "unit": "nm",
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Up to 64 fi lters (8-20 nm width, range from 300 to 1200 nm) are available on four fi lter-wheels to produce the monochromatic input, which is chopped at 75 Hz, superimposed on the bias light and measured via the usual lock-in technique."
+            }
+          ]
+        },
+        {
+          "name": "filter wavelength range",
+          "raw_value": "300 to 1200 nm",
+          "value_number": null,
+          "unit": "nm",
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Up to 64 fi lters (8-20 nm width, range from 300 to 1200 nm) are available on four fi lter-wheels to produce the monochromatic input, which is chopped at 75 Hz, superimposed on the bias light and measured via the usual lock-in technique."
+            }
+          ]
+        },
+        {
+          "name": "monochromatic-input chopping frequency",
+          "raw_value": "75 Hz",
+          "value_number": 75.0,
+          "unit": "Hz",
+          "evidence": [
+            {
+              "block_id": "main_p7_0091_text_eb3d8ab5706b",
+              "quote": "Up to 64 fi lters (8-20 nm width, range from 300 to 1200 nm) are available on four fi lter-wheels to produce the monochromatic input, which is chopped at 75 Hz, superimposed on the bias light and measured via the usual lock-in technique."
+            }
+          ]
+        },
+        {
+          "name": "photocurrent onset",
+          "raw_value": "800 nm",
+          "value_number": 800.0,
+          "unit": "nm",
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "[ 1,2 ] The incident photon to current effi ciency (IPCE) spectrum of pero-HSCs is presented in Figure 8 b. The onset of the photocurrents observed from Figure 8 b is at 800 nm, which is in good agreement with the bandgap of CH 3 NH 3 PbI 3x Cl x observed from absorption spectrum. [ 46,47 ] Based on IPCE spectrum, the J SC of pero-HSCs is estimated to be 21.14 mA cm -2 , which is consistent with that observed from the J -V characteristics (Figure 8 a)."
+            }
+          ]
+        },
+        {
+          "name": "short-circuit current density estimated from IPCE spectrum (JSC)",
+          "raw_value": "21.14 mA cm -2",
+          "value_number": 21.14,
+          "unit": "mA cm−2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "[ 1,2 ] The incident photon to current effi ciency (IPCE) spectrum of pero-HSCs is presented in Figure 8 b. The onset of the photocurrents observed from Figure 8 b is at 800 nm, which is in good agreement with the bandgap of CH 3 NH 3 PbI 3x Cl x observed from absorption spectrum. [ 46,47 ] Based on IPCE spectrum, the J SC of pero-HSCs is estimated to be 21.14 mA cm -2 , which is consistent with that observed from the J -V characteristics (Figure 8 a)."
+            },
+            {
+              "block_id": "main_p5_0165_typography_509fdd868932",
+              "quote": "Typography-preserving source fragments:\nkite ﬁ lms. ^{[ 48–51 ]} The photocurrent hysteresis of pero-HSCs is \ncan discharge from 0.75 V, which is smaller than  V _{OC} (0.90 V) \nof pero-HSCs, to 0 V at the current density 1 A g ^{−1} , and can \nable personal devices. ^{[ 52 ]} \ntors exhibit a high speciﬁ c capacitance of 245 F g ^{−1} at 1 A g ^{−1} \ncircuit current ( J _{SC} ) of 22.59 mA cm ^{−2} , an open-circuit voltage \n( V _{OC} ) of 0.90 V, a ﬁ ll factor of 69.5%, with a corresponding \ndevice structure. ^{[ 1,2 ]} The incident photon to current efﬁ ciency \nCH _{3} NH _{3} PbI _{3- x}  Cl _{x} observed from absorption spectrum. ^{[ 46,47 ]} \nBased on IPCE spectrum, the  J _{SC} of pero-HSCs is estimated \nto be 21.14 mA cm ^{−2} , which is consistent with that observed \n Figure 7.  a) CV curves with scan rate at 100 mV s ^{−1} and b) galvanostatic charge–discharge \n89 000–98 000 g mol ^{−1} ), ammonia methylamine \n(57 wt% in water), and lead chloride (PbCl _{2} ) were \nand PC _{61} BM were purchased from Clevious and \niodide (CH _{3} NH _{3} I) was synthesized according to \nreported reference. ^{[ 2,3 ]} To prepare the perovskite \nprecursor solution, CH _{3} NH _{3} I and PbCl"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0058_text_fd55d7c1e71b",
+          "quote": "[ 1,2 ] The incident photon to current effi ciency (IPCE) spectrum of pero-HSCs is presented in Figure 8 b. The onset of the photocurrents observed from Figure 8 b is at 800 nm, which is in good agreement with the bandgap of CH 3 NH 3 PbI 3x Cl x observed from absorption spectrum. [ 46,47 ] Based on IPCE spectrum, the J SC of pero-HSCs is estimated to be 21.14 mA cm -2 , which is consistent with that observed from the J -V characteristics (Figure 8 a)."
+        },
+        {
+          "block_id": "main_p7_0091_text_eb3d8ab5706b",
+          "quote": "Characterization of Pero-HSCs : The current densities versus voltage ( J -V ) characteristics of pero-HSCs were recorded using a Keithley 2400 Source Meter. The device photocurrent was measured under air mass (AM) 1.5 illumination at the light intensity of 100 mW cm -2 . The light intensity was accurately calibrated by a standard Si photodiode. The Incident photon-to-current effi ciency (IPCE) spectra of pero-HSCs were measured through the IPCE measurement setup in use at European solar test installation (ESTI) for cells and mini-modules. A 300 W steadystate xenon lamp provides the source light."
+        },
+        {
+          "block_id": "main_p7_0091_text_eb3d8ab5706b",
+          "quote": "Up to 64 fi lters (8-20 nm width, range from 300 to 1200 nm) are available on four fi lter-wheels to produce the monochromatic input, which is chopped at 75 Hz, superimposed on the bias light and measured via the usual lock-in technique."
+        },
+        {
+          "block_id": "main_p6_0076_text_65b2804fd31e",
+          "quote": "Figure 8. a) Current density-voltage characteristics of b) the IPCE spectrum of the pero-HSCs and c) photocurrents of pero-HSCs measured under forward and reversed directions."
+        },
+        {
+          "block_id": "main_p5_0165_typography_509fdd868932",
+          "quote": "Typography-preserving source fragments:\nkite ﬁ lms. ^{[ 48–51 ]} The photocurrent hysteresis of pero-HSCs is \ncan discharge from 0.75 V, which is smaller than  V _{OC} (0.90 V) \nof pero-HSCs, to 0 V at the current density 1 A g ^{−1} , and can \nable personal devices. ^{[ 52 ]} \ntors exhibit a high speciﬁ c capacitance of 245 F g ^{−1} at 1 A g ^{−1} \ncircuit current ( J _{SC} ) of 22.59 mA cm ^{−2} , an open-circuit voltage \n( V _{OC} ) of 0.90 V, a ﬁ ll factor of 69.5%, with a corresponding \ndevice structure. ^{[ 1,2 ]} The incident photon to current efﬁ ciency \nCH _{3} NH _{3} PbI _{3- x}  Cl _{x} observed from absorption spectrum. ^{[ 46,47 ]} \nBased on IPCE spectrum, the  J _{SC} of pero-HSCs is estimated \nto be 21.14 mA cm ^{−2} , which is consistent with that observed \n Figure 7.  a) CV curves with scan rate at 100 mV s ^{−1} and b) galvanostatic charge–discharge \n89 000–98 000 g mol ^{−1} ), ammonia methylamine \n(57 wt% in water), and lead chloride (PbCl _{2} ) were \nand PC _{61} BM were purchased from Clevious and \niodide (CH _{3} NH _{3} I) was synthesized according to \nreported reference. ^{[ 2,3 ]} To prepare the perovskite \nprecursor solution, CH _{3} NH _{3} I and PbCl"
+        }
+      ]
+    },
+    {
+      "observation_id": "observation-hysteresis-figure8c-01",
+      "device_id": "device-jv-figure8a-01",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "J-V sweep directions",
+          "raw_value": "both forward and reversed directions",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "It was reported that the photocurrent hysteresis are originated from the presence of traps, ferroelectrically respond in the perovskite materials and the ion migration in the perovskite fi lms and interlayers, but the devices with negligible photocurrent hysteresis have also been reported in the case of perovskite/fullerene planar www.MaterialsViews.com heterojunction solar cells provided that optimized perovskite fi lms. [ 48-51 ] The photocurrent hysteresis of pero-HSCs is tested by sweeping the J -V measurement from both forward and reversed directions. The results are shown in Figure 8 c."
+            }
+          ]
+        },
+        {
+          "name": "efficiency difference between forward and reversed directions",
+          "raw_value": "less than 2%",
+          "value_number": null,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0058_text_fd55d7c1e71b",
+              "quote": "The effi ciency difference between J -V under forward and reversed directions is less than 2%, which is probably attributed to high quality of perovskite fi lm with high surface coverage. These results demonstrate that pero-HSCs possess high performance."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0058_text_fd55d7c1e71b",
+          "quote": "It was reported that the photocurrent hysteresis are originated from the presence of traps, ferroelectrically respond in the perovskite materials and the ion migration in the perovskite fi lms and interlayers, but the devices with negligible photocurrent hysteresis have also been reported in the case of perovskite/fullerene planar www.MaterialsViews.com heterojunction solar cells provided that optimized perovskite fi lms. [ 48-51 ] The photocurrent hysteresis of pero-HSCs is tested by sweeping the J -V measurement from both forward and reversed directions. The results are shown in Figure 8 c."
+        },
+        {
+          "block_id": "main_p4_0058_text_fd55d7c1e71b",
+          "quote": "The effi ciency difference between J -V under forward and reversed directions is less than 2%, which is probably attributed to high quality of perovskite fi lm with high surface coverage. These results demonstrate that pero-HSCs possess high performance."
+        },
+        {
+          "block_id": "main_p6_0076_text_65b2804fd31e",
+          "quote": "Figure 8. a) Current density-voltage characteristics of b) the IPCE spectrum of the pero-HSCs and c) photocurrents of pero-HSCs measured under forward and reversed directions."
+        }
+      ]
+    }
+  ],
+  "population_statistics": [],
+  "stability_tests": [],
+  "unresolved_notes": [
+    "The source does not establish that the Figure 8a J-V device, Figure 8b IPCE device, and Figure 8c hysteresis device are the same physical cell; they are therefore kept as separate individual-device records.",
+    "Figure 8c reports only the efficiency difference between forward and reversed directions, not a direction-specific efficiency or other direction-specific outcome. The comparative result is retained in one observation with scan direction not reported rather than duplicated into unsupported forward and reverse observations.",
+    "The source establishes that pero-HSCs charged flexible solid-state supercapacitors in the integrated system, but it does not identify a particular photovoltaic specimen or report a photovoltaic-device metric for that charging experiment. The discharge voltage, current density, and time are supercapacitor/system outcomes and are not extracted as photovoltaic performance observations.",
+    "The stated high vacuum is preserved verbatim as “2 × 10 6 mbar”; no missing negative exponent was inferred.",
+    "The source reports the second-procedure spin time only as “tuned from 20 s”; no final spin time was inferred.",
+    "The source does not explicitly report the device polarity or the electrical roles of PEDOT:PSS and PC61BM, so those classifications remain not reported.",
+    "The precursor sentence reports CH3NH3I and PbCl2 together with a molar ratio of 3:1. Following the explicitly coordinated scope, the same source-reported ratio is retained as separate item-specific values; no additional stoichiometric interpretation is inferred.",
+    "No photovoltaic population statistic or photovoltaic aging or operational-stability outcome is reported. The supplied cycling and storage stability results concern solid-state supercapacitors, not photovoltaic devices.",
+    "The self-powered-electronics passages report a system-level integration of flexible solid-state supercapacitors with pero-HSCs through two copper wires and a supercapacitor discharge from 0.75 V to 0 V at 1 A g -1 for about 45 s under/after white-light charging. They do not identify one individual photovoltaic device, and the reported discharge outcomes belong to the supercapacitor/integrated system rather than to an explicitly linked individual PV device. No IndividualDevice or device-linked M-"
+  ]
+}

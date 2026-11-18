@@ -1,0 +1,1901 @@
+{
+  "paper": {
+    "title": "Novel Intense-pulsed-light synthesis of amorphous SnO 2 electron-selective layers for efficient planar MAPbI 3 perovskite solar cells",
+    "doi": null
+  },
+  "device_families": [
+    {
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "label": "Planar MAPbI 3 solar cells with SnO 2 electron-selective layer",
+      "variant": "A-SnO 2, I-SnO 2, and heat-treated SnO 2 processing arms",
+      "architecture": "planar solar cells",
+      "polarity": "not_reported",
+      "full_stack_raw": "FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au",
+      "layers": [
+        {
+          "layer_id": "family-01-layer-01",
+          "sequence": 1,
+          "role": "substrate",
+          "material": "glass substrate",
+          "constituents": [
+            {
+              "name": "glass",
+              "role": "substrate",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [
+            {
+              "name": "substrate product",
+              "raw_value": "Pilkington, Tec-8",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-02",
+          "sequence": 2,
+          "role": "transparent_electrode",
+          "material": "fluorine-doped tin oxide (FTO)",
+          "constituents": [
+            {
+              "name": "fluorine-doped tin oxide (FTO)",
+              "role": "transparent electrode",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+            },
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-03",
+          "sequence": 3,
+          "role": "electron_transport_layer",
+          "material": "SnO 2",
+          "constituents": [
+            {
+              "name": "SnO 2",
+              "role": "electron-selective layer (ESL)",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                  "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            },
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-04",
+          "sequence": 4,
+          "role": "absorber",
+          "material": "MAPbI 3",
+          "constituents": [
+            {
+              "name": "MAPbI 3",
+              "role": "perovskite absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                  "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            },
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-05",
+          "sequence": 5,
+          "role": "hole_transport_layer",
+          "material": "spiroMeOTAD",
+          "constituents": [
+            {
+              "name": "2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD)",
+              "role": "hole-selective material",
+              "amount": {
+                "name": "spiroMeOTAD mass",
+                "raw_value": "80 mg",
+                "value_number": 80.0,
+                "unit": "mg",
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0035_text_265b522a2931",
+                    "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "4tert -butylpyridine",
+              "role": "solution additive",
+              "amount": {
+                "name": "4tert -butylpyridine volume",
+                "raw_value": "28.5 μL",
+                "value_number": 28.5,
+                "unit": "μL",
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0035_text_265b522a2931",
+                    "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI)",
+              "role": "solution additive",
+              "amount": {
+                "name": "Li-TFSI solution volume",
+                "raw_value": "17.5 μL",
+                "value_number": 17.5,
+                "unit": "μL",
+                "evidence": [
+                  {
+                    "block_id": "main_p2_0035_text_265b522a2931",
+                    "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+            },
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            }
+          ]
+        },
+        {
+          "layer_id": "family-01-layer-06",
+          "sequence": 6,
+          "role": "back_electrode",
+          "material": "Au",
+          "constituents": [
+            {
+              "name": "Au",
+              "role": "electrode",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            }
+          ],
+          "material_form_raw": null,
+          "material_form": "not_reported",
+          "reported_properties": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+            },
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            }
+          ]
+        }
+      ],
+      "absorbers": [
+        {
+          "absorber_id": "family-01-absorber-01",
+          "layer_id": "family-01-layer-04",
+          "label": "MAPbI 3 absorber",
+          "formula": {
+            "name": "absorber composition",
+            "raw_value": "MAPbI 3",
+            "value_number": null,
+            "unit": null,
+            "evidence": [
+              {
+                "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+              }
+            ]
+          },
+          "properties": [],
+          "constituents": [
+            {
+              "name": "MAPbI 3",
+              "role": "perovskite absorber",
+              "amount": null,
+              "evidence": [
+                {
+                  "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                  "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            },
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+            }
+          ]
+        }
+      ],
+      "processing_steps": [
+        {
+          "step_id": "family-01-step-01",
+          "sequence": 1,
+          "operation": "patterning",
+          "target_layer_ids": [
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "Zn powder",
+            "dilute HCl solution"
+          ],
+          "conditions": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-02",
+          "sequence": 2,
+          "operation": "cleaning",
+          "target_layer_ids": [
+            "family-01-layer-01",
+            "family-01-layer-02"
+          ],
+          "materials": [
+            "diluted Hellmanex",
+            "acetone",
+            "ethanol",
+            "deionized water"
+          ],
+          "conditions": [],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-03",
+          "sequence": 3,
+          "operation": "spin coating amorphous-SnO 2 ESL precursor",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [
+            "tin(II) chloride dihydrate",
+            "ethanol"
+          ],
+          "conditions": [
+            {
+              "name": "tin(II) chloride dihydrate solution concentration",
+              "raw_value": "0.1 M",
+              "value_number": 0.1,
+              "unit": "M",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating speed",
+              "raw_value": "30 0 0 rpm",
+              "value_number": 3000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating duration",
+              "raw_value": "30 s",
+              "value_number": 30.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-04",
+          "sequence": 4,
+          "operation": "drying SnO 2 sample",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "drying temperature",
+              "raw_value": "100 ° C",
+              "value_number": 100.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            },
+            {
+              "name": "drying duration",
+              "raw_value": "1 min",
+              "value_number": 1.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-05",
+          "sequence": 5,
+          "operation": "IPL treatment of the I-SnO 2 processing arm",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "IPL experimental voltage",
+              "raw_value": "60 0 V",
+              "value_number": 600.0,
+              "unit": "V",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+                }
+              ]
+            },
+            {
+              "name": "IPL experimental current",
+              "raw_value": "20 0 0 mA",
+              "value_number": 2000.0,
+              "unit": "mA",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+                }
+              ]
+            },
+            {
+              "name": "IPL pulse duration",
+              "raw_value": "2 ms",
+              "value_number": 2.0,
+              "unit": "ms",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+                }
+              ]
+            },
+            {
+              "name": "IPL pulse frequency",
+              "raw_value": "4 Hz",
+              "value_number": 4.0,
+              "unit": "Hz",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+                }
+              ]
+            },
+            {
+              "name": "energy per IPL pulse",
+              "raw_value": "1.84 J cm -2",
+              "value_number": 1.84,
+              "unit": "J cm-2",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+                },
+                {
+                  "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                  "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+            },
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            },
+            {
+              "block_id": "main_p2_0039_text_90744ebab1c5",
+              "quote": "Amorphous SnO 2 films were synthesized through a simple solution process using tin(II) chloride dihydrate in ethanol. Hereafter, the amorphous-SnO 2 films that were treated and not treated with IPL are denoted as I-SnO 2 and A-SnO 2 , respectively. Fig. 1 (a) shows the XRD patterns of A-SnO 2 and I-SnO 2 , respectively, showing that no crystalline peaks were observed. XPS was used to characterize the chemical bonding states of both amorphous films (A-SnO 2 and I-SnO 2 ); the resultant spectra are shown in Fig. 1 (b) -(d). Fig. 1 (b) shows the XPS spectra of the Sn 3 d states in A-SnO 2 and I-SnO 2 ."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-06",
+          "sequence": 5,
+          "operation": "no IPL treatment for the A-SnO 2 processing arm",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "IPL treatment state",
+              "raw_value": "not treated with IPL",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p2_0039_text_90744ebab1c5",
+                  "quote": "Amorphous SnO 2 films were synthesized through a simple solution process using tin(II) chloride dihydrate in ethanol. Hereafter, the amorphous-SnO 2 films that were treated and not treated with IPL are denoted as I-SnO 2 and A-SnO 2 , respectively. Fig. 1 (a) shows the XRD patterns of A-SnO 2 and I-SnO 2 , respectively, showing that no crystalline peaks were observed. XPS was used to characterize the chemical bonding states of both amorphous films (A-SnO 2 and I-SnO 2 ); the resultant spectra are shown in Fig. 1 (b) -(d). Fig. 1 (b) shows the XPS spectra of the Sn 3 d states in A-SnO 2 and I-SnO 2 ."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0039_text_90744ebab1c5",
+              "quote": "Amorphous SnO 2 films were synthesized through a simple solution process using tin(II) chloride dihydrate in ethanol. Hereafter, the amorphous-SnO 2 films that were treated and not treated with IPL are denoted as I-SnO 2 and A-SnO 2 , respectively. Fig. 1 (a) shows the XRD patterns of A-SnO 2 and I-SnO 2 , respectively, showing that no crystalline peaks were observed. XPS was used to characterize the chemical bonding states of both amorphous films (A-SnO 2 and I-SnO 2 ); the resultant spectra are shown in Fig. 1 (b) -(d). Fig. 1 (b) shows the XPS spectra of the Sn 3 d states in A-SnO 2 and I-SnO 2 ."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-07",
+          "sequence": 5,
+          "operation": "heat treatment of comparison SnO 2 ESL arm",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "heat-treatment temperature",
+              "raw_value": "185 ° C",
+              "value_number": 185.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                  "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+                }
+              ]
+            },
+            {
+              "name": "heat-treatment duration",
+              "raw_value": "3 h",
+              "value_number": 3.0,
+              "unit": "h",
+              "evidence": [
+                {
+                  "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                  "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The improved hysteresis, high efficiency, and improved stability of the I-SnO 2 -based device are attributed to both the reduced defects/traps of I-SnO 2 and the enhanced quality of the overlying MAPbI 3 film, which exhibits fewer grain boundaries and less stress. Moreover, we compared these results with those for PSCs based on heat-treated SnO 2 (185 ° C for 3 h), as shown in Fig. 3 (f). In Fig S7 detailed comparisons of the PV parameters and efficiencies are indicated."
+            },
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-08",
+          "sequence": 6,
+          "operation": "ultraviolet-ozone (UVO) treatment",
+          "target_layer_ids": [
+            "family-01-layer-03"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "UVO treatment duration",
+              "raw_value": "as long as 35 min",
+              "value_number": null,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0033_text_91a738444a45",
+                  "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0033_text_91a738444a45",
+              "quote": "S1 shows a schematic of the IPL setup and the processing parameters corresponding to the various IPL irradiation conditions. Table S1 shows the transferred energy values for each pulse time (1 and 2 ms), as measured by a photosensor (Nova II, Ophir). From ten or more measurements of each transferred energy value, 1.84 J cm -2 of energy per IPL pulse was confirmed to be transferred to the SnO 2 surface under the conditions used to conduct the experiment (60 0 V, 20 0 0 mA, 2 ms, 4 Hz). The SnO 2 films were thereafter subjected to an ultraviolet-ozone (UVO) treatment for as long as 35 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-09",
+          "sequence": 7,
+          "operation": "preparation of perovskite precursor solution",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "lead(II) iodide (PbI 2 ; TCI)",
+            "methylammonium iodide (MAI; GreatCell Solar)",
+            "dimethylformamide (DMF; Sigma-Aldrich)",
+            "dimethyl sulfoxide (DMSO; Sigma-Aldrich)"
+          ],
+          "conditions": [
+            {
+              "name": "perovskite precursor solution concentration",
+              "raw_value": "50 wt.%",
+              "value_number": 50.0,
+              "unit": "wt.%",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "DMF volume",
+              "raw_value": "0.635 mL",
+              "value_number": 0.635,
+              "unit": "mL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "DMSO volume",
+              "raw_value": "70 μL",
+              "value_number": 70.0,
+              "unit": "μL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-10",
+          "sequence": 8,
+          "operation": "spin coating perovskite precursor",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "perovskite precursor solution"
+          ],
+          "conditions": [
+            {
+              "name": "spin-coating speed",
+              "raw_value": "40 0 0 rpm",
+              "value_number": 4000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating duration",
+              "raw_value": "25 s",
+              "value_number": 25.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-11",
+          "sequence": 9,
+          "operation": "antisolvent dripping",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [
+            "diethyl ether (Sigma-Aldrich)"
+          ],
+          "conditions": [
+            {
+              "name": "diethyl ether volume",
+              "raw_value": "0.5 mL",
+              "value_number": 0.5,
+              "unit": "mL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-12",
+          "sequence": 10,
+          "operation": "first perovskite annealing",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "annealing temperature",
+              "raw_value": "65 ° C",
+              "value_number": 65.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "annealing duration",
+              "raw_value": "1 min",
+              "value_number": 1.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-13",
+          "sequence": 11,
+          "operation": "second perovskite annealing",
+          "target_layer_ids": [
+            "family-01-layer-04"
+          ],
+          "materials": [],
+          "conditions": [
+            {
+              "name": "annealing temperature",
+              "raw_value": "100 ° C",
+              "value_number": 100.0,
+              "unit": "°C",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            },
+            {
+              "name": "annealing duration",
+              "raw_value": "2 min",
+              "value_number": 2.0,
+              "unit": "min",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-14",
+          "sequence": 12,
+          "operation": "spin coating hole-selective layer",
+          "target_layer_ids": [
+            "family-01-layer-05"
+          ],
+          "materials": [
+            "spiroMeOTAD",
+            "4tert -butylpyridine",
+            "lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI)",
+            "acetonitrile",
+            "chlorobenzene"
+          ],
+          "conditions": [
+            {
+              "name": "spiroMeOTAD solution coating volume",
+              "raw_value": "20 μL",
+              "value_number": 20.0,
+              "unit": "μL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "spiroMeOTAD mass",
+              "raw_value": "80 mg",
+              "value_number": 80.0,
+              "unit": "mg",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "4tert -butylpyridine volume",
+              "raw_value": "28.5 μL",
+              "value_number": 28.5,
+              "unit": "μL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "Li-TFSI solution volume",
+              "raw_value": "17.5 μL",
+              "value_number": 17.5,
+              "unit": "μL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "Li-TSFI mass in stock solution",
+              "raw_value": "520 mg",
+              "value_number": 520.0,
+              "unit": "mg",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "acetonitrile volume in stock solution",
+              "raw_value": "1 mL",
+              "value_number": 1.0,
+              "unit": "mL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "chlorobenzene volume",
+              "raw_value": "1 mL",
+              "value_number": 1.0,
+              "unit": "mL",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating speed",
+              "raw_value": "40 0 0 rpm",
+              "value_number": 4000.0,
+              "unit": "rpm",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            },
+            {
+              "name": "spin-coating duration",
+              "raw_value": "30 s",
+              "value_number": 30.0,
+              "unit": "s",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+            }
+          ]
+        },
+        {
+          "step_id": "family-01-step-15",
+          "sequence": 13,
+          "operation": "thermal evaporation of Au electrode",
+          "target_layer_ids": [
+            "family-01-layer-06"
+          ],
+          "materials": [
+            "Au"
+          ],
+          "conditions": [
+            {
+              "name": "evaporation pressure",
+              "raw_value": "10 -6 Torr",
+              "value_number": 1e-06,
+              "unit": "Torr",
+              "evidence": [
+                {
+                  "block_id": "main_p2_0035_text_265b522a2931",
+                  "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p2_0035_text_265b522a2931",
+              "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+        },
+        {
+          "block_id": "main_p2_0033_text_91a738444a45",
+          "quote": "PSCs were fabricated on fluorine-doped tin oxide (FTO)-coated glass substrates (Pilkington, Tec-8), which were patterned using Zn powder and a dilute HCl solution, followed by cleaning with diluted Hellmanex, acetone, ethanol, and deionized water. Amorphous-SnO 2 was prepared as an ESL on the FTO glass by spin coating 0.1 M tin(II) chloride dihydrate solution in ethanol (Sigma-Aldrich) at 30 0 0 rpm for 30 s. After drying at 100 ° C for 1 min, the sample was instantly transferred to an IPL apparatus (HI-PULSE 15,0 0 0, PSTEK) for treatment using different flash counts delivering different amounts of energy. Fig."
+        },
+        {
+          "block_id": "main_p2_0035_text_265b522a2931",
+          "quote": "The perovskite precursor solution (50 wt.%) was prepared by dissolving lead(II) iodide (PbI 2 ; TCI) and methylammonium iodide (MAI; GreatCell Solar) in 0.635 mL of dimethylformamide (DMF; Sigma-Aldrich), to which 70 μL of dimethyl sulfoxide (DMSO; Sigma-Aldrich) was added to form the corresponding adducts [24] . The completely dissolved solution was spin-coated onto an amorphous-SnO 2 ESL layer at 40 0 0 rpm for 25 s, and 0.5 mL of diethyl ether (Sigma-Aldrich) was slowly dripped onto the substrate before the surface became turbid as a result of the rapid vaporization of DMF. The sample was subsequently annealed at 65 ° C for 1 min and then at 100 ° C for 2 min."
+        },
+        {
+          "block_id": "main_p2_0035_text_265b522a2931",
+          "quote": "A hole-selective layer was then coated onto the perovskite layer by spin coating 20 μL of a 2,2 ′ ,7,7 ′ -tetrakis[ N,N -di (4-methoxyphenyl)amino] -9,9 ′ -spirobifluorene (spiroMeOTAD) solution (composed of 80 mg spiroMeOTAD (1-Material), 28.5 μL of 4tert -butylpyridine, and 17.5 μL of lithium bis(trifluoromethanesulfonyl)imide (Li-TFSI, SigmaAldrich) solution (520 mg Li-TSFI in 1 mL acetonitrile)), and 1 mL of chlorobenzene (Sigma-Aldrich) at 40 0 0 rpm for 30 s. The Au electrode was evaporated under 10 -6 Torr using a thermal evaporation system."
+        }
+      ]
+    }
+  ],
+  "individual_devices": [
+    {
+      "device_id": "device-01-a-sno2-jv",
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "label": "A-SnO 2-based device reported in the Fig. 3(c) J-V comparison",
+      "variant": "A-SnO 2 ESL; not treated with IPL",
+      "champion_status": "not_reported",
+      "selection_basis": "not_reported",
+      "reported_properties": [
+        {
+          "name": "active area",
+          "raw_value": "0.09 cm 2",
+          "value_number": 0.09,
+          "unit": "cm2",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "IPL treatment state",
+          "raw_value": "not treated with IPL",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p2_0039_text_90744ebab1c5",
+              "quote": "Amorphous SnO 2 films were synthesized through a simple solution process using tin(II) chloride dihydrate in ethanol. Hereafter, the amorphous-SnO 2 films that were treated and not treated with IPL are denoted as I-SnO 2 and A-SnO 2 , respectively. Fig. 1 (a) shows the XRD patterns of A-SnO 2 and I-SnO 2 , respectively, showing that no crystalline peaks were observed. XPS was used to characterize the chemical bonding states of both amorphous films (A-SnO 2 and I-SnO 2 ); the resultant spectra are shown in Fig. 1 (b) -(d). Fig. 1 (b) shows the XPS spectra of the Sn 3 d states in A-SnO 2 and I-SnO 2 ."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+        },
+        {
+          "block_id": "main_p2_0039_text_90744ebab1c5",
+          "quote": "Amorphous SnO 2 films were synthesized through a simple solution process using tin(II) chloride dihydrate in ethanol. Hereafter, the amorphous-SnO 2 films that were treated and not treated with IPL are denoted as I-SnO 2 and A-SnO 2 , respectively. Fig. 1 (a) shows the XRD patterns of A-SnO 2 and I-SnO 2 , respectively, showing that no crystalline peaks were observed. XPS was used to characterize the chemical bonding states of both amorphous films (A-SnO 2 and I-SnO 2 ); the resultant spectra are shown in Fig. 1 (b) -(d). Fig. 1 (b) shows the XPS spectra of the Sn 3 d states in A-SnO 2 and I-SnO 2 ."
+        },
+        {
+          "block_id": "main_p2_0037_text_eb6d2ee07a95",
+          "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+        }
+      ]
+    },
+    {
+      "device_id": "device-02-i-sno2-jv",
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "label": "Optimized I-SnO 2-based device reported in the Fig. 3(c) J-V comparison",
+      "variant": "I-SnO 2 ESL; optimized IPL treatment",
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [
+        {
+          "name": "active area",
+          "raw_value": "0.09 cm 2",
+          "value_number": 0.09,
+          "unit": "cm2",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "optimal IPL treatment pulse count",
+          "raw_value": "120 pulses",
+          "value_number": 120.0,
+          "unit": "pulses",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+            }
+          ]
+        },
+        {
+          "name": "optimized IPL total energy",
+          "raw_value": "220.8 J cm -2",
+          "value_number": 220.8,
+          "unit": "J cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        },
+        {
+          "name": "IPL treatment time",
+          "raw_value": "only 30 s",
+          "value_number": 30.0,
+          "unit": "s",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+        },
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+        },
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+        },
+        {
+          "block_id": "main_p2_0030_text_88de8e8eb0d2",
+          "quote": "Here, the IPL irradiation of amorphous-SnO 2 ESLs is used to synthesize highly efficient methylammonium lead iodide (MAPbI 3 )-based planar PSCs with improved performance. During each 2 ms pulse, 1.84 J cm -2 of energy is irradiated onto the surface of an amorphous-SnO 2 film; the number of pulses is varied to optimize the ESL properties. The PSC with the highest PCE was obtained with an amorphous-SnO 2 film subjected to 120 pulses (~220 J cm -2 ) of IPL within a few tens of seconds; a maximum PCE of 17.68% with an average and standard deviation of 15.58% ± 0.85% was achieved."
+        },
+        {
+          "block_id": "main_p2_0037_text_eb6d2ee07a95",
+          "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+        }
+      ]
+    },
+    {
+      "device_id": "device-03-heat-sno2-best",
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "label": "Best device based on heat-treated SnO 2 ESL",
+      "variant": "heat-treated SnO 2 ESL",
+      "champion_status": "yes",
+      "selection_basis": "champion",
+      "reported_properties": [
+        {
+          "name": "active area",
+          "raw_value": "0.09 cm 2",
+          "value_number": 0.09,
+          "unit": "cm2",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "SnO 2 ESL heat-treatment temperature",
+          "raw_value": "185 ° C",
+          "value_number": 185.0,
+          "unit": "°C",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        },
+        {
+          "name": "SnO 2 ESL heat-treatment duration",
+          "raw_value": "3 h",
+          "value_number": 3.0,
+          "unit": "h",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+        },
+        {
+          "block_id": "main_p2_0037_text_eb6d2ee07a95",
+          "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+        }
+      ]
+    }
+  ],
+  "performance_observations": [
+    {
+      "observation_id": "obs-01-a-sno2-jv",
+      "device_id": "device-01-a-sno2-jv",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "PCE",
+          "raw_value": "7.06%",
+          "value_number": 7.06,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+            }
+          ]
+        },
+        {
+          "name": "J sc",
+          "raw_value": "13.20 mA cm -2",
+          "value_number": 13.2,
+          "unit": "mA cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+            }
+          ]
+        },
+        {
+          "name": "V oc",
+          "raw_value": "0.952 V",
+          "value_number": 0.952,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "56.20%",
+          "value_number": 56.2,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5 simulated sunlight",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "illumination power density",
+          "raw_value": "100 mW cm -2",
+          "value_number": 100.0,
+          "unit": "mW cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "J-V scan speed",
+          "raw_value": "0.1 V/s",
+          "value_number": 0.1,
+          "unit": "V/s",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+        },
+        {
+          "block_id": "main_p2_0037_text_eb6d2ee07a95",
+          "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-02-i-sno2-jv",
+      "device_id": "device-02-i-sno2-jv",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "PCE",
+          "raw_value": "17.68%",
+          "value_number": 17.68,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        },
+        {
+          "name": "J sc",
+          "raw_value": "20.68 mA cm -2",
+          "value_number": 20.68,
+          "unit": "mA cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        },
+        {
+          "name": "V oc",
+          "raw_value": "1.098 V",
+          "value_number": 1.098,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "77.87%",
+          "value_number": 77.87,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5 simulated sunlight",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "illumination power density",
+          "raw_value": "100 mW cm -2",
+          "value_number": 100.0,
+          "unit": "mW cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "J-V scan speed",
+          "raw_value": "0.1 V/s",
+          "value_number": 0.1,
+          "unit": "V/s",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+        },
+        {
+          "block_id": "main_p2_0037_text_eb6d2ee07a95",
+          "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-03-heat-sno2-jv",
+      "device_id": "device-03-heat-sno2-best",
+      "measurement_type": "jv_scan",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "best PCE",
+          "raw_value": "18.16%",
+          "value_number": 18.16,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        },
+        {
+          "name": "J sc",
+          "raw_value": "22.12 mA cm -2",
+          "value_number": 22.12,
+          "unit": "mA cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        },
+        {
+          "name": "V oc",
+          "raw_value": "1.083 V",
+          "value_number": 1.083,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        },
+        {
+          "name": "FF",
+          "raw_value": "75.85%",
+          "value_number": 75.85,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+            }
+          ]
+        },
+        {
+          "name": "illumination spectrum",
+          "raw_value": "AM 1.5 simulated sunlight",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "illumination power density",
+          "raw_value": "100 mW cm -2",
+          "value_number": 100.0,
+          "unit": "mW cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        },
+        {
+          "name": "J-V scan speed",
+          "raw_value": "0.1 V/s",
+          "value_number": 0.1,
+          "unit": "V/s",
+          "evidence": [
+            {
+              "block_id": "main_p2_0037_text_eb6d2ee07a95",
+              "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "The device based on the heat-treated ESL showed a best PCE of 18.16%, with a J sc of 22.12 mA cm -2 , V oc of 1.083 V, and FF of 75.85%, which is comparable to the performance of the I-SnO 2 -based device subjected to the IPL treatment for only 30 s (220.8 J cm -2 ). On the basis of these results, we propose that an IPL process shorter than 30 s can result in an SnO 2 ESL with performance comparable to that of an SnO 2 ESL sintered at high temperature (185 ° C, 3 h)."
+        },
+        {
+          "block_id": "main_p2_0037_text_eb6d2ee07a95",
+          "quote": "The photovoltaic (PV) properties of the assembled PSCs were determined under AM 1.5 simulated sunlight with a power density of 100 mW cm -2 using a solar simulator (Polaronix K201, McScience, Korea) equipped with a 150 W xenon lamp and a Keithley 2401 source meter. The scan speed was set to a constant of 0.1 V/s in this study. After the intensity was calibrated using a KIER-calibrated KG5-filtered Si reference cell, all measurements were performed by masking the cells with a metal aperture to define an active area of 0.09 cm 2 . An incident photon-to-current conversion efficiency (IPCE) measurement system (HS Tech, Korea) was used to evaluate the external quantum efficiency (EQE)."
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-04-i-sno2-eqe",
+      "device_id": "device-02-i-sno2-jv",
+      "measurement_type": "eqe_integrated_current",
+      "scan_direction": "not_applicable",
+      "metrics": [
+        {
+          "name": "EQE-calculated J sc",
+          "raw_value": "19.14 mA cm -2",
+          "value_number": 19.14,
+          "unit": "mA cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-05-a-sno2-hysteresis",
+      "device_id": "device-01-a-sno2-jv",
+      "measurement_type": "other",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "hysteresis index",
+          "raw_value": "0.73",
+          "value_number": 0.73,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "S6 shows the hysteresis behaviors of the devices fabricated with the A-SnO 2 and I-SnO 2 ESLs. In general, hysteresis originates from the trap states of charge carriers, ion charge carriers, ion migration, and ferroelectricity, all of which are related to the grain size and defect density [39] . The device with the I-SnO 2 ESL showed the lowest hysteresis index (HI) of 0.08, which is substantially lower than the HI of the A-SnO 2 -based device (0.73)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "S6 shows the hysteresis behaviors of the devices fabricated with the A-SnO 2 and I-SnO 2 ESLs. In general, hysteresis originates from the trap states of charge carriers, ion charge carriers, ion migration, and ferroelectricity, all of which are related to the grain size and defect density [39] . The device with the I-SnO 2 ESL showed the lowest hysteresis index (HI) of 0.08, which is substantially lower than the HI of the A-SnO 2 -based device (0.73)."
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-06-i-sno2-hysteresis",
+      "device_id": "device-02-i-sno2-jv",
+      "measurement_type": "other",
+      "scan_direction": "not_reported",
+      "metrics": [
+        {
+          "name": "lowest hysteresis index",
+          "raw_value": "0.08",
+          "value_number": 0.08,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "S6 shows the hysteresis behaviors of the devices fabricated with the A-SnO 2 and I-SnO 2 ESLs. In general, hysteresis originates from the trap states of charge carriers, ion charge carriers, ion migration, and ferroelectricity, all of which are related to the grain size and defect density [39] . The device with the I-SnO 2 ESL showed the lowest hysteresis index (HI) of 0.08, which is substantially lower than the HI of the A-SnO 2 -based device (0.73)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "S6 shows the hysteresis behaviors of the devices fabricated with the A-SnO 2 and I-SnO 2 ESLs. In general, hysteresis originates from the trap states of charge carriers, ion charge carriers, ion migration, and ferroelectricity, all of which are related to the grain size and defect density [39] . The device with the I-SnO 2 ESL showed the lowest hysteresis index (HI) of 0.08, which is substantially lower than the HI of the A-SnO 2 -based device (0.73)."
+        }
+      ]
+    },
+    {
+      "observation_id": "obs-07-i-sno2-eis",
+      "device_id": "device-02-i-sno2-jv",
+      "measurement_type": "other",
+      "scan_direction": "not_applicable",
+      "metrics": [
+        {
+          "name": "EIS measurement voltage",
+          "raw_value": "0.8 V",
+          "value_number": 0.8,
+          "unit": "V",
+          "evidence": [
+            {
+              "block_id": "main_p5_0060_text_45a6dfe66dc7",
+              "quote": "To analyze the substantial influence of IPL-treated SnO 2 on the PV performance of devices, we used EIS to characterize the charge transport and recombination dynamics at the interfaces [ 10 , 40 ]. Fig. 4 (a) shows the Nyquist plot for the devices with A-SnO 2 -and I-SnO 2 -based ESLs, as measured at 0.8 V in the dark using an equivalent circuit (inset of Fig. 4 (a)). The Nyquist plot consists of two arcs or semicircles. The charge transfer resistance ( R tr ) was assigned to the arc in the high-frequency region, and the recombination resistance ( R rec ) was assigned to the arc in the low-frequency region [41] ."
+            }
+          ]
+        },
+        {
+          "name": "EIS circuit/illumination condition",
+          "raw_value": "in the dark",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0060_text_45a6dfe66dc7",
+              "quote": "To analyze the substantial influence of IPL-treated SnO 2 on the PV performance of devices, we used EIS to characterize the charge transport and recombination dynamics at the interfaces [ 10 , 40 ]. Fig. 4 (a) shows the Nyquist plot for the devices with A-SnO 2 -and I-SnO 2 -based ESLs, as measured at 0.8 V in the dark using an equivalent circuit (inset of Fig. 4 (a)). The Nyquist plot consists of two arcs or semicircles. The charge transfer resistance ( R tr ) was assigned to the arc in the high-frequency region, and the recombination resistance ( R rec ) was assigned to the arc in the low-frequency region [41] ."
+            }
+          ]
+        },
+        {
+          "name": "relative charge-transfer resistance",
+          "raw_value": "smaller R tr than that of the device with A-SnO 2 as the ESL",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0060_text_45a6dfe66dc7",
+              "quote": "The device with I-SnO 2 as the ESL exhibits a smaller R tr than that of the device with A-SnO 2 as the ESL, which indicates that I-SnO 2 exhibits better charge extraction than its counterpart ( Fig. 4 (b)). In addition, the device with an I-SnO 2 ESL exhibits a larger R rec than the A-SnO 2 -based device, which means that the IPL treatment of SnO 2 films greatly reduced the charge recombination rate and increased the V oc ( Fig. 4 (c)) [42] . Because charge recombination is closely related to the concentration of defects/traps in perovskite films, we characterized the trap densities of the perovskite film using the electron-only device configuration shown in Fig. 4 (d)."
+            }
+          ]
+        },
+        {
+          "name": "relative recombination resistance",
+          "raw_value": "larger R rec than the A-SnO 2 -based device",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p5_0060_text_45a6dfe66dc7",
+              "quote": "The device with I-SnO 2 as the ESL exhibits a smaller R tr than that of the device with A-SnO 2 as the ESL, which indicates that I-SnO 2 exhibits better charge extraction than its counterpart ( Fig. 4 (b)). In addition, the device with an I-SnO 2 ESL exhibits a larger R rec than the A-SnO 2 -based device, which means that the IPL treatment of SnO 2 films greatly reduced the charge recombination rate and increased the V oc ( Fig. 4 (c)) [42] . Because charge recombination is closely related to the concentration of defects/traps in perovskite films, we characterized the trap densities of the perovskite film using the electron-only device configuration shown in Fig. 4 (d)."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p5_0060_text_45a6dfe66dc7",
+          "quote": "To analyze the substantial influence of IPL-treated SnO 2 on the PV performance of devices, we used EIS to characterize the charge transport and recombination dynamics at the interfaces [ 10 , 40 ]. Fig. 4 (a) shows the Nyquist plot for the devices with A-SnO 2 -and I-SnO 2 -based ESLs, as measured at 0.8 V in the dark using an equivalent circuit (inset of Fig. 4 (a)). The Nyquist plot consists of two arcs or semicircles. The charge transfer resistance ( R tr ) was assigned to the arc in the high-frequency region, and the recombination resistance ( R rec ) was assigned to the arc in the low-frequency region [41] ."
+        },
+        {
+          "block_id": "main_p5_0060_text_45a6dfe66dc7",
+          "quote": "The device with I-SnO 2 as the ESL exhibits a smaller R tr than that of the device with A-SnO 2 as the ESL, which indicates that I-SnO 2 exhibits better charge extraction than its counterpart ( Fig. 4 (b)). In addition, the device with an I-SnO 2 ESL exhibits a larger R rec than the A-SnO 2 -based device, which means that the IPL treatment of SnO 2 films greatly reduced the charge recombination rate and increased the V oc ( Fig. 4 (c)) [42] . Because charge recombination is closely related to the concentration of defects/traps in perovskite films, we characterized the trap densities of the perovskite film using the electron-only device configuration shown in Fig. 4 (d)."
+        }
+      ]
+    }
+  ],
+  "population_statistics": [
+    {
+      "population_id": "population-01-ipl-optimization",
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "label": "IPL pulse-count optimization population",
+      "statistic_type": "other",
+      "sample_size": 20,
+      "metrics": [
+        {
+          "name": "highest IPL pulse count tested",
+          "raw_value": "140",
+          "value_number": 140.0,
+          "unit": "pulses",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            }
+          ]
+        },
+        {
+          "name": "optimal IPL treatment pulse count",
+          "raw_value": "120 pulses",
+          "value_number": 120.0,
+          "unit": "pulses",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+            }
+          ]
+        },
+        {
+          "name": "IPL pulse duration",
+          "raw_value": "2 ms",
+          "value_number": 2.0,
+          "unit": "ms",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            }
+          ]
+        },
+        {
+          "name": "energy per IPL pulse",
+          "raw_value": "1.84 J cm -2",
+          "value_number": 1.84,
+          "unit": "J cm-2",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "To assess the effect of the IPL treatment of the amorphous SnO 2 on the device properties, we fabricated MAPbI 3 -based planar solar cells using a device architecture of FTO/ESL(I-SnO 2 /ASnO 2 )/MAPbI 3 /spiroMeOTAD/Au, as shown in Fig. 3 (a, b). To optimize the number of IPL pulses for the SnO 2 films, we characterized the PV performance of 20 devices by varying the number of IPL treatment pulses. During each 2 ms pulse, 1.84 J cm -2 of energy was irradiated onto the surface of amorphous-SnO 2 . To optimize the IPL treatment, we varied the number of IPL pulses to as high as 140; the resultant PCEs and the corresponding PV parameters are indicated in Fig. S5."
+        },
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "As the number of IPL pulses was increased to 120, most of PV parameters improved. However, when the number of IPL pulses was 140, the PV parameters rapidly decreased. Thus, we determined that the optimal IPL treatment was 120 pulses. Fig. 3 (c) shows the current density -voltage (J -V) characteristics of I-SnO 2 -based devices treated under the optimized IPL conditions; the details of the PV parameters are summarized in the inset. The device based on the A-SnO 2 ESL showed a PCE of 7.06%, a short-circuit current density ( J sc ) of 13.20 mA cm -2 , an opencircuit voltage ( V oc ) of 0.952 V, and a fill factor (FF) of 56.20%."
+        }
+      ]
+    },
+    {
+      "population_id": "population-03-i-sno2-mean",
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "label": "Optimized I-SnO 2-based PSC population average",
+      "statistic_type": "mean",
+      "sample_size": null,
+      "metrics": [
+        {
+          "name": "PCE average and standard deviation",
+          "raw_value": "15.58% ± 0.85%",
+          "value_number": 15.58,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p2_0030_text_88de8e8eb0d2",
+              "quote": "Here, the IPL irradiation of amorphous-SnO 2 ESLs is used to synthesize highly efficient methylammonium lead iodide (MAPbI 3 )-based planar PSCs with improved performance. During each 2 ms pulse, 1.84 J cm -2 of energy is irradiated onto the surface of an amorphous-SnO 2 film; the number of pulses is varied to optimize the ESL properties. The PSC with the highest PCE was obtained with an amorphous-SnO 2 film subjected to 120 pulses (~220 J cm -2 ) of IPL within a few tens of seconds; a maximum PCE of 17.68% with an average and standard deviation of 15.58% ± 0.85% was achieved."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0030_text_88de8e8eb0d2",
+          "quote": "Here, the IPL irradiation of amorphous-SnO 2 ESLs is used to synthesize highly efficient methylammonium lead iodide (MAPbI 3 )-based planar PSCs with improved performance. During each 2 ms pulse, 1.84 J cm -2 of energy is irradiated onto the surface of an amorphous-SnO 2 film; the number of pulses is varied to optimize the ESL properties. The PSC with the highest PCE was obtained with an amorphous-SnO 2 film subjected to 120 pulses (~220 J cm -2 ) of IPL within a few tens of seconds; a maximum PCE of 17.68% with an average and standard deviation of 15.58% ± 0.85% was achieved."
+        }
+      ]
+    },
+    {
+      "population_id": "population-05-a-sno2-mean",
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "label": "Nontreated SnO 2-based PSC population average",
+      "statistic_type": "mean",
+      "sample_size": null,
+      "metrics": [
+        {
+          "name": "PCE average and standard deviation",
+          "raw_value": "2.65% ± 1.76%",
+          "value_number": 2.65,
+          "unit": "%",
+          "evidence": [
+            {
+              "block_id": "main_p2_0030_text_88de8e8eb0d2",
+              "quote": "Compared with PSCs based on nontreated SnO 2 (maximum PCE of 7.06% with 2.65% ± 1.76%), the IPL treatment substantially enhanced the photovoltaic properties. Notably, the IPLtreated SnO 2 -based PSCs showed a PCE similar to that of devices (maximum PCE of 18.16%) with an SnO 2 ESL prepared by a general heat-treatment process at 185 ° C for 3 h. We found that the IPL treatment of the amorphous-SnO 2 substantially improved the short-circuit current density ( J sc ) and open-circuit voltage ( V oc ) by decreasing the number of hydroxyl ( -OH) species, which function as defect/trap states."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p2_0030_text_88de8e8eb0d2",
+          "quote": "Compared with PSCs based on nontreated SnO 2 (maximum PCE of 7.06% with 2.65% ± 1.76%), the IPL treatment substantially enhanced the photovoltaic properties. Notably, the IPLtreated SnO 2 -based PSCs showed a PCE similar to that of devices (maximum PCE of 18.16%) with an SnO 2 ESL prepared by a general heat-treatment process at 185 ° C for 3 h. We found that the IPL treatment of the amorphous-SnO 2 substantially improved the short-circuit current density ( J sc ) and open-circuit voltage ( V oc ) by decreasing the number of hydroxyl ( -OH) species, which function as defect/trap states."
+        }
+      ]
+    }
+  ],
+  "stability_tests": [
+    {
+      "test_id": "stability-01-a-vs-i",
+      "family_id": "family-01-planar-mapbi3-sno2",
+      "device_id": null,
+      "specimen_label": "two devices without encapsulation: I-SnO 2-based and A-SnO 2-based devices",
+      "link_status": "explicit_family_link",
+      "conditions": [
+        {
+          "name": "number of devices",
+          "raw_value": "two devices",
+          "value_number": 2.0,
+          "unit": "devices",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        },
+        {
+          "name": "encapsulation state",
+          "raw_value": "without encapsulation",
+          "value_number": null,
+          "unit": null,
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        },
+        {
+          "name": "relative humidity",
+          "raw_value": "40% relative humidity",
+          "value_number": 40.0,
+          "unit": "% relative humidity",
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_id": "stability-01-checkpoint-01",
+          "time": null,
+          "conditions": [],
+          "outcomes": [
+            {
+              "name": "comparative stability of I-SnO 2-based device",
+              "raw_value": "greater stability than the A-SnO 2 -based device",
+              "value_number": null,
+              "unit": null,
+              "evidence": [
+                {
+                  "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+                  "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+                }
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+              "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "block_id": "main_p4_0055_text_1ec9ce7f3c62",
+          "quote": "In the case of the device with I-SnO 2 , the PCE was substantially increased to 17.68%, with a J sc of 20.68 mA cm -2 , V oc of 1.098 V, and FF of 77.87%. In addition, to confirm the increase of the J sc , we evaluated the EQE of the I-SnO 2 -based device ( Fig. 3 (d)). On the basis of the EQE curve, the J sc value was calculated to be 19.14 mA cm -2 , which well matches the J sc value obtained from the J -V curve. To test the stability of the devices, the two devices without encapsulation were tested in 40% relative humidity. Fig. 3 (e) shows the results of the stability tests, indicating that the I-SnO 2 -based device exhibits greater stability than the A-SnO 2 -based device. Fig."
+        },
+        {
+          "block_id": "main_p4_0053_text_d137592a1650",
+          "quote": "Fig. 3. (a, b) Cross-sectional SEM images showing the device architecture of solar cells based on I-SnO 2 and A-SnO 2 ; (c) the J-V characteristics of perovskite solar cells fabricated with I-SnO 2 and A-SnO 2 ; (d) IPCE of I-SnO 2 -and A-SnO 2 -based cells; (e) PCE stability of I-SnO 2 -and A-SnO 2 -based cells; and (f) J-V characteristics of perovskite solar cells fabricated with I-SnO 2 and SnO 2 sintered at 185 ° C for 3 h."
+        }
+      ]
+    }
+  ],
+  "unresolved_notes": [
+    "A-SnO 2, I-SnO 2, and heat-treated SnO 2 were retained as processing variants of one family because the finished functional-layer identity remains SnO 2 and the evidence does not establish a different complete architecture or absorber composition for these arms.",
+    "The source does not state J-V scan direction; all J-V observations therefore use scan_direction not_reported.",
+    "The source does not explicitly establish that the I-SnO 2 device used for EQE was the same physical device as the optimized J-V specimen, so it is represented as a separate individual device.",
+    "The source does not explicitly link the hysteresis or EIS specimens to the reported J-V specimens; they are represented as separate measured devices.",
+    "The stability comparison reports two unencapsulated devices but does not identify them as any performance devices. It is linked only to the shared family, and no duration or numerical retention value is supplied.",
+    "The A-SnO 2 EIS device was measured as part of the comparison, but the reported usable outcomes are phrased as relative properties of the I-SnO 2 device; no separate A-SnO 2 EIS performance observation was invented.",
+    "The 20-device IPL optimization reports the number characterized and process-count extrema/optimum, but the supplied evidence contains no complete device-level results for those 20 devices and no extractable numerical distribution from Fig. S5.",
+    "Film specimens, electron-only structures, and FTO/ESL/Au structures used for materials, trap-density, conductivity, or mobility characterization were excluded as photovoltaic devices.",
+    "The supplied supporting-information pages titled “Intense Pulsed Light Annealing of Tin(IV) Oxide Electron Transport Layer for Largescale Fabrication of Flexible Printed Perovskite Solar Cells” identify a different article and were excluded from this study.",
+    "The characterization of 20 devices while varying the IPL pulse count does not itself report an aggregate or distribution. The pulse range and IPL settings are process/optimization conditions, so population-01-ipl-optimization is removed rather than retained as a PopulationStatistic.",
+    "The EIS text reports comparative resistance outcomes involving both A-SnO 2- and I-SnO 2-based devices, but its grammar directly attributes the smaller R tr and larger R rec outcomes to the I-SnO 2-based device. No inverse-valued observation was invented for device-07-a-sno2-eis."
+  ]
+}
