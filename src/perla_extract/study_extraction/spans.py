@@ -1,9 +1,9 @@
-"""Create stable, directly citable passages from parser evidence blocks.
+"""Create directly citable passages from parser evidence blocks.
 
 Models need to choose supporting evidence, but they do not need to reproduce text we
 already own.  This module divides parser blocks into sentence-, row-, or bounded
-passages and gives each passage a content-derived identifier.  Model responses can
-therefore cite identifiers while Python restores exact quotations deterministically.
+passages and numbers each request's catalog. Model responses cite short identifiers;
+Python restores exact quotations. The catalog fingerprint binds identifiers to text.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+(?=[\[('“\"A-Z0-9])")
 
 
 class EvidenceSpan(StrictModel):
-    """Identify one exact, bounded passage within a parser evidence block."""
+    """Identify one exact passage within the catalog supplied to a model call."""
 
     span_id: Identifier
     block_id: Identifier
@@ -95,19 +95,24 @@ def _passages(text: str, kind: str) -> list[str]:
 
 
 def build_evidence_spans(blocks: Iterable[EvidenceBlock]) -> list[EvidenceSpan]:
-    """Return stable citation passages for the supplied blocks in document order."""
+    """Number exact passages in input order; IDs are local to this catalog.
+
+    A different subset can number the same passage differently. Prompt construction
+    and decoding must use the same catalog. Persisted public citations contain the
+    parser block ID and exact quotation, never this temporary shorthand.
+    """
 
     spans: list[EvidenceSpan] = []
-    seen_ids: set[str] = set()
+    seen_passages: set[tuple[str, int, str]] = set()
     for block in blocks:
         for ordinal, text in enumerate(_passages(block.text, block.kind), start=1):
-            digest = hashlib.sha256(
-                f"{block.block_id}\0{ordinal}\0{text}".encode("utf-8")
-            ).hexdigest()[:12]
-            span_id = f"span-{digest}"
-            if span_id in seen_ids:
-                raise ValueError(f"duplicate evidence span identifier: {span_id}")
-            seen_ids.add(span_id)
+            identity = (block.block_id, ordinal, text)
+            if identity in seen_passages:
+                raise ValueError(
+                    f"duplicate evidence passage in block: {block.block_id}"
+                )
+            seen_passages.add(identity)
+            span_id = f"s{len(spans) + 1}"
             spans.append(
                 EvidenceSpan(span_id=span_id, block_id=block.block_id, text=text)
             )
@@ -126,12 +131,18 @@ def evidence_spans_sha256(spans: Iterable[EvidenceSpan]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def evidence_payload(blocks: Iterable[EvidenceBlock]) -> list[dict[str, object]]:
-    """Serialize source locations once and nest their directly citable passages."""
+def evidence_payload(
+    blocks: Iterable[EvidenceBlock], spans: Iterable[EvidenceSpan] | None = None
+) -> list[dict[str, object]]:
+    """Serialize blocks using one catalog, including when displaying its subsets.
+
+    A reader presents context and primary evidence separately but decodes against
+    their combined catalog. Passing that catalog prevents reusing s1 for two texts.
+    """
 
     block_list = list(blocks)
     spans_by_block: dict[str, list[EvidenceSpan]] = {}
-    for span in build_evidence_spans(block_list):
+    for span in build_evidence_spans(block_list) if spans is None else spans:
         spans_by_block.setdefault(span.block_id, []).append(span)
     return [
         {

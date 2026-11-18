@@ -49,8 +49,11 @@ identity, or import values from cited background work. Human ground truth follow
 same boundary.
 
 Before generation, parser blocks are deterministically divided into sentence,
-table-row, or bounded text spans with content-derived IDs. Model-facing responses use
-only those IDs. PERLA inserts the exact span text and parent block ID before writing
+table-row, or bounded text spans. Each request numbers its catalog with short IDs
+such as `s1` and `s2`; context and primary passages share that catalog. These IDs
+are local to the request, and its fingerprint binds them to the exact source text.
+Model-facing responses use only those IDs. PERLA rejects an unknown ID and inserts
+the exact span text and parent block ID before writing
 the public `StudyExtraction`, so review and export continue to see ordinary nested
 citations while the model neither reproduces nor alters quotation text.
 

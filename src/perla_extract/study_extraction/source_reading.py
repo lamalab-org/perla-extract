@@ -143,8 +143,8 @@ def _collect_claim_ledger(
                             if pass_index > 1
                             else ""
                         ),
-                        "primary_evidence": evidence_payload(primary),
-                        "context_evidence": evidence_payload(context),
+                        "primary_evidence": evidence_payload(primary, spans),
+                        "context_evidence": evidence_payload(context, spans),
                     },
                     response_model=ClaimLedger,
                     request_schema=span_citation_schema(ClaimLedger, spans),

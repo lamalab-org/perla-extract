@@ -253,6 +253,7 @@ def _claim_ledger_prompt(
     """
 
     context = context or []
+    spans = build_evidence_spans([*context, *primary])
     return (
         CLAIM_LEDGER_PROMPT
         + (
@@ -264,7 +265,7 @@ def _claim_ledger_prompt(
         )
         + ("\n\n" + CLAIM_RECALL_PROMPTS[recall_pass - 2] if recall_pass > 1 else "")
         + "\n\nCONTEXT EVIDENCE:\n"
-        + json.dumps(evidence_payload(context), ensure_ascii=False)
+        + json.dumps(evidence_payload(context, spans), ensure_ascii=False)
         + "\n\nPRIMARY EVIDENCE:\n"
-        + json.dumps(evidence_payload(primary), ensure_ascii=False)
+        + json.dumps(evidence_payload(primary, spans), ensure_ascii=False)
     )
