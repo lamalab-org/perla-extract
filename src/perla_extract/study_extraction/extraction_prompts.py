@@ -25,7 +25,6 @@ from .guidance import (
 from .models import EvidenceBlock
 from .refinement import REFINEMENT_PROMPT
 from .repair import REPAIR_PROMPT, REPAIR_SYSTEM_PROMPT
-from .scoring_vocabulary import MEASUREMENT_CONDITIONS
 from .spans import build_evidence_spans, evidence_payload
 from .transport import compact_to_span_citations
 
@@ -46,6 +45,10 @@ the evidence supports the connection.
 {EVIDENCE_INTERPRETATION_POLICY}
 {SHARED_QUANTITY_POLICY}
 Rules:
+- Preserve a device as one coherent object. Do not create one device per metric,
+  paragraph, layer, scan direction, or stability checkpoint.
+- Put a fabrication or material value that distinguishes one measured specimen in
+  that IndividualDevice's reported_properties, not among family-wide conditions.
 - Keep individual devices and population statistics in separate top-level arrays.
   Means, medians, distributions, sample sizes, ranges, and population maxima are not
   individual-device measurements.
@@ -60,8 +63,6 @@ Rules:
 - Use measurement_conditions for the conditions during an individual or population
   measurement (irradiance, spectrum, scan rate, temperature). Keep outcomes in metrics,
   preparation in processing/subject_context, and aging stress in stability_tests.
-  Prefer these names when they describe the reported condition exactly:
-  {", ".join(MEASUREMENT_CONDITIONS)}. Preserve unfamiliar or qualified condition names.
 - Mark a device champion only when the source explicitly identifies the device as a
   champion/best-performing device or its efficiency as record/highest. An extremum
   for one attribute (for example voltage, current, or stability) does not make the
@@ -110,13 +111,6 @@ Rules:
 - Empty arrays are correct only when all supplied evidence truly contains no record of
   that kind.
 - Reconcile duplicate mentions before assigning final record IDs.
-
-Illustrative scope example, not source evidence: "Cells A and B were measured at
-100 mW/cm2" applies that condition to their reported measurements. A table's forward
-and reverse results for A are two observations linked to one device, each carrying
-the irradiance and its source evidence. A reported mean for B belongs in a population
-record. An A-labelled loading-series specimen remains distinct unless the source
-links it to the main A specimen. An unstated shared condition stays unknown.
 """
 
 CLAIM_LEDGER_PROMPT = f"""Read the supplied paper evidence before the final schema is
