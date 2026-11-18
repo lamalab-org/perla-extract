@@ -96,7 +96,7 @@ Rules:
   table columns, or a complete row into one name or raw_value. Emit one object per
   quantity even when several quantities share the same source row.
 - ReportedValue.raw_value and material_form_raw must be copied from supplied evidence.
-  Every evidence array contains supplied span_id values, never copied quotation text
+  Every evidence array contains supplied integer span_id values, never quotation text
   or block IDs. Reuse a span_id when several atomic values share one row or sentence.
   Typography-preserving renderings are source evidence and may be used for subscript
   or superscript notation.

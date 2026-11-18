@@ -49,10 +49,12 @@ identity, or import values from cited background work. Human ground truth follow
 same boundary.
 
 Before generation, parser blocks are deterministically divided into sentence,
-table-row, or bounded text spans. Each request numbers its catalog with short IDs
-such as `s1` and `s2`; context and primary passages share that catalog. These IDs
+table-row, or bounded text spans. Each request numbers its catalog with integers
+such as `1` and `2`; context and primary passages share that catalog. These IDs
 are local to the request, and its fingerprint binds them to the exact source text.
-Model-facing responses use only those IDs. PERLA rejects an unknown ID and inserts
+The model-facing schema bounds the citation numbers to that catalog's range.
+Selected catalogs can contain gaps, so Python also checks exact membership.
+PERLA rejects an unknown ID and inserts
 the exact span text and parent block ID before writing
 the public `StudyExtraction`, so review and export continue to see ordinary nested
 citations while the model neither reproduces nor alters quotation text.

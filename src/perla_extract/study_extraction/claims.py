@@ -399,7 +399,7 @@ def assembly_evidence_payload(
     """Serialize the compact passage catalog used by global schema assembly."""
 
     block_by_id = {block.block_id: block for block in blocks}
-    grouped: dict[str, dict[str, str]] = defaultdict(dict)
+    grouped: dict[str, dict[int, str]] = defaultdict(dict)
     for span in assembly_spans(blocks, ledger):
         grouped[span.block_id][span.span_id] = span.text
     return [

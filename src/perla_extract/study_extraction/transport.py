@@ -17,12 +17,16 @@ from .evidence import source_contains_text
 from .spans import EvidenceSpan
 
 
-def _identifier_schema() -> dict[str, object]:
-    """Bound citation syntax; the decoder checks membership in the source catalog."""
+def _identifier_schema(spans: list[EvidenceSpan]) -> dict[str, object]:
+    """Constrain a citation to the catalog's integer range without a large enum.
+
+    Complete-source catalogs are consecutive. Selected catalogs can have gaps;
+    decoding still requires exact membership in the visible catalog.
+    """
     return {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 200,
+        "type": "integer",
+        "minimum": min(span.span_id for span in spans),
+        "maximum": max(span.span_id for span in spans),
     }
 
 
@@ -46,7 +50,7 @@ def span_citation_schema(
     # A document-sized enum can exceed provider limits before inference. The
     # catalog still travels in the prompt; expand_span_citations enforces exact
     # membership, including for responses accepted by the provider's schema.
-    definitions["EvidenceCitation"] = _identifier_schema()
+    definitions["EvidenceCitation"] = _identifier_schema(span_list)
     return schema
 
 
@@ -63,8 +67,10 @@ def expand_span_citations(
     }
 
     def citation(reference: object) -> dict[str, str]:
-        if not isinstance(reference, str):
-            raise ValueError("model-facing evidence must contain span identifiers")
+        if not isinstance(reference, int) or isinstance(reference, bool):
+            raise ValueError(
+                "model-facing evidence must contain integer span identifiers"
+            )
         try:
             return catalog[reference]
         except KeyError as error:
@@ -105,7 +111,7 @@ def compact_to_span_citations(
     span_list = list(spans)
     identities = {(span.block_id, span.text): span.span_id for span in span_list}
 
-    def compact_reference(reference: object) -> str:
+    def compact_reference(reference: object) -> int:
         if not isinstance(reference, dict):
             raise ValueError("public evidence citation must be an object")
         identity = (str(reference.get("block_id")), str(reference.get("quote")))

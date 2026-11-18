@@ -49,14 +49,14 @@ def test_subsets_reuse_the_call_catalog_without_reassigning_short_ids():
     context = block("Context statement.")
     primary = block("Primary result.").model_copy(update={"block_id": "b2"})
     spans = build_evidence_spans([context, primary])
-    assert [span.span_id for span in spans] == ["s1", "s2"]
+    assert [span.span_id for span in spans] == [1, 2]
     payload = evidence_payload([primary], spans)
-    assert payload[0]["spans"] == {"s2": "Primary result."}
-    assert expand_span_citations({"evidence": ["s2"]}, spans) == {
+    assert payload[0]["spans"] == {2: "Primary result."}
+    assert expand_span_citations({"evidence": [2]}, spans) == {
         "evidence": [{"block_id": "b2", "quote": "Primary result."}]
     }
     # The public citation survives renumbering in a different request catalog.
-    assert build_evidence_spans([primary])[0].span_id == "s1"
+    assert build_evidence_spans([primary])[0].span_id == 1
     assert evidence_spans_sha256(spans) != evidence_spans_sha256(
         build_evidence_spans([primary])
     )
@@ -73,5 +73,5 @@ def test_reader_prompt_context_and_primary_share_one_decode_catalog():
     left, right = prompt.split("CONTEXT EVIDENCE:\n", 1)[1].split(
         "\n\nPRIMARY EVIDENCE:\n"
     )
-    assert json.loads(left)[0]["spans"] == {"s1": "Context statement."}
-    assert json.loads(right)[0]["spans"] == {"s2": "Primary result."}
+    assert json.loads(left)[0]["spans"] == {"1": "Context statement."}
+    assert json.loads(right)[0]["spans"] == {"2": "Primary result."}

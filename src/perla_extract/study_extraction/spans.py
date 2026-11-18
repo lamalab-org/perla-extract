@@ -25,7 +25,7 @@ _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+(?=[\[('“\"A-Z0-9])")
 class EvidenceSpan(StrictModel):
     """Identify one exact passage within the catalog supplied to a model call."""
 
-    span_id: Identifier
+    span_id: int = Field(ge=1, strict=True)
     block_id: Identifier
     text: str = Field(min_length=1, max_length=MAX_SPAN_CHARACTERS)
 
@@ -112,7 +112,7 @@ def build_evidence_spans(blocks: Iterable[EvidenceBlock]) -> list[EvidenceSpan]:
                     f"duplicate evidence passage in block: {block.block_id}"
                 )
             seen_passages.add(identity)
-            span_id = f"s{len(spans) + 1}"
+            span_id = len(spans) + 1
             spans.append(
                 EvidenceSpan(span_id=span_id, block_id=block.block_id, text=text)
             )
@@ -137,7 +137,7 @@ def evidence_payload(
     """Serialize blocks using one catalog, including when displaying its subsets.
 
     A reader presents context and primary evidence separately but decodes against
-    their combined catalog. Passing that catalog prevents reusing s1 for two texts.
+    their combined catalog. Passing that catalog prevents reusing 1 for two texts.
     """
 
     block_list = list(blocks)
