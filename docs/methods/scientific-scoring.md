@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 17, matcher `rich-study-hungarian-v22`, fact
-profile `core-scientific-facts-v19`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 17, matcher `rich-study-hungarian-v23`, fact
+profile `core-scientific-facts-v20`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -257,6 +257,11 @@ as complete claims; a matching central number alone is insufficient. Offset unit
 are converted before comparison. Bounds, unknown units and contradictions between
 raw text, parsed number and unit are not silently discarded. Unsupported claims
 remain literal assertions.
+
+Before unit parsing, mathematical minus, figure/en dashes and the legacy
+Symbol-font minus are mapped to ASCII minus. Thus `mA cm‒2` and `mA/cm2` describe
+the same quantity. Unit prefixes, case, scale and dimensions remain significant;
+unsupported notation stays unparsed. Original strings and quotations are retained.
 
 For registered PV names, a recognized, dimensionally compatible trailing unit in brackets or parentheses
 (`PCE [%]`, `Voc (mV)`) supplies a missing unit field in the scoring projection.
