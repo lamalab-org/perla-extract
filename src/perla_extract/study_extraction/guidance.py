@@ -73,18 +73,6 @@ RECORD_BOUNDARY_POLICY = """Record boundary:
   scans or protocols belong to one device but remain distinct observations. A shared
   material label or recipe alone does not establish that link. Do not merge a best
   cell with a representative cell simply because they share a device family.
-- Preserve the source's device or experimental-arm code in the label and its
-  distinguishing preparation settings in reported_properties or subject_context.
-  Keep source-backed variant wording in variant; generated IDs only connect records.
-- Distinguish the specimens supporting the main performance comparison from those
-  in a dose, loading or treatment optimization series. A reused design code does
-  not establish the same specimen. Retain the source's arm qualifiers and reported
-  settings, together with the evidence linking each result to that arm. Do not
-  infer a missing setting by reading a curve or by comparing result values.
-- Reconcile these identities across tables, captions and prose before assigning
-  device_id links. Additional metrics or scan directions do not create a new
-  specimen. A distinct reported preparation does. Keep unresolved identity explicit
-  rather than choosing the specimen with the closest performance value.
 - Preserve mean, median, maximum, champion, and sample-size qualifiers with their own
   results. Equal numbers are not evidence that an individual result and an aggregate
   are the same assertion. If prose and a table disagree about the reporting level,
