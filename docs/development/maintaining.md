@@ -73,6 +73,10 @@ report = summarize(source, reading, final, exports)
 `workflow_results.py` names the inputs passed between these operations. It does
 not own model settings or duplicate accounting. `extraction_prompts.py` owns the
 reading/assembly instructions and scientific prompt fingerprint.
+`spans.py` numbers the passages visible to a request; `transport.py` translates
+those integer references back to exact public block IDs and quotations. Selected
+catalogs can have gaps, so decoding checks membership as well as numeric bounds.
+Keep this mapping mechanical and reject unknown references.
 `source_reading.py` fits windows and combines repeated notes with provenance.
 `candidate_selection.py` owns the refinement acceptance rule. `study_outputs.py`
 keeps optional interpretations separate from reported facts. `run_reporting.py`
