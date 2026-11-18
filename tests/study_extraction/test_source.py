@@ -8,6 +8,7 @@ from perla_extract.study_extraction.source import (
     _cache_identity,
     _deduplicate_evidence_blocks,
     _scientific_evidence_blocks,
+    _table_cell_texts,
     parse_pdf,
 )
 
@@ -151,3 +152,70 @@ def test_duplicate_supplement_retains_original_source_location():
     assert retained[0].metadata["duplicate_locations"] == [
         {"source": "supplement", "page": 4, "block_id": "si"}
     ]
+
+
+class _Row:
+    def __init__(self, cells):
+        self.cells = cells
+
+
+class _Table:
+    """Stand-in for a PyMuPDF table: cell geometry plus what ``extract()`` returns."""
+
+    def __init__(self, cells, extracted):
+        self.rows = [_Row(row) for row in cells]
+        self._extracted = extracted
+
+    def extract(self):
+        return self._extracted
+
+
+def _word(text, x0, y0, x1, y1):
+    return (x0, y0, x1, y1, text, 0, 0, 0)
+
+
+def test_table_cells_keep_decimal_points_that_extract_splits_off():
+    table = _Table(
+        cells=[[(0, 0, 50, 20), (50, 0, 120, 20)]],
+        extracted=[["Ref\n.", "2638±012\n. ."]],
+    )
+    words = [_word("Ref.", 2, 5, 20, 15), _word("26.38±0.12", 55, 5, 110, 15)]
+
+    assert _table_cell_texts(table, words) == [["Ref.", "26.38±0.12"]]
+
+
+def test_table_cells_keep_raised_glyphs_on_their_line_and_order_lines():
+    table = _Table(cells=[[(0, 0, 200, 40)]], extracted=[["unused"]])
+    words = [
+        _word("Hope", 40, 22, 70, 32),
+        _word("Zhao", 40, 5, 70, 15),
+        _word("1,2", 71, 3, 80, 10),  # superscript, higher than the line
+        _word("Chenxu", 2, 5, 38, 15),
+        _word("Michael", 2, 22, 38, 32),
+    ]
+
+    assert _table_cell_texts(table, words) == [["Chenxu Zhao 1,2\nMichael Hope"]]
+
+
+def test_table_cells_fall_back_to_extract_for_merged_or_wordless_cells():
+    table = _Table(
+        cells=[[(0, 0, 50, 20), None, (100, 0, 150, 20)]],
+        extracted=[["vector text", None, "kept"]],
+    )
+    words = [_word("kept", 105, 5, 130, 15)]
+
+    assert _table_cell_texts(table, words) == [["vector text", None, "kept"]]
+
+
+def test_table_cells_use_extract_when_row_geometry_does_not_match():
+    table = _Table(cells=[[(0, 0, 50, 20)]], extracted=[["a"], ["b"]])
+
+    assert _table_cell_texts(table, [_word("x", 1, 1, 5, 5)]) == [["a"], ["b"]]
+
+
+def test_pymupdf_table_blocks_keep_word_spacing_from_the_pdf(tmp_path):
+    blocks, _ = parse_pdf(FIXTURE, "main", parser="pymupdf", cache_dir=tmp_path)
+    tables = [block.text for block in blocks if block.kind == "table"]
+
+    assert any("Received: 4 March 2024" in text for text in tables)
+    assert not any("Received:4March2024" in text for text in tables)

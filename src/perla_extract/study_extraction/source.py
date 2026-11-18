@@ -171,6 +171,79 @@ def _overlap_fraction(first: list[float], second: list[float]) -> float:
     return intersection / area
 
 
+def _visual_lines(words: list[tuple]) -> list[list[tuple]]:
+    """Group words into printed lines by vertical overlap, top to bottom.
+
+    A word joins a line when it overlaps the line's vertical extent by at least half
+    of the smaller height, so raised or lowered glyphs (affiliation superscripts,
+    subscripts) stay on the line they belong to rather than forming lines of their own.
+    """
+
+    lines: list[tuple[float, float, list[tuple]]] = []
+    for word in sorted(words, key=lambda w: (w[1], w[0])):
+        top, bottom = word[1], word[3]
+        for index, (line_top, line_bottom, members) in enumerate(lines):
+            overlap = min(bottom, line_bottom) - max(top, line_top)
+            smaller = min(bottom - top, line_bottom - line_top)
+            if smaller > 0 and overlap >= 0.5 * smaller:
+                members.append(word)
+                lines[index] = (min(top, line_top), max(bottom, line_bottom), members)
+                break
+        else:
+            lines.append((top, bottom, [word]))
+    return [members for _, _, members in sorted(lines, key=lambda line: line[0])]
+
+
+def _table_cell_texts(
+    table: Any, page_words: list[tuple]
+) -> list[list[str | None]]:
+    """Read table cells from the page's words instead of ``Table.extract()``.
+
+    ``extract()`` groups characters into lines using tight glyph boxes, so a decimal
+    point, which sits lower than the digits, can be split onto its own line
+    (``26.38±0.12`` becomes ``2638±012`` and ``. .``). PyMuPDF's word extraction keeps
+    them together. Each word goes to the cell containing its centre; words are grouped
+    into printed lines and ordered top to bottom, left to right. Merged
+    cells stay ``None`` as in ``extract()``, and a cell that receives no word falls
+    back to ``extract()`` so no text is lost.
+    """
+
+    extracted = table.extract() or []
+    try:
+        cell_rows = [row.cells for row in table.rows]
+    except Exception:  # noqa: BLE001 - row geometry is optional across PyMuPDF releases
+        return extracted
+    if len(cell_rows) != len(extracted):
+        return extracted
+    result: list[list[str | None]] = []
+    for row_index, cells in enumerate(cell_rows):
+        fallback_row = extracted[row_index]
+        row: list[str | None] = []
+        for column, bbox in enumerate(cells):
+            fallback = fallback_row[column] if column < len(fallback_row) else None
+            if bbox is None:
+                row.append(fallback)
+                continue
+            x0, y0, x1, y1 = bbox
+            inside = [
+                word
+                for word in page_words
+                if x0 <= (word[0] + word[2]) / 2 <= x1
+                and y0 <= (word[1] + word[3]) / 2 <= y1
+            ]
+            if not inside:
+                row.append(fallback)
+                continue
+            row.append(
+                "\n".join(
+                    " ".join(w[4] for w in sorted(line, key=lambda w: w[0]))
+                    for line in _visual_lines(inside)
+                )
+            )
+        result.append(row)
+    return result
+
+
 def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
     """Recover native text and tables without emitting table contents twice.
 
@@ -191,10 +264,11 @@ def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
             except Exception as exc:  # noqa: BLE001 - optional detector failures vary by PyMuPDF release
                 logger.debug("Table detection failed on page {}: {}", page_index, exc)
                 tables = []
+            page_words = page.get_text("words") if tables else []
             for table in tables:
                 rows = [
                     [_normalize_layout_text(cell) or None for cell in row]
-                    for row in (table.extract() or [])
+                    for row in _table_cell_texts(table, page_words)
                 ]
                 nonempty_by_row = [
                     sum(bool(cell) for cell in row) for row in rows if row
