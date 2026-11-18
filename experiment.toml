@@ -1,6 +1,27 @@
-# Frozen development references already included in this checkout.
-# Supply the original PDFs at the paths below, or edit these paths.
-# Each [[papers]] block links one main article, its SI, and their ground truth.
+# All 30 included development references; start with the one-paper example first.
+# Supply the original PDFs or edit their paths. Each block links paper, SI and truth.
+output = "results/refinement"
+repeats = 1
+
+[stages.default]
+model = "openai/gpt-6.1-sol"
+reasoning_effort = "medium"
+max_output_tokens = 40000
+
+[extraction]
+parser = "pymupdf"
+use_claim_ledger = false
+use_targeted_repair = false
+use_enrichment = false
+max_model_calls = 2
+
+[control]
+use_refinement = false
+
+[treatment]
+use_refinement = true
+
+[[papers]] block links one main article, its SI, and their ground truth.
 output = "results/reading-passes-dev"
 repeats = 1
 

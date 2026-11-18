@@ -174,7 +174,9 @@ request that exceeds its context budget is a retained failure, not permission to
 truncate the source or remove that paper. This combined comparison establishes a
 baseline; it cannot attribute a difference to any one stage.
 
-The [four ablation studies](../workflows/extraction-ablations.md) isolate:
+Use the [single-file experiment](../workflows/extraction-ablations.md) to isolate
+one choice at a time. Start with the refinement comparison in the template;
+possible follow-up questions are:
 
 | Study | Changed choice | Kept fixed |
 | --- | --- | --- |
@@ -232,6 +234,27 @@ training. See [Cawley and Talbot](https://www.jmlr.org/papers/v11/cawley10a.html
 Choice of paired testing and the evaluation unit also matters; see
 [Dror et al.](https://aclanthology.org/P18-1128/). Neither reference supplies a
 universal acceptable quality-loss margin for this scientific application.
+
+### Keep the starting pipeline inexpensive
+
+If the complete paper and SI fit the declared context, start with direct assembly.
+Disable the claim reader, refinement, targeted repair and enrichment for the
+one-call baseline. A reader is useful when the source does not fit; extra stages
+need a measured benefit. Do not truncate a long SI to make the cheaper arm fit.
+The experiment template adds only refinement as its treatment.
+
+Reuse parsed documents, sealed extractions and response caches where appropriate.
+A scoring change needs rescoring, not new extraction. Citation IDs are bounded
+integers in model requests; Python restores exact source passages in the public
+output. This saves repeated citation text without shortening the scientific record.
+
+Measure all attempted spend per completed output, including failures, and keep
+unknown charges unavailable. Report observed provider-cache savings separately
+from estimates for new papers. Include output tokens, retries, parsing, storage
+and tracing costs when planning a corpus. Full-content Langfuse capture is useful
+for debugging; use metadata tracing for routine large runs unless full capture is
+required. [Processing tiers](../workflows/open-models.md#configure-a-deployment)
+can lower rates, but completion and quality still need to be measured.
 
 ## 4. Require new evidence before scaling
 
