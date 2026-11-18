@@ -405,6 +405,23 @@ class ModelClient:
             cost_source = (
                 "adapter_reported_unspecified" if cost is not None else "unknown"
             )
+            served_tier = payload.get("service_tier") or usage.get("service_tier")
+            if (
+                cost is not None
+                and served_tier
+                and body.get("service_tier")
+                and served_tier != body["service_tier"]
+            ):
+                # Older adapters price the requested tier even when the provider
+                # serves another. Re-estimate with the actual tier; an unavailable
+                # estimate must not become a known, incorrectly discounted cost.
+                try:
+                    cost = litellm.completion_cost(
+                        completion_response=response, service_tier=served_tier
+                    )
+                    cost_source = "adapter_estimated_served_tier"
+                except Exception:
+                    cost, cost_source = None, "unknown"
         # The native OpenRouter adapter moves this field into hidden metadata;
         # the generic OpenAI-compatible adapter retains it on the response body.
         upstream_provider = hidden.get("upstream_provider") or payload.get("provider")

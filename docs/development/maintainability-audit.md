@@ -108,9 +108,17 @@ leaves insufficient space for another request under the study's $25 admission
 rule. Three additional Flex capacity rejections are documented as no-charge, while
 their native reports preserve missing accounting. Blablador costs are unpriced.
 
-The final software suite passes 1,402 tests (three skipped). Ruff, mypy and strict
+The final software suite passes 1,404 tests (three skipped) on Python 3.10 and 3.12.
+Ruff, mypy and strict
 documentation checks pass. Langfuse read-back matches 32 attempts exactly; the
 remaining attempt preserves one large integer as identical decimal text. Local
 scientific outputs retain their original numeric types. These checks establish
 software behavior and trace preservation; corpus-scale quality and cost remain
 unvalidated.
+
+CI exposed an older LiteLLM version pricing a requested Flex tier even when the
+response reported Standard. The client now re-estimates that mismatch using the
+served tier, preserving explicit provider amounts, including zero. Pricing tests
+supply a local catalog and exercise both supported adapter generations. The live
+study used the newer adapter and had no mismatched-tier responses; its saved costs
+and scientific outputs remain unchanged.

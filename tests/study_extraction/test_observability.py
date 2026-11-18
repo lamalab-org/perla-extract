@@ -288,25 +288,39 @@ def test_provider_http_contract_and_accounting(
 
 
 @pytest.mark.parametrize(
-    "served_tier,expected", [("flex", 0.000125), ("default", 0.00025)]
+    "served_tier,provider_cost,expected",
+    [
+        ("flex", None, 0.000125),
+        ("default", None, 0.00025),
+        ("default", 0.0123, 0.0123),
+        ("default", 0.0, 0.0),
+    ],
 )
 def test_processing_tier_reaches_http_and_actual_tier_controls_accounting(
-    tmp_path, monkeypatch, served_tier, expected
+    tmp_path, monkeypatch, served_tier, provider_cost, expected
 ):
     monkeypatch.setenv("TIER_TEST_KEY", "synthetic-tier-key")
-    prices = dict(litellm.model_cost["gpt-6.1-sol"])
-    prices.update(
-        input_cost_per_token=2e-6,
-        output_cost_per_token=1e-5,
-        input_cost_per_token_flex=1e-6,
-        output_cost_per_token_flex=5e-6,
-    )
+    # Supply the pricing contract locally; old adapters' bundled catalogs need
+    # not contain this model, and tests must not depend on a registry download.
+    prices = {
+        "litellm_provider": "openai",
+        "mode": "chat",
+        "max_input_tokens": 1_000_000,
+        "max_output_tokens": 40_000,
+        "input_cost_per_token": 2e-6,
+        "output_cost_per_token": 1e-5,
+        "input_cost_per_token_flex": 1e-6,
+        "output_cost_per_token_flex": 5e-6,
+    }
     monkeypatch.setitem(litellm.model_cost, "gpt-6.1-sol", prices)
     sent = []
 
     def send(self, request, **kwargs):
         sent.append(json.loads(request.content))
         actual = served_tier if sent[-1].get("service_tier") == "flex" else "default"
+        usage = {"prompt_tokens": 100, "completion_tokens": 5, "total_tokens": 105}
+        if provider_cost is not None:
+            usage["cost"] = provider_cost
         return httpx.Response(
             200,
             request=request,
@@ -323,11 +337,7 @@ def test_processing_tier_reaches_http_and_actual_tier_controls_accounting(
                         "message": {"role": "assistant", "content": '{"value":7}'},
                     }
                 ],
-                "usage": {
-                    "prompt_tokens": 100,
-                    "completion_tokens": 5,
-                    "total_tokens": 105,
-                },
+                "usage": usage,
             },
         )
 
