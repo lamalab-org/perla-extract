@@ -64,6 +64,11 @@ schema and prompt fingerprints match, and their sealed outputs validate. `--reru
 creates a new numbered attempt and retains all previous artifacts. Use `--config
 method.toml` to apply the shared extraction settings instead of legacy manifest defaults. Keep new extraction runs separate from saved human-review state.
 
+If a completed attempt exists but its sources or method no longer match, the
+command stops before making model calls. A scoring update needs new evaluations
+of saved outputs, not another paid extraction. Use `--rerun` only when you intend
+new extraction attempts for the selected papers, or choose a new output directory.
+
 To divide a batch among workers, give each the same `--shard-count` and a distinct
 zero-based `--shard-index`. Each worker writes a separate batch report.
 

@@ -274,6 +274,50 @@ def test_completed_shard_still_writes_a_full_audit(tmp_path, monkeypatch):
     ]
 
 
+def test_method_drift_never_silently_replaces_completed_work(tmp_path, monkeypatch):
+    value = manifest()
+    manifest_path = tmp_path / "cohort.json"
+    manifest_path.write_text(value.model_dump_json())
+    pdf_dir, si_dir = tmp_path / "pdfs", tmp_path / "si"
+    pdf_dir.mkdir()
+    si_dir.mkdir()
+    pdf = pdf_dir / "paper.pdf"
+    pdf.write_bytes(b"source")
+    run_dir = tmp_path / "runs/paper"
+    sealed_run(run_dir, pdf, value)
+    original = (run_dir / "extraction.json").read_bytes()
+    # Updating evaluation/reporting code changes the conservative package hash.
+    monkeypatch.setattr(cohort, "implementation_sha256", lambda: "changed-code")
+    calls = []
+
+    def extract(**options):
+        calls.append(options)
+        return {"status": "complete"}
+
+    monkeypatch.setattr(cohort, "extract_study", extract)
+    args = [
+        "--manifest",
+        str(manifest_path),
+        "--pdf-dir",
+        str(pdf_dir),
+        "--supplement-dir",
+        str(si_dir),
+        "--output-dir",
+        str(tmp_path / "runs"),
+    ]
+    blocked = CliRunner().invoke(cohort.main, args)
+    assert blocked.exit_code == 1
+    assert "No extraction was started" in blocked.output
+    assert "Re-score saved outputs" in blocked.output
+    assert calls == []
+    assert (run_dir / "extraction.json").read_bytes() == original
+    rerun = CliRunner().invoke(cohort.main, [*args, "--rerun"])
+    assert rerun.exit_code == 0, rerun.output
+    assert len(calls) == 1
+    assert calls[0]["output_dir"] != run_dir
+    assert (run_dir / "extraction.json").read_bytes() == original
+
+
 def test_failed_attempt_path_and_invocation_history_are_retained(tmp_path, monkeypatch):
     value = manifest()
     manifest_path = tmp_path / "cohort.json"

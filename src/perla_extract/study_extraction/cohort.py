@@ -204,6 +204,17 @@ def _matching_attempt(
     )
 
 
+def _has_completed_attempt(paper_dir: Path) -> bool:
+    """Protect an existing result from automatic replacement after method drift."""
+    for path in [*paper_dir.glob("attempt-*/report.json"), paper_dir / "report.json"]:
+        try:
+            if json.loads(path.read_text()).get("status") in COMPLETE_OUTPUT_STATUSES:
+                return True
+        except (OSError, ValueError, AttributeError):
+            continue
+    return False
+
+
 def _new_attempt(paper_dir: Path) -> Path:
     """Allocate a fresh location, retaining every prior failed or completed attempt."""
     if not paper_dir.exists() or not any(paper_dir.iterdir()):
@@ -293,6 +304,20 @@ def main(
         )
         for paper in selected
     }
+    stale = [
+        paper.paper_id
+        for paper in selected
+        if resumed[paper.paper_id] is None
+        and _has_completed_attempt(output_dir / paper.paper_id)
+    ]
+    if stale and not rerun:
+        raise click.ClickException(
+            f"{len(stale)} paper(s) have completed attempts that do not match the current "
+            "sources or method. No extraction was started. Re-score saved outputs when "
+            "only evaluation changed. Use a new output directory or --rerun to create "
+            "new attempts for every selected paper. "
+            f"First affected paper: {stale[0]}"
+        )
     incomplete = [
         paper for paper in selected if rerun or resumed[paper.paper_id] is None
     ]
