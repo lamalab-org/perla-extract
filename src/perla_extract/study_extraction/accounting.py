@@ -72,6 +72,7 @@ def aggregate_usage(records: list[dict]) -> dict:
         "finish_reason",
         "response_id",
         "cost_source",
+        "service_tier",
     ):
         values = list(
             dict.fromkeys(
@@ -116,7 +117,8 @@ def summarize_calls(calls: list[dict[str, Any]]) -> dict[str, Any]:
         **{
             key: value
             for key, value in usage.items()
-            if "_details" in key or key in {"cost_sources", "upstream_providers"}
+            if "_details" in key
+            or key in {"cost_sources", "upstream_providers", "service_tiers"}
         },
     }
 

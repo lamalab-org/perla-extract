@@ -287,6 +287,88 @@ def test_provider_http_contract_and_accounting(
         assert "secret-never-save" not in artifact.read_text()
 
 
+@pytest.mark.parametrize(
+    "served_tier,expected", [("flex", 0.000125), ("default", 0.00025)]
+)
+def test_processing_tier_reaches_http_and_actual_tier_controls_accounting(
+    tmp_path, monkeypatch, served_tier, expected
+):
+    monkeypatch.setenv("TIER_TEST_KEY", "synthetic-tier-key")
+    prices = dict(litellm.model_cost["gpt-6.1-sol"])
+    prices.update(
+        input_cost_per_token=2e-6,
+        output_cost_per_token=1e-5,
+        input_cost_per_token_flex=1e-6,
+        output_cost_per_token_flex=5e-6,
+    )
+    monkeypatch.setitem(litellm.model_cost, "gpt-6.1-sol", prices)
+    sent = []
+
+    def send(self, request, **kwargs):
+        sent.append(json.loads(request.content))
+        actual = served_tier if sent[-1].get("service_tier") == "flex" else "default"
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "id": "tier-answer",
+                "object": "chat.completion",
+                "created": 1,
+                "model": "gpt-6.1-sol",
+                "service_tier": actual,
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": '{"value":7}'},
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 100,
+                    "completion_tokens": 5,
+                    "total_tokens": 105,
+                },
+            },
+        )
+
+    monkeypatch.setattr(httpx.Client, "send", send)
+    original = client(
+        tmp_path,
+        temperature=None,
+        deployments={
+            "assemble": DeploymentSettings(
+                model="openai/gpt-6.1-sol",
+                api_key_env="TIER_TEST_KEY",
+                reasoning_effort="omit",
+            )
+        },
+    )
+    assert complete(original).value == 7
+    discounted = client(
+        tmp_path,
+        temperature=None,
+        deployments={
+            "assemble": DeploymentSettings(
+                model="openai/gpt-6.1-sol",
+                api_key_env="TIER_TEST_KEY",
+                reasoning_effort="omit",
+                service_tier="flex",
+            )
+        },
+    )
+    assert complete(discounted, slug="flex").value == 7
+    assert len(sent) == 2  # Flex cannot replay an ordinary-tier cached response.
+    assert "service_tier" not in sent[0]
+    assert sent[1]["service_tier"] == "flex"
+    usage = summarize_calls(discounted.calls)
+    assert usage["service_tiers"] == [served_tier]
+    assert usage["cost"] == pytest.approx(expected)
+    assert (
+        original.calls[0]["cache_key_sha256"] != discounted.calls[0]["cache_key_sha256"]
+    )
+    assert "service_tier" not in DeploymentSettings().identity()
+
+
 def test_retry_request_is_checked_against_context_limit(tmp_path, monkeypatch):
     schema = strict_response_schema(Answer)
     initial = estimate_request_input("System instructions", "Evidence", schema)[
@@ -715,6 +797,7 @@ def test_explicit_tracing_with_missing_credentials_has_actionable_error(monkeypa
         {"temperature": float("nan")},
         {"top_p": float("inf")},
         {"reasoning_effort": "unknown"},
+        {"service_tier": "cheapest"},
         {"revision": " "},
         {"chat_template_kwargs": {"x": float("nan")}},
     ],

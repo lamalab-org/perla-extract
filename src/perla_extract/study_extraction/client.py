@@ -413,6 +413,7 @@ class ModelClient:
                 "response_received": True,
                 "response_id": payload.get("id"),
                 "response_model": payload.get("model"),
+                "service_tier": payload.get("service_tier") or usage.get("service_tier"),
                 "provider": hidden.get("custom_llm_provider"),
                 "upstream_provider": upstream_provider
                 if isinstance(upstream_provider, str)
@@ -509,6 +510,8 @@ class ModelClient:
             body["temperature"] = policy.temperature
         if deployment.top_p is not None:
             body["top_p"] = deployment.top_p
+        if deployment.service_tier is not None:
+            body["service_tier"] = deployment.service_tier
         extra: dict[str, object] = {}
         if policy.model.startswith("openrouter/") or (
             urlsplit(deployment.base_url or "").hostname == "openrouter.ai"
