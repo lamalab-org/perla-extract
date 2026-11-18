@@ -500,6 +500,9 @@ def summarize(
             row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
             for row in arm_paired
         )
+        # Include failed/accounting-only spend in the cost of obtaining completed
+        # outputs. Unknown cost and zero completions cannot produce a unit price.
+        per_complete = known / paired_complete if complete and paired_complete else None
         accounting[arm] = dict(
             planned_runs=len(design.expected_pairs()),
             listed_paired_runs=len(arm_paired),
@@ -518,6 +521,11 @@ def summarize(
             known_cost_usd=known,
             cost_tracking_complete=complete,
             total_cost_usd=known if complete else None,
+            cost_per_completed_extraction_usd=per_complete,
+            projected_cost_usd={
+                str(count): per_complete * count if per_complete is not None else None
+                for count in (10_000, 50_000)
+            },
         )
     control, treatment = (accounting[arm]["total_cost_usd"] for arm in ARMS)
     saving = (

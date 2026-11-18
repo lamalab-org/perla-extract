@@ -136,6 +136,9 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
         "claim_recall_passes": {"control": 1, "treatment": 2}
     }
     assert report["accounting"]["control"]["total_cost_usd"] == 2
+    assert report["accounting"]["control"]["cost_per_completed_extraction_usd"] == 1
+    assert report["accounting"]["control"]["projected_cost_usd"]["10000"] == 10000
+    assert (output / "figure-data/cost_projection.csv").is_file()
     assert (output / "figure-data/paired_papers.csv").is_file()
     field_rows = list(csv.DictReader((output / "figure-data/field_scores.csv").open()))
     pce = [
@@ -197,6 +200,9 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
     assert "Reviewed-scope conclusion unavailable" in summary
     assert "Treatment − control:" not in summary
     assert "| control | 1 / 2 | 2 | 2.000000 |" in summary
+    counts = report["accounting"][failed["arm"]]
+    assert counts["cost_per_completed_extraction_usd"] == 2
+    assert counts["projected_cost_usd"]["50000"] == 100000
 
 
 def test_all_failed_attempts_have_no_automatic_effect_estimate(setup, monkeypatch):
@@ -211,6 +217,10 @@ def test_all_failed_attempts_have_no_automatic_effect_estimate(setup, monkeypatc
     assert "Comparison unavailable" in summary
     assert "Automatic reference-agreement difference" not in summary
     assert "Treatment − control:" not in summary
+    report = json.loads((path.parent / "results/comparison.json").read_text())
+    for counts in report["accounting"].values():
+        assert counts["cost_per_completed_extraction_usd"] is None
+        assert counts["projected_cost_usd"] == {"10000": None, "50000": None}
 
 
 def test_source_mismatch_is_rejected_before_any_output_or_paid_work(setup):

@@ -77,6 +77,7 @@ uncertainty, scored/planned run counts, recorded spend and any blocking issues.
 | `figure-data/group_scores.csv` | Attributed and recovery precision/recall/F1 and fact counts by scientific group |
 | `figure-data/subfield_scores.csv` | The same scores split into measurement, composition, processing and other subfields |
 | `figure-data/runs.csv` | Per-attempt quality, tokens, requests, elapsed time, recorded cost and failures |
+| `figure-data/cost_projection.csv` | All listed spend per completed extraction and simple projections for 10,000/50,000 outputs; unavailable when costs are unknown |
 | `runs/paper-NNN/ARM-REPEAT/evaluation.json` | Trace scores to matched and unmatched fields in that run's `extraction.json` |
 | `errors.json`, per-run `report.json` and `events.jsonl` | Diagnose failed attempts |
 | `comparison.json` | Full machine-readable result and consistency checks |
@@ -97,6 +98,13 @@ reference. Do not interpret these as established extraction accuracy. Retain fai
 attempts rather than interpreting only the successful subset. Empty CSV
 cells and JSON `null` mean unavailable, not zero. Missing cost can coexist with a
 valid quality comparison; a known cost subtotal is not a complete total.
+
+For corpus planning, the summary divides all listed spend, including failed
+attempts, by the number of completed paired extractions. It also projects that
+observed rate to 10,000 and 50,000 completed outputs. These are simple estimates
+assuming the same paper mix, rates and failures; they exclude infrastructure and
+unreported GPU costs. A completed output can still contain scientific errors.
+Unknown costs or no completed outputs leave these estimates unavailable.
 
 Run folders and response caches are separate for every paper, arm and repeat.
 Execution order is shuffled reproducibly. The intended cohort and arm settings are

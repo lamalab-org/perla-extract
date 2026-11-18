@@ -132,6 +132,22 @@ def export_tables(result: dict, directory: Path) -> None:
                         }
                     )
     _write(directory / "runs.csv", list(runs[0]), runs)
+    scale = [
+        {
+            "arm": arm,
+            "planned_runs": counts["planned_runs"],
+            "completed_runs": counts["paired_complete_runs"],
+            "known_cost_usd": counts["known_cost_usd"],
+            "total_cost_usd": counts["total_cost_usd"],
+            "cost_per_completed_extraction_usd": counts[
+                "cost_per_completed_extraction_usd"
+            ],
+            "projected_10000_usd": counts["projected_cost_usd"]["10000"],
+            "projected_50000_usd": counts["projected_cost_usd"]["50000"],
+        }
+        for arm, counts in result["accounting"].items()
+    ]
+    _write(directory / "cost_projection.csv", list(scale[0]), scale)
     _write(
         directory / "scoring_diagnostics.csv",
         [
