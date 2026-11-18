@@ -81,7 +81,7 @@ serializes existing decisions rather than running scientific checks again.
 `guidance.py` owns the scientific boundaries shared by reading, assembly and
 correction. Explicitly shared measurement conditions belong on every observation
 covered by the source statement, with scope evidence and narrower exceptions.
-Device labels retain source arm codes; distinguishing preparation belongs in
+Source arm codes belong in device labels; distinguishing preparation belongs in
 `reported_properties` or `subject_context`. A reused design code alone does not
 establish the same physical specimen. These rules use the existing schema.
 
@@ -89,6 +89,10 @@ When testing a guidance change, pin the source, model, schema and scorer. Vary o
 policy at a time and retain failed attempts and collateral field changes. The
 workflow request tests check that the shared policies reach each relevant stage
 exactly once; a live ablation is still needed to measure model behavior.
+Treat stronger guidance as a behavioral hypothesis, not a validated fix. Check
+whole-roster completion and other scientific fields before promoting a change.
+Inspect context diagnostics as well: an unrecognized protocol name can change
+attributed credit even when the raw quantity and unit are unchanged.
 
 A citation check and reader-note coverage check are integrity constraints. They
 cannot prove that the extracted scientific attribution is correct. For example,
