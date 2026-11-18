@@ -73,8 +73,13 @@ def test_sample_sizes_remain_exact_at_one_percent():
     prediction.population_statistics[0].sample_size = 101
     result = evaluate_study(truth, prediction)
     assert result.core_facts.subfields["statistical_metadata"].matched == 0
-    assert not any(m.truth_path.startswith("/population_statistics/") for m in result.core_facts.matches)
-    assert result.core_facts.recovery.groups["performance"].matched == 2  # Individual and population values, never the count.
+    assert not any(
+        m.truth_path.startswith("/population_statistics/")
+        for m in result.core_facts.matches
+    )
+    assert (
+        result.core_facts.recovery.groups["performance"].matched == 2
+    )  # Individual and population values, never the count.
 
 
 def test_cli_default_and_strict_override_are_frozen_in_reports(tmp_path):

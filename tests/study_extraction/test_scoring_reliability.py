@@ -122,7 +122,9 @@ def test_extra_unannotated_subject_context_does_not_veto_paired_pv_value():
     )
     assert credited(evaluate_study(truth, prediction))
     # The added preparation claims remain unmatched fields in their own right.
-    assert evaluate_study(truth, prediction).core_facts.groups["processing"].matched == 0
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["processing"].matched == 0
+    )
 
 
 def test_duplicate_treatment_views_preserve_inventory_and_original_paths():

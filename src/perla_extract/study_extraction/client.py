@@ -413,7 +413,8 @@ class ModelClient:
                 "response_received": True,
                 "response_id": payload.get("id"),
                 "response_model": payload.get("model"),
-                "service_tier": payload.get("service_tier") or usage.get("service_tier"),
+                "service_tier": payload.get("service_tier")
+                or usage.get("service_tier"),
                 "provider": hidden.get("custom_llm_provider"),
                 "upstream_provider": upstream_provider
                 if isinstance(upstream_provider, str)
