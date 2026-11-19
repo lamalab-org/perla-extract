@@ -60,9 +60,17 @@ Repeated indistinguishable subjects remain ambiguous, even with different outcom
 Only the checked treatment-condition names may establish identity. Unknown fields
 remain stored/scored but cannot break a tie; a misplaced PCE cannot become identity.
 
-The same explicit sample-code parser supports families and cohorts. Known codes
-must agree; extra label prose adds no evidence. A same-code family can align despite
-an incomplete stack, but the missing layers remain misses. PV context comparison
+The same explicit sample-code parser supports families, specimens and cohorts. Known codes
+must agree. Literal family/device label words also support candidate alignment;
+they do not establish chemical or treatment equivalence. Internal separators are
+retained, so `c-NiOx`, `cp-NiOx`, `A/B` and `B/A` stay distinct. Duplicate words add
+no weight; no synonyms are guessed. A same-code family can align despite
+an incomplete stack, but the missing layers remain misses. Words shared by all
+family headings cannot resolve a design tie. Tied parent assignments supply no
+anchor to child pairing. Equal explicit specimen codes support correspondence;
+contradictory codes exclude it. The final specimen similarity must
+meet the cutoff after measurement corroboration, before assignment priority.
+PV context comparison
 distinguishes omitted reference scan/method/subjects from explicit contradictions;
 known reference conditions still need a prediction. Champion-status omission does
 not veto an already aligned specimen's value. See `test_attribution_missingness.py`
@@ -92,6 +100,13 @@ identity. A label remains a fallback when recognized inputs are absent. Layer
 alignment uses ordered materials and passes the same links to composition and
 recipe targets. It never fills omitted layers. See the [paper methods](../methods/scientific-scoring.md)
 for the exact similarity equation, tolerances, score definitions and limits.
+
+`scoring_vocabulary.processing_name` equates a separate final fabrication word
+`time` with `duration`. Both compound recipe conditions and device preparation
+properties use it. Every preceding qualifier stays in the key; measurement and
+stability names retain their own meaning. Extend this small normalization with
+positive and contradiction tests in `test_processing_attribution.py`, rather than
+adding paper-specific field aliases or changing numeric tolerances.
 
 ## Run and inspect the existing example
 
@@ -138,7 +153,7 @@ Use a new output path. Read `calibration_coverage` for applicable, passed and
 inapplicable cases; the tool exits unsuccessfully if any applicable control fails.
 Synthetic conditions are explicitly marked and never written back into references.
 
-Evaluation format **17**, matcher **v22**, fact profile **v19**, explanation format
+Evaluation format **17**, matcher **v24**, fact profile **v21**, explanation format
 **6**, and study schema **8** are current. Ground-truth format **4** is unchanged.
 Archived schema-6/7 inputs load through the additive schema with unknown defaults;
 no treatment/protocol is inferred and no archived file is overwritten. Existing

@@ -14,6 +14,15 @@ from tokenize import TokenError
 
 from .models import ReportedValue
 
+_UNIT_MINUS_SIGNS = str.maketrans(
+    {
+        "\u2212": "-",  # Mathematical minus.
+        "\u2012": "-",  # Figure dash used in PDF unit exponents.
+        "\u2013": "-",  # En dash used in PDF unit exponents.
+        "\uf02d": "-",  # Legacy Symbol-font minus.
+    }
+)
+
 
 def _unit_key(unit: str) -> str:
     """Normalize a percentage label without interpreting other unit semantics."""
@@ -51,9 +60,7 @@ def _pint_unit(unit: str) -> str:
         .replace("°C", "degree_Celsius")
         .replace("° C", "degree_Celsius")
         .replace("·", " * ")
-        .replace("−", "-")
-        .replace("–", "-")
-        .replace("\uf02d", "-")
+        .translate(_UNIT_MINUS_SIGNS)
     )
     value = re.sub(
         r"[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+",

@@ -38,6 +38,30 @@ def property_name(name: str) -> str:
     return METRIC_ALIASES.get(key, key)
 
 
+def processing_name(name: str) -> str:
+    """Equate time and duration in fabrication fields, retaining every qualifier.
+
+    Only a final, separate word is interpreted. Thus ``first spin time`` agrees
+    with ``first spin duration``, but not ``second spin duration`` or ``lifetime``.
+    Measurement and stability fields do not use this fabrication convention.
+    """
+    text = scientific_text(name)
+    text = re.sub(r"(^|[\s_-])time$", r"\1duration", text, flags=re.IGNORECASE)
+    return property_name(text)
+
+
+def label_tokens(label: str) -> set[str]:
+    """Read literal label words for candidate alignment, without synonym inference.
+
+    Case and punctuation outside a word are typography. Internal hyphens and
+    slashes remain significant: c-NiOx, cp-NiOx, A/B and B/A stay distinct.
+    These tokens corroborate identity; they never establish scientific equality.
+    """
+    return set(
+        re.findall(r"[^\W_]+(?:[-/][^\W_]+)*", scientific_text(label).casefold())
+    )
+
+
 # One vocabulary for measurement context. The canonical labels can also appear in
 # extraction guidance; aliases describe the same condition, not related outcomes.
 MEASUREMENT_CONDITIONS = {
@@ -115,13 +139,13 @@ def treatment_condition_name(name: str) -> str | None:
     potential``. Unknown qualifiers, starting/ending temperatures and outcomes
     stay literal and cannot establish a treatment identity.
     """
-    direct = TREATMENT_NAMES.get(property_name(name))
+    direct = TREATMENT_NAMES.get(processing_name(name))
     if direct is not None:
         return direct
     text = scientific_text(name)
     for separator in re.finditer(r"\s+", text):
         material, condition = text[: separator.start()], text[separator.end() :]
-        canonical = TREATMENT_NAMES.get(property_name(condition))
+        canonical = TREATMENT_NAMES.get(processing_name(condition))
         if canonical is not None and known_material(material):
             return f"{canonical}@{material_name(material)}"
     return None

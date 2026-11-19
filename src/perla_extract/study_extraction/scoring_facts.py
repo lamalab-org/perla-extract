@@ -70,6 +70,7 @@ from .scoring_vocabulary import (
     material_name,
     material_role,
     material_stage,
+    processing_name,
     property_name,
     scientific_concept,
     scoped_property_name,
@@ -958,7 +959,9 @@ class _FactProjector:
                 "processing",
                 f"{path}/reported_properties/{j}",
                 owner,
-                "treatment:" + name if name is not None else property_name(value.name),
+                "treatment:" + name
+                if name is not None
+                else processing_name(value.name),
                 value,
                 value_context,
             )

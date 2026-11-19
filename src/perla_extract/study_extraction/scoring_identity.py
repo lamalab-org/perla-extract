@@ -29,7 +29,12 @@ from .scoring_context import (
 )
 from .scoring_layers import ordered_layers, stack_similarity
 from .scoring_protocol import canonical_conditions
-from .scoring_vocabulary import material_name, material_stage, property_name
+from .scoring_vocabulary import (
+    label_tokens,
+    material_name,
+    material_stage,
+    property_name,
+)
 
 
 def sample_code(
@@ -60,6 +65,18 @@ def sample_code(
 
 
 MeasurementUse = tuple[str, str | None]
+
+
+def family_label_features(families: list[DeviceFamily]) -> dict[str, set[str]]:
+    """Remove words shared by every design label before using labels to align arms.
+
+    Generic headings such as 'perovskite solar cell' must not choose between
+    otherwise indistinguishable designs. Use each study's own labels only; no
+    words are learned from the other study or from measurement outcomes.
+    """
+    words = {family.family_id: label_tokens(family.label) for family in families}
+    common = set.intersection(*words.values()) if len(words) > 1 else set()
+    return {key: value - common for key, value in words.items()}
 
 
 def device_measurements(
@@ -143,14 +160,19 @@ def _jaccard(left: set[str], right: set[str]) -> float:
 
 
 def record_similarity(
-    left: object, right: object, relative: float, absolute: float
+    left: object,
+    right: object,
+    relative: float,
+    absolute: float,
+    *,
+    family_labels: tuple[set[str], set[str]] | None = None,
 ) -> float:
     """Compare declared identity and protocol, independently of measured outcomes."""
 
     # A family describes a design. Recipe completeness and measured properties
     # must not determine its identity or suppress credit for unchanged children.
     if isinstance(left, DeviceFamily) and isinstance(right, DeviceFamily):
-        structural = stack_similarity(left, right)
+        structural = stack_similarity(left, right, label_features=family_labels)
         if structural is not None:
             return structural
         return _jaccard(_family_features(left), _family_features(right))
@@ -212,7 +234,8 @@ def record_similarity(
 def _identity_features(record: object) -> set[str]:
     """Keep specimen labels and experimental protocol; exclude results and counts.
 
-    Complete field values preserve distinctions such as A/B versus B/A. Device
+    Literal device-label words allow reordered and partially paraphrased labels.
+    Internal separators preserve distinctions such as A/B versus B/A. Device
     properties, outcome metrics and population sizes are scored after pairing
     and cannot establish that pairing. Explicit protocols are compared separately
     with the same numeric tolerance used for fact credit.
@@ -220,7 +243,7 @@ def _identity_features(record: object) -> set[str]:
 
     fields: tuple[str, ...]
     if isinstance(record, IndividualDevice):
-        fields = ("label", "variant", "champion_status", "selection_basis")
+        fields = ("variant", "champion_status", "selection_basis")
     elif isinstance(record, PerformanceObservation):
         fields = ("measurement_type", "scan_direction")
     elif isinstance(record, PopulationStatistic):
@@ -237,6 +260,8 @@ def _identity_features(record: object) -> set[str]:
         if (value := getattr(record, name)) not in (None, "", "not_reported")
     }
     features.add(f"record_type:{type(record).__name__}")
+    if isinstance(record, IndividualDevice):
+        features.update(f"label:{token}" for token in label_tokens(record.label))
     return features
 
 
@@ -269,13 +294,23 @@ def _protocol(record: object) -> tuple[tuple[object, ...], ...]:
 
 
 def family_pair_evidence(
-    left: DeviceFamily, right: DeviceFamily
+    left: DeviceFamily,
+    right: DeviceFamily,
+    label_features: tuple[set[str], set[str]] | None = None,
 ) -> dict[str, list[str]]:
     """Expose the ordered materials, or fallback features, used to pair a family."""
     left_code, right_code = sample_code(left), sample_code(right)
     codes = {
         "truth_sample_code": [left_code] if left_code else [],
         "prediction_sample_code": [right_code] if right_code else [],
+        "truth_label_tokens": sorted(label_tokens(left.label)),
+        "prediction_label_tokens": sorted(label_tokens(right.label)),
+        "truth_distinguishing_label_tokens": sorted(label_features[0])
+        if label_features
+        else [],
+        "prediction_distinguishing_label_tokens": sorted(label_features[1])
+        if label_features
+        else [],
     }
     left_order, right_order = ordered_layers(left), ordered_layers(right)
     if left_order is not None and right_order is not None:
