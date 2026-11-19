@@ -67,6 +67,22 @@ RECORD_BOUNDARY_POLICY = """Record boundary:
   measurement_conditions on the observation or population statistic; metrics holds
   its outcomes. Put preparation in processing/subject_context and aging stress in
   stability_tests. A shared name such as temperature does not establish its purpose.
+- Before filling measurement_conditions, read the measurement methods, table headers,
+  captions and footnotes across the paper and supplement. When the source explicitly
+  states a protocol for a set of measurements, attach its conditions to each covered
+  observation or population record. Cite the condition's source span as well as the
+  result's span, even when they occur on different pages or in different documents.
+  An outcome row alone is insufficient evidence for a condition stated elsewhere.
+- Apply shared context only to the stated subjects and measurement method. A J-V
+  protocol does not automatically describe EQE or aging tests. Preserve explicit
+  exceptions and conflicting statements in unresolved_notes. Keep reported spectrum
+  wording and scan labels; do not supply customary illumination or infer scan labels
+  from voltage endpoints.
+- Read table_layout as zero-based, half-open row/column ranges, not as measured values.
+  context_block_ids link the table to its supplied caption/footnote evidence. Use the
+  relevant header and note spans for units and qualifiers. A blank cell remains
+  unknown unless an explicit spanning cell covers it; row order alone cannot establish
+  a treatment arm or device identity.
 - Reconcile repeated mentions globally. Do not create a second record for the same
   device and protocol merely because another passage reports an additional metric.
 - Resolve the specimen separately from the measurement: several explicitly linked

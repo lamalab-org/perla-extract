@@ -28,7 +28,12 @@ from .models import (
     StrictModel,
     StudyExtraction,
 )
-from .spans import EvidenceSpan, build_evidence_spans
+from .spans import (
+    EvidenceSpan,
+    build_evidence_spans,
+    evidence_payload,
+    linked_context_ids,
+)
 
 ObjectRole = Literal[
     "device_design",
@@ -348,11 +353,14 @@ def assembly_blocks(
 def assembly_spans(
     blocks: Sequence[EvidenceBlock], ledger: ClaimLedger
 ) -> list[EvidenceSpan]:
-    """Select cited spans and their same-block neighbors; empty notes retain all text.
+    """Keep local prose and complete cited tables with their explicit caption/note links.
 
     One neighboring span on either side supplies local grammar at bounded cost.
-    This heuristic cannot guarantee that distant headers or cross-references remain
-    available. The model's citation choices use exactly this same selected catalog.
+    Prose neighbors remain a bounded heuristic; distant unlinked context may still
+    be absent. Tables retain all rows so their headers and spanning cells remain
+    interpretable. The model cites exactly this selected catalog. Empty notes retain
+    the complete source; an oversized request fails its input budget instead of
+    silently dropping a table's context.
     """
 
     block_list = list(blocks)
@@ -385,10 +393,26 @@ def assembly_spans(
         for block in block_list
         if block.source == "main" and block.page == first_main_page
     }
+    # A cited table needs its complete headers and explicitly linked notes, even
+    # when the reader cited only a distant result row. Retain the table once;
+    # do not reconstruct context from a guessed number of neighboring spans.
+    cited_blocks = {identifier for identifier, _ in cited}
+    table_ids = {
+        b.block_id
+        for b in block_list
+        if b.kind == "table" and b.block_id in cited_blocks
+    }
+    table_context = {
+        identifier
+        for block in block_list
+        if block.block_id in table_ids
+        for identifier in linked_context_ids(block)
+    }
     selected = [
         span
         for index, span in enumerate(spans)
-        if index in neighborhood_positions or span.block_id in header_block_ids
+        if index in neighborhood_positions
+        or span.block_id in header_block_ids | table_ids | table_context
     ]
     return selected or spans
 
@@ -398,21 +422,10 @@ def assembly_evidence_payload(
 ) -> list[dict[str, object]]:
     """Serialize the compact passage catalog used by global schema assembly."""
 
-    block_by_id = {block.block_id: block for block in blocks}
-    grouped: dict[str, dict[int, str]] = defaultdict(dict)
-    for span in assembly_spans(blocks, ledger):
-        grouped[span.block_id][span.span_id] = span.text
     return [
-        {
-            "block_id": block.block_id,
-            "source": block.source,
-            "page": block.page,
-            "section": block.section_path[-1] if block.section_path else None,
-            "kind": block.kind,
-            "spans": grouped[block_id],
-        }
-        for block_id, block in block_by_id.items()
-        if block_id in grouped
+        entry
+        for entry in evidence_payload(blocks, assembly_spans(blocks, ledger))
+        if entry["spans"]
     ]
 
 

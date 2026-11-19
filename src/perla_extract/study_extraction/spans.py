@@ -131,6 +131,16 @@ def evidence_spans_sha256(spans: Iterable[EvidenceSpan]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def linked_context_ids(block: EvidenceBlock) -> list[str]:
+    """Read explicit parser links; unknown or malformed metadata supplies no links."""
+    context = block.metadata.get("context_block_ids", [])
+    return (
+        [value for value in context if isinstance(value, str)]
+        if isinstance(context, list)
+        else []
+    )
+
+
 def evidence_payload(
     blocks: Iterable[EvidenceBlock], spans: Iterable[EvidenceSpan] | None = None
 ) -> list[dict[str, object]]:
@@ -144,7 +154,7 @@ def evidence_payload(
     spans_by_block: dict[str, list[EvidenceSpan]] = {}
     for span in build_evidence_spans(block_list) if spans is None else spans:
         spans_by_block.setdefault(span.block_id, []).append(span)
-    return [
+    payload: list[dict[str, object]] = [
         {
             "block_id": block.block_id,
             "source": block.source,
@@ -158,3 +168,13 @@ def evidence_payload(
         }
         for block in block_list
     ]
+    present = {block.block_id for block in block_list}
+    for block, entry in zip(block_list, payload):
+        if block.kind == "table":
+            entry["table_layout"] = block.metadata.get("table_layout", [])
+            entry["context_block_ids"] = [
+                identifier
+                for identifier in linked_context_ids(block)
+                if identifier in present
+            ]
+    return payload

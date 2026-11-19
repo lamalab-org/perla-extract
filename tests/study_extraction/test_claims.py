@@ -91,7 +91,7 @@ def test_assembly_keeps_claim_evidence_and_the_main_paper_header():
     assert [block.block_id for block in selected] == ["title", "result"]
 
 
-def test_assembly_includes_only_a_bounded_local_neighborhood():
+def test_assembly_keeps_the_complete_cited_table():
     block = EvidenceBlock(
         block_id="recipe",
         source="supplement",
@@ -118,6 +118,7 @@ def test_assembly_includes_only_a_bounded_local_neighborhood():
         "First row",
         "The solution was stirred",
         "It was deposited immediately",
+        "Last row",
     ]
 
 

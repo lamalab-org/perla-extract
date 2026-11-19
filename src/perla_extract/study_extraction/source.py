@@ -398,24 +398,61 @@ def _parse_pymupdf(path: Path, source: str) -> list[EvidenceBlock]:
     return _evidence_blocks_from_layout(_pymupdf_layout_items(path), source)
 
 
-def _docling_bbox(item: object) -> list[float] | None:
-    """Translate optional Docling provenance into the common rectangle representation.
+def _docling_bbox(item: Any, document: Any) -> list[float] | None:
+    """Return PDF points from the top-left corner, or no geometry when unavailable.
 
-    Attribute access rather than concrete Docling classes keeps this narrow adapter
-    compatible across releases. Returning ``None`` is explicit: the caller can provide
-    deterministic ordering geometry without inventing source coordinates.
+    Docling provenance may use a bottom-left origin. Converting both vertical
+    coordinates using that page's height preserves the rectangle's actual location;
+    sorting the original numbers would instead mirror it. Reading order does not
+    require geometry, so missing coordinates never acquire a synthetic rectangle.
     """
 
     provenance = getattr(item, "prov", None) or []
     if not provenance:
         return None
     bbox = getattr(provenance[0], "bbox", None)
-    values = [getattr(bbox, name, None) for name in ("l", "t", "r", "b")]
-    return (
-        [float(value) for value in values if value is not None]
-        if all(value is not None for value in values)
-        else None
-    )
+    if bbox is None:
+        return None
+    page = document.pages.get(provenance[0].page_no)
+    if page is None or page.size is None:
+        return None
+    converted = bbox.to_top_left_origin(page_height=page.size.height)
+    return [float(getattr(converted, name)) for name in ("l", "t", "r", "b")]
+
+
+def _docling_table(item: Any) -> tuple[str, dict[str, object]]:
+    """Serialize source cells without dataframe-generated columns or merged headers.
+
+    Docling's grid repeats an explicitly spanning cell in the positions it covers;
+    an ordinary blank stays blank. Preserve source header rows separately instead
+    of concatenating them into new column names. Logical cell spans are metadata,
+    not source quantities, and never replace the cell text used for citations.
+    """
+    rows = [
+        [" ".join(_normalize_layout_text(cell.text).split()) or None for cell in row]
+        for row in item.data.grid
+    ]
+    layout = [
+        {
+            "row_start": cell.start_row_offset_idx,
+            "row_end": cell.end_row_offset_idx,
+            "column_start": cell.start_col_offset_idx,
+            "column_end": cell.end_col_offset_idx,
+            "column_header": cell.column_header,
+            "row_header": cell.row_header,
+            "row_section": cell.row_section,
+        }
+        for cell in item.data.table_cells
+        if cell.row_span > 1
+        or cell.col_span > 1
+        or cell.column_header
+        or cell.row_header
+        or cell.row_section
+    ]
+    return "\n".join(" | ".join(cell or "" for cell in row) for row in rows), {
+        "rows": rows,
+        "table_layout": layout,
+    }
 
 
 def _native_typography_blocks(
@@ -496,6 +533,8 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     converter, ContentLayer, DocItemLabel = _docling_runtime()
     document = converter.convert(str(path)).document
     layout_items: list[dict[str, Any]] = []
+    context_refs: dict[str, list[str]] = {}
+    item_refs: list[str] = []
     items = document.iterate_items(
         included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
     )
@@ -528,32 +567,15 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             kind = "heading"
         elif "table" in class_name or label.endswith("table"):
             kind = "table"
-            try:
-                dataframe = item.export_to_dataframe(doc=document)
-                rows = [
-                    [
-                        _normalize_layout_text(value) or None
-                        for value in dataframe.columns.tolist()
-                    ],
-                    *[
-                        [_normalize_layout_text(value) or None for value in row]
-                        for row in dataframe.astype(object)
-                        .where(dataframe.notna(), None)
-                        .values.tolist()
-                    ],
-                ]
-                text = "\n".join(" | ".join(cell or "" for cell in row) for row in rows)
-                metadata["rows"] = rows
-            except Exception as exc:  # noqa: BLE001 - Docling APIs vary by release
-                logger.debug("Docling table export failed: {}", exc)
+            text, table_metadata = _docling_table(item)
+            metadata.update(table_metadata)
+            context_refs[item.self_ref] = [
+                ref.cref for ref in [*item.captions, *item.footnotes]
+            ]
         if not text:
             continue
-        bbox = _docling_bbox(item) or [
-            0.0,
-            float(len(layout_items)),
-            0.0,
-            float(len(layout_items) + 1),
-        ]
+        bbox = _docling_bbox(item, document)
+        item_refs.append(item.self_ref)
         layout_items.append(
             {
                 "page": max(1, page),
@@ -570,6 +592,14 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     # Docling already classifies headings. Avoid replacing its labels by giving
     # non-heading layout_items no typography signal in _evidence_blocks_from_layout.
     blocks = _evidence_blocks_from_layout(layout_items, source, sort_geometry=False)
+    block_by_ref = dict(zip(item_refs, blocks))
+    for ref, context in context_refs.items():
+        if ref in block_by_ref:
+            block_by_ref[ref].metadata["context_block_ids"] = [
+                block_by_ref[target].block_id
+                for target in context
+                if target in block_by_ref
+            ]
     scientific_pages = {
         block.page
         for block in blocks
@@ -642,7 +672,9 @@ def _parser_dependency_versions(parser: str) -> dict[str, str]:
     depends on PyMuPDF alone.
     """
 
-    names = ("docling", "PyMuPDF") if parser == "docling" else ("PyMuPDF",)
+    names = (
+        ("docling", "docling-core", "PyMuPDF") if parser == "docling" else ("PyMuPDF",)
+    )
     return {name: _package_version(name) for name in names}
 
 
