@@ -99,6 +99,21 @@ def test_check_explains_change_without_running_or_creating_output(setup):
     assert not (path.parent / "results").exists()
 
 
+def test_check_accepts_an_explicit_parser_ablation(setup):
+    path, calls, _ = setup
+    path.write_text(
+        path.read_text().replace(
+            "[treatment]\nclaim_recall_passes = 2",
+            '[treatment]\nclaim_recall_passes = 1\nparser = "docling"',
+        )
+    )
+    result = CliRunner().invoke(experiment.main, [str(path), "--check"])
+    assert result.exit_code == 0, result.output
+    assert 'parser: "pymupdf" → "docling"' in result.output
+    assert calls == []
+    assert not (path.parent / "results").exists()
+
+
 def test_unreviewed_benchmark_finishes_with_an_automatic_diagnostic_result(setup):
     path, calls, _ = setup
     manifest_path = path.parent / "example/truth/dev/10.0000--synthetic/manifest.json"

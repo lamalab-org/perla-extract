@@ -207,10 +207,6 @@ def prepare(path: Path) -> Experiment:
         raise ValueError(
             "Control and treatment are identical; change a setting in [treatment]"
         )
-    if "parser" in factors:
-        raise ValueError(
-            "Use the same parser in both arms; paired extraction comparisons require identical source evidence"
-        )
     study = ComparisonStudy(
         paper_ids=paper_ids, repeats=settings.repeats, factors=factors
     )

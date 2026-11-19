@@ -200,6 +200,12 @@ Paths are relative to the TOML file. `output` names a new results directory;
 the extraction configuration format, including `[stages.default]`; `[control.stages.NAME]` or
 `[treatment.stages.NAME]` override a stage in one arm.
 
+To compare parsers, set `parser = "pymupdf"` in `[control]` and
+`parser = "docling"` in `[treatment]`. Both arms must use the same PDF/SI files
+and references. Their parsed-evidence fingerprints may differ; both are retained.
+Backend-specific dependencies are recorded, while shared dependency versions,
+instructions, implementation and scoring remain subject to the usual checks.
+
 `--check` prints the validated paper/SI/reference mapping and checks every source/reference hash and setting without parsing PDFs,
 creating outputs or making model calls. Running freezes the intended roster before
 extraction, assigns independent response caches, scores each usable result and
