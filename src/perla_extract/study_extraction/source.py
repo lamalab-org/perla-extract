@@ -663,8 +663,21 @@ def _parse_docling(
             path, source, len(blocks) + 1, included_pages=scientific_pages
         )
     )
-    if figure_table_parsing and figures:
-        blocks = _with_figure_tables(path, source, figures, blocks)
+    if figure_table_parsing:
+        if figures:
+            pages = sorted({figure["page"] for figure in figures})
+            logger.info(
+                "Figure table parsing: PyMuPDF reads {} Docling figure(s) of {} (page(s) {})",
+                len(figures),
+                path.name,
+                ", ".join(map(str, pages)),
+            )
+            blocks = _with_figure_tables(path, source, figures, blocks)
+        else:
+            logger.info(
+                "Figure table parsing: Docling found no figures in {}; PyMuPDF not applied",
+                path.name,
+            )
     return blocks
 
 
@@ -685,7 +698,9 @@ def _with_figure_tables(
 
     placed: list[tuple[int, EvidenceBlock]] = []
     order = len(blocks)
+    figure_indices: set[int] = set()
     for item in figure_tables(path, figures):
+        figure_indices.add(item["figure_index"])
         figure = figures[item["figure_index"]]
         position = min(figure["after"], len(blocks))  # where the figure itself would be
         caption = figure.get("caption") or ""
@@ -710,6 +725,14 @@ def _with_figure_tables(
                 ),
             )
         )
+    logger.info(
+        "Figure table parsing: {} table(s) rebuilt in {} of {} figure(s) of {}{}",
+        len(placed),
+        len(figure_indices),
+        len(figures),
+        path.name,
+        f" (page(s) {', '.join(str(b.page) for _, b in placed)})" if placed else "",
+    )
     result = list(blocks)
     for position, block in sorted(placed, key=lambda entry: entry[0], reverse=True):
         result.insert(position, block)
@@ -869,6 +892,12 @@ def parse_pdf(
                 },
             )
 
+    if cache_hit and figure_table_parsing:
+        logger.info(
+            "Figure table parsing: {} figure table(s) loaded from the parse cache for {}",
+            sum(block.kind == "figure_table" for block in parsed_blocks),
+            path.name,
+        )
     evidence_blocks, excluded = _scientific_evidence_blocks(parsed_blocks)
     logger.info(
         "{} {} with {} ({} evidence blocks, {} excluded blocks)",
