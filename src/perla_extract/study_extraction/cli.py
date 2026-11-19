@@ -128,6 +128,12 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     "--parser", type=click.Choice(available_parsers()), default=default("parser")
 )
 @click.option(
+    "--figure-table-parsing/--no-figure-table-parsing",
+    "figure_table_parsing",
+    default=default("figure_table_parsing"),
+    help="Docling only: rebuild numeric tables printed inside figures from PDF words.",
+)
+@click.option(
     "--claim-mode",
     type=click.Choice(("auto", "single", "windowed")),
     default=default("claim_mode"),

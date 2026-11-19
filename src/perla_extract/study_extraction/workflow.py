@@ -317,6 +317,7 @@ def _prepare_source(
             cache_dir=config.document_cache_dir,
             refresh_cache=config.refresh_document_cache,
             heartbeat_seconds=config.heartbeat_seconds,
+            figure_table_parsing=config.figure_table_parsing,
         )
         state.source_parsing = source_events
         write_json_atomic(

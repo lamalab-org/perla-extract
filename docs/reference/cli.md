@@ -29,6 +29,7 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--parser [docling|pymupdf]` | `docling` | Explicit parser backend |
+| `--figure-table-parsing / --no-figure-table-parsing` | off | Docling only: rebuild numeric tables printed inside figures from the PDF words |
 | `--claim-mode [auto|single|windowed]` | `auto` | One-call or windowed source-claim collection |
 | `--single-call-max-input-tokens INTEGER` | `90000` | Claim-input estimate at which auto mode uses windows |
 | `--claim-window-input-tokens INTEGER` | `60000` | Request budget used to size claim-reading windows |
@@ -45,6 +46,23 @@ alternative; parser failures never silently change backends. Complete parser res
 are cached using the source, backend and dependency version, block schema, and parser
 implementation. Only parser-labelled references and document furniture are withheld
 from the model-facing evidence view.
+
+Docling does not pass on text inside figures, so a table drawn inside a figure (for
+example the J-V parameters inset in a J-V plot) never reaches the model.
+`--figure-table-parsing` (TOML: `figure_table_parsing = true` under `[extraction]`)
+takes Docling's figure regions and rebuilds such tables from PyMuPDF's word positions.
+Adjacent lines sharing at least two numeric columns (two rows, six numbers, rows mostly
+numeric) form a table, with their row labels, units and header lines. Axis tick labels
+(evenly spaced positions with linearly or logarithmically spaced values) are removed
+where they continue beyond the table, rotated text is ignored, and content of
+neighbouring panels is separated by the jump in column spacing. All distances are
+measured in text heights. Figures stored as images have no text layer and are not
+covered. Each table becomes one block
+of kind `figure_table`, placed after its figure's caption, with one citable row per
+line and a section label naming the figure. Its identifier is numbered after all other
+blocks, so existing block identifiers do not change. Row text colours and coloured
+legend markers are kept in the block's metadata for review; they are not quotable
+text, so a series that the figure marks only by colour is not assigned from it.
 
 Only claim collection uses windows. The grounded ledgers from all windows are combined
 before a single global study-assembly call, so the final schema is never constructed

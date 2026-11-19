@@ -63,7 +63,10 @@ def _parser_implementation_sha256() -> str:
     safer than relying on a manually bumped version.
     """
 
-    return _sha256(Path(__file__))
+    digest = hashlib.sha256()
+    for module in (Path(__file__), Path(__file__).with_name("figure_tables.py")):
+        digest.update(_sha256(module).encode("ascii"))
+    return digest.hexdigest()
 
 
 @lru_cache(maxsize=1)
@@ -532,7 +535,9 @@ def _docling_runtime() -> tuple[Any, Any, Any]:
     return DocumentConverter(), ContentLayer, DocItemLabel
 
 
-def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
+def _parse_docling(
+    path: Path, source: str, *, figure_table_parsing: bool = False
+) -> list[EvidenceBlock]:
     """Adapt Docling structure without leaking its object model downstream.
 
     Docling supplies reading order, headings, tables, provenance, and semantic content
@@ -540,11 +545,17 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     references or document furniture should be excluded from model evidence; filtering
     happens later so the complete parse remains cacheable and inspectable. Compact native
     typography blocks support subscripts and superscripts that conversion may normalize.
+
+    With ``figure_table_parsing``, numeric tables printed inside figures are rebuilt
+    from PyMuPDF's words within Docling's figure regions (see ``figure_tables``). They
+    are placed after their figure's caption, but numbered after all other blocks, so
+    existing block identifiers stay unchanged.
     """
 
     converter, ContentLayer, DocItemLabel = _docling_runtime()
     document = converter.convert(str(path)).document
     layout_items: list[dict[str, Any]] = []
+    figures: list[dict[str, Any]] = []
     items = document.iterate_items(
         included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
     )
@@ -555,6 +566,28 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
         provenance = getattr(item, "prov", None) or []
         page = int(getattr(provenance[0], "page_no", 1) or 1) if provenance else 1
         text = _normalize_layout_text(getattr(item, "text", ""))
+        if figure_table_parsing and (
+            "picture" in class_name or label in {"picture", "chart"}
+        ):
+            box = getattr(provenance[0], "bbox", None) if provenance else None
+            caption = ""
+            for reference in getattr(item, "captions", None) or []:
+                try:
+                    caption = _normalize_layout_text(reference.resolve(document).text)
+                    break
+                except Exception:  # noqa: BLE001 - caption links vary by Docling release
+                    continue
+            if box is not None:
+                figures.append(
+                    {
+                        "page": max(1, page),
+                        "bbox": [float(box.l), float(box.t), float(box.r), float(box.b)],
+                        "bottom_left_origin": "BOTTOM"
+                        in str(getattr(box, "coord_origin", "BOTTOMLEFT")).upper(),
+                        "after": len(layout_items),
+                        "caption": caption,
+                    }
+                )
         metadata: dict[str, object] = {
             "docling_label": label,
             "content_layer": content_layer,
@@ -630,7 +663,57 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             path, source, len(blocks) + 1, included_pages=scientific_pages
         )
     )
+    if figure_table_parsing and figures:
+        blocks = _with_figure_tables(path, source, figures, blocks)
     return blocks
+
+
+def _with_figure_tables(
+    path: Path,
+    source: str,
+    figures: list[dict[str, Any]],
+    blocks: list[EvidenceBlock],
+) -> list[EvidenceBlock]:
+    """Insert figure-table blocks after their figure's caption.
+
+    Reading order follows the position in the block list, so each table sits next to
+    its figure. Its identifier is numbered after all existing blocks, so inserting it
+    renumbers nothing. The section path names the figure (from its caption), so the
+    link survives even where a reading window starts at the table.
+    """
+    from .figure_tables import figure_tables, section_label
+
+    placed: list[tuple[int, EvidenceBlock]] = []
+    order = len(blocks)
+    for item in figure_tables(path, figures):
+        figure = figures[item["figure_index"]]
+        position = min(figure["after"], len(blocks))  # where the figure itself would be
+        caption = figure.get("caption") or ""
+        for index, block in enumerate(blocks):
+            if caption and block.page == figure["page"] and block.text.startswith(caption[:60]):
+                position = index + 1
+                break
+        section = list(blocks[position - 1].section_path) if position > 0 else []
+        order += 1
+        placed.append(
+            (
+                position,
+                EvidenceBlock(
+                    block_id=_block_id(source, item["page"], order, "figure_table", item["text"]),
+                    source=source,
+                    page=item["page"],
+                    section_path=[*section[-19:], section_label(caption)],
+                    kind="figure_table",
+                    text=item["text"],
+                    bbox=item["bbox"],
+                    metadata={**item["metadata"], "figure_caption_start": caption[:80] or None},
+                ),
+            )
+        )
+    result = list(blocks)
+    for position, block in sorted(placed, key=lambda entry: entry[0], reverse=True):
+        result.insert(position, block)
+    return result
 
 
 def available_parsers() -> list[str]:
@@ -663,6 +746,7 @@ def _cache_identity(
     source: str,
     parser: str,
     dependency_versions: dict[str, str],
+    figure_table_parsing: bool = False,
 ) -> dict[str, object]:
     """Describe all reproducibility-relevant inputs to a parsed document.
 
@@ -672,7 +756,7 @@ def _cache_identity(
     change scientific evidence.
     """
 
-    return {
+    identity: dict[str, object] = {
         "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
         "parser_implementation_sha256": _parser_implementation_sha256(),
         "evidence_schema_sha256": _evidence_schema_sha256(),
@@ -681,6 +765,9 @@ def _cache_identity(
         "parser": parser,
         "dependency_versions": dependency_versions,
     }
+    if figure_table_parsing:  # only when enabled, so default cache keys are unchanged
+        identity["figure_table_parsing"] = True
+    return identity
 
 
 def _parser_dependency_versions(parser: str) -> dict[str, str]:
@@ -703,6 +790,7 @@ def parse_pdf(
     cache_dir: Path | None = None,
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,
+    figure_table_parsing: bool = False,
 ) -> tuple[list[EvidenceBlock], dict[str, object]]:
     """Parse one PDF with the explicitly selected, reproducible backend.
 
@@ -716,6 +804,8 @@ def parse_pdf(
         raise ValueError(
             f"Unknown parser {parser!r}; choose from {available_parsers()}"
         )
+    if figure_table_parsing and parser != "docling":
+        raise ValueError("figure_table_parsing requires the docling parser")
     source_hash = _sha256(path)
     dependency_versions = _parser_dependency_versions(parser)
     if "not-installed" in dependency_versions.values():
@@ -732,6 +822,7 @@ def parse_pdf(
         source=source,
         parser=parser,
         dependency_versions=dependency_versions,
+        figure_table_parsing=figure_table_parsing,
     )
     key = hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -763,7 +854,7 @@ def parse_pdf(
         logger.info("Parsing {} with {}", path.name, parser)
         with heartbeat(f"{parser} parsing for {path.name}", heartbeat_seconds):
             parsed_blocks = (
-                _parse_docling(path, source)
+                _parse_docling(path, source, figure_table_parsing=figure_table_parsing)
                 if parser == "docling"
                 else _parse_pymupdf(path, source)
             )
@@ -799,6 +890,8 @@ def parse_pdf(
         "parser_implementation_sha256": identity["parser_implementation_sha256"],
         "evidence_schema_sha256": identity["evidence_schema_sha256"],
         "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
+        "figure_table_parsing": figure_table_parsing,
+        "figure_table_blocks": sum(block.kind == "figure_table" for block in evidence_blocks),
         "cache_hit": cache_hit,
         "parsed_block_count": len(parsed_blocks),
         "excluded_block_count": excluded,
@@ -862,6 +955,7 @@ def parse_documents(
     cache_dir: Path | None = None,
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,
+    figure_table_parsing: bool = False,
 ) -> tuple[list[EvidenceBlock], list[dict[str, object]]]:
     """Build one evidence stream from a main article and optional supplement.
 
@@ -878,6 +972,7 @@ def parse_documents(
         cache_dir=cache_dir,
         refresh_cache=refresh_cache,
         heartbeat_seconds=heartbeat_seconds,
+        figure_table_parsing=figure_table_parsing,
     )
     events = [main_event]
     if supplement:
@@ -888,6 +983,7 @@ def parse_documents(
             cache_dir=cache_dir,
             refresh_cache=refresh_cache,
             heartbeat_seconds=heartbeat_seconds,
+            figure_table_parsing=figure_table_parsing,
         )
         blocks.extend(supplement_blocks)
         events.append(supplement_event)

@@ -121,6 +121,9 @@ class ExtractionConfig:
     use_refinement: bool = True
     use_targeted_repair: bool = True
     parser: str = "docling"
+    # Rebuild numeric tables printed inside figures from PyMuPDF words within
+    # Docling's figure regions (blocks of kind "figure_table"). Docling only.
+    figure_table_parsing: bool = False
     claim_mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
     claim_window_input_tokens: int = 60_000
@@ -149,12 +152,15 @@ class ExtractionConfig:
             raise ValueError("claim_mode must be auto, single or windowed")
         if self.parser not in {"docling", "pymupdf"}:
             raise ValueError("parser must be docling or pymupdf")
+        if self.figure_table_parsing is True and self.parser != "docling":
+            raise ValueError("figure_table_parsing requires parser = \"docling\"")
         for name in (
             "use_claim_ledger",
             "use_enrichment",
             "use_refinement",
             "use_targeted_repair",
             "refresh_document_cache",
+            "figure_table_parsing",
             "reduced_export",
             "dry_run",
             "langfuse",
