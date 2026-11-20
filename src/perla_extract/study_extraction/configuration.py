@@ -122,8 +122,12 @@ class ExtractionConfig:
     use_targeted_repair: bool = True
     parser: str = "docling"
     # Rebuild numeric tables printed inside figures from PyMuPDF words within
-    # Docling's figure regions (blocks of kind "figure_table"). Docling only.
+    # Docling's figure regions, or RapidOCR words for image figures (blocks of kind
+    # "figure_table"). Docling only.
     figure_table_parsing: bool = False
+    # Resolution at which figure_table_parsing renders image figures for OCR. Higher
+    # values can recover small subscripts (Voc) at the cost of OCR time.
+    figure_table_ocr_dpi: int = 300
     claim_mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
     claim_window_input_tokens: int = 60_000
@@ -154,6 +158,8 @@ class ExtractionConfig:
             raise ValueError("parser must be docling or pymupdf")
         if self.figure_table_parsing is True and self.parser != "docling":
             raise ValueError("figure_table_parsing requires parser = \"docling\"")
+        if type(self.figure_table_ocr_dpi) is not int or not 72 <= self.figure_table_ocr_dpi <= 1200:
+            raise ValueError("figure_table_ocr_dpi must be an integer from 72 to 1200")
         for name in (
             "use_claim_ledger",
             "use_enrichment",

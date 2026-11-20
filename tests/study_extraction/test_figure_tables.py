@@ -4,7 +4,13 @@ import pymupdf
 import pytest
 
 from perla_extract.study_extraction.configuration import ExtractionConfig
-from perla_extract.study_extraction.figure_tables import SECTION_LABEL, figure_tables, section_label
+from perla_extract.study_extraction.figure_tables import (
+    SECTION_LABEL,
+    _label_values,
+    _rows,
+    figure_tables,
+    section_label,
+)
 from perla_extract.study_extraction.models import EvidenceBlock
 from perla_extract.study_extraction.source import (
     _cache_identity,
@@ -201,3 +207,222 @@ def test_widely_spaced_columns_stay_one_table_but_neighbouring_panels_split(tmp_
     pdf = _page_pdf(tmp_path / "f.pdf", items)
 
     assert _table(pdf) == [["1.10 26.5 82.9", "1.21 26.4 85.3"]]
+
+
+def _raster_figure_pdf(path: Path) -> Path:
+    """The J-V figure above, stored as an image: no text layer at all."""
+    vector = pymupdf.open(_figure_pdf(path.with_name("vector.pdf")))
+    region = pymupdf.Rect(30, 200, 570, 340)
+    image = vector[0].get_pixmap(clip=region, dpi=200).tobytes("png")
+    document = pymupdf.open()
+    document.new_page(width=595, height=790).insert_image(region, stream=image)
+    document.save(path)
+    return path
+
+
+def test_image_figures_are_read_by_ocr_only_when_enabled(tmp_path):
+    pytest.importorskip("rapidocr")
+    pdf = _raster_figure_pdf(tmp_path / "raster.pdf")
+    region = [{"page": 1, "bbox": [30, 200, 570, 340]}]
+
+    assert figure_tables(pdf, region) == []
+    items = figure_tables(pdf, region, ocr=True)
+
+    assert len(items) == 1 and items[0]["read_by_ocr"] is True
+    assert "FS 1.216 26.48 85.26 27.45" in items[0]["text"].splitlines()
+    metadata = items[0]["metadata"]
+    assert metadata["derived_from"] == "docling_figure_region+rapidocr_words"
+    assert 0 < metadata["ocr_min_word_confidence"] <= 1
+    colours = metadata["row_text_colours"]
+    assert colours[1] == colours[2] != colours[3] == colours[4]
+
+
+def test_text_layer_is_preferred_over_ocr(tmp_path):
+    pdf = _figure_pdf(tmp_path / "figure.pdf")
+
+    items = figure_tables(pdf, [{"page": 1, "bbox": [30, 200, 570, 340]}], ocr=True)
+
+    assert [item["read_by_ocr"] for item in items] == [False]
+
+
+def test_ocr_labels_and_cache_identity():
+    common = {"source_hash": "0" * 64, "source": "main", "parser": "docling", "dependency_versions": {}}
+
+    assert "misread" in section_label("Fig. 3 | x", ocr=True)
+    assert section_label("Fig. 3 | x", ocr=True).startswith("Fig. 3:")
+    assert "rapidocr" not in _cache_identity(**common)
+    assert "rapidocr" in _cache_identity(**common, figure_table_parsing=True)
+
+
+def test_ocr_resolution_is_part_of_the_cache_key_and_validated(tmp_path):
+    common = {"source_hash": "0" * 64, "source": "main", "parser": "docling", "dependency_versions": {}}
+
+    assert "figure_table_ocr_dpi" not in _cache_identity(**common, figure_table_ocr_dpi=600)
+    assert _cache_identity(**common, figure_table_parsing=True)["figure_table_ocr_dpi"] == 300
+    assert _cache_identity(**common, figure_table_parsing=True, figure_table_ocr_dpi=600)[
+        "figure_table_ocr_dpi"
+    ] == 600
+    pdf = tmp_path / "paper.pdf"
+    pdf.write_bytes(b"%PDF")
+    assert ExtractionConfig(pdf=pdf, figure_table_ocr_dpi=600).figure_table_ocr_dpi == 600
+    for wrong in (50, 2000, 300.0):
+        with pytest.raises(ValueError, match="figure_table_ocr_dpi"):
+            ExtractionConfig(pdf=pdf, figure_table_ocr_dpi=wrong)
+
+
+def test_legend_with_numbers_beside_the_table_stays_out_of_its_rows(tmp_path):
+    # a legend left of the table, its entries on the table's lines and numbered like
+    # the row labels ("FACl 20 mol%"), separated from the table by an empty plot area
+    items = [(300, 192, "mol%"), (350, 192, "Jsc"), (400, 192, "Voc"), (450, 192, "PCE")]
+    values = (("24.90", "1.016", "19.29"), ("23.46", "1.039", "18.19"), ("23.97", "1.030", "19.32"),
+              ("24.36", "1.092", "20.28"))
+    for index, (jsc, voc, pce) in enumerate(values):
+        y = 200 + 10 * index
+        items += [(285, y, f"FACl {10 * index} mol%"), (350, y, jsc), (400, y, voc), (450, y, pce)]
+        items += [(130, y + 5, f"FACl {10 * index + 10} mol%")]  # legend, between the rows
+    for index in range(1, 4):
+        items.append((130, 200 + 10 * index, f"FACl {10 * index} mol%"))  # legend, on the rows
+    pdf = _page_pdf(tmp_path / "f.pdf", items)
+
+    (table,) = _table(pdf)
+    assert table[1:] == [
+        "FACl 0 mol% 24.90 1.016 19.29",
+        "FACl 10 mol% 23.46 1.039 18.19",
+        "FACl 20 mol% 23.97 1.030 19.32",
+        "FACl 30 mol% 24.36 1.092 20.28",
+    ]
+
+
+# OCR words (page points) of a J-V figure with an inset table in panel A, recorded from
+# a real image figure: the y axes of panels A and B and B's second axis run past it.
+INSET_BESIDE_AXES = [
+    (305, 79, 318, 93, 'B'),
+    (89, 81, 100, 93, 'A'),
+    (316, 91, 329, 101, '100'),
+    (507, 91, 517, 101, '25'),
+    (480, 104, 498, 114, '21.23'),
+    (104, 110, 114, 120, '20'),
+    (320, 115, 330, 125, '80'),
+    (509, 115, 516, 125, '20'),
+    (480, 127, 499, 136, '19.07'),
+    (104, 136, 114, 146, '15'),
+    (320, 139, 330, 149, '60'),
+    (509, 139, 515, 149, '15'),
+    (104, 161, 114, 171, '10'),
+    (320, 163, 330, 173, '40'),
+    (504, 163, 517, 173, '-10'),
+    (172, 173, 182, 183, 'Voc'),
+    (195, 174, 203, 183, 'Jsc'),
+    (236, 174, 246, 181, 'PCE'),
+    (219, 175, 224, 182, 'FF'),
+    (172, 180, 180, 188, '(V)'),
+    (187, 180, 196, 188, '(mA'),
+    (198, 180, 210, 188, 'cm{2)'),
+    (236, 181, 246, 188, '(%)'),
+    (107, 186, 115, 196, '5'),
+    (320, 187, 330, 197, '20'),
+    (506, 187, 513, 197, '5'),
+    (411, 189, 471, 198, 'ZnAl-MMO/TiO,'),
+    (170, 190, 181, 199, '0.94'),
+    (190, 190, 207, 199, '21.75'),
+    (216, 190, 228, 199, '0.71'),
+    (233, 190, 248, 199, '14.45'),
+    (122, 191, 165, 198, 'ZnAl-MMO/TiO2'),
+    (410, 202, 428, 212, 'Bare'),
+    (430, 202, 445, 212, 'TiO2'),
+    (131, 203, 143, 211, 'Bare'),
+    (144, 203, 156, 211, 'TiO2'),
+    (170, 203, 182, 212, '0.82'),
+    (190, 203, 207, 212, '20.88'),
+    (216, 203, 228, 212, '0.70'),
+    (233, 203, 248, 212, '11.94'),
+    (107, 211, 115, 220, '0'),
+    (505, 211, 513, 220, '0'),
+    (324, 212, 330, 220, '0'),
+    (112, 219, 122, 229, '0.0'),
+    (148, 219, 158, 229, '0.2'),
+    (183, 219, 193, 229, '0.4'),
+    (218, 219, 228, 229, '0.6'),
+    (253, 219, 263, 229, '0.8'),
+    (289, 219, 299, 229, '1.0'),
+    (344, 220, 357, 230, '400'),
+    (377, 220, 392, 230, '500'),
+    (412, 220, 426, 230, '600'),
+    (447, 220, 459, 230, '700'),
+    (479, 220, 493, 230, '800'),
+    (184, 232, 214, 244, 'Voltage'),
+    (215, 232, 228, 244, '(V)'),
+    (387, 235, 431, 245, 'Wavelength'),
+    (433, 235, 452, 245, '(nm)'),
+]
+
+
+def test_tick_lines_of_neighbouring_axes_are_neither_rows_nor_headers():
+    (table,) = _rows(INSET_BESIDE_AXES)
+
+    assert [" ".join(w[4] for w in row) for row in table["rows"]] == [
+        "Voc Jsc FF PCE",
+        "(V) (mA cm{2) (%)",
+        "ZnAl-MMO/TiO2 0.94 21.75 0.71 14.45",
+        "Bare TiO2 0.82 20.88 0.70 11.94",
+    ]
+
+
+def test_legends_repeating_one_value_per_line_are_no_table(tmp_path):
+    items = []
+    for index, label in enumerate(("2 days", "6 days", "12 days", "20 days")):
+        y = 200 + 9 * index
+        items += [(80, y, label), (200, y, label), (320, y, label)]  # the same legend in three panels
+    pdf = _page_pdf(tmp_path / "f.pdf", items)
+
+    assert _table(pdf) == []
+
+
+def _stack(lines, x=100, y=250):
+    return [(x, y + 10 * i, text) for i, text in enumerate(lines)]
+
+
+def test_label_value_stacks_of_one_device_are_read(tmp_path):
+    pdf = _page_pdf(tmp_path / "stack.pdf", [
+        (100, 240, "Champion"),
+        *_stack(["PCE: 20.1%", "Voc: 1.15 V", "Jsc: 23.5 mA/cm2", "FF: 78.2%"]),
+    ])
+
+    assert _table(pdf) == [["Champion", "PCE: 20.1%", "Voc: 1.15 V", "Jsc: 23.5 mA/cm2", "FF: 78.2%"]]
+
+
+def test_label_value_stacks_side_by_side_are_read_separately(tmp_path):
+    left = _stack(["PCE = 20.1%", "Voc = 1.12 V", "Jsc = 23.1 mA/cm2", "FF = 77.5%"])
+    right = _stack(["PCE = 22.4%", "Voc = 1.16 V", "Jsc = 23.9 mA/cm2", "FF = 80.6%"], x=200)
+    pdf = _page_pdf(tmp_path / "pair.pdf", [(100, 240, "Control"), (200, 240, "Target"), *left, *right])
+
+    assert [rows[0] for rows in _table(pdf)] == ["Control", "Target"]
+    assert [len(rows) for rows in _table(pdf)] == [5, 5]
+
+
+def test_attached_separators_and_split_exponents_from_ocr_are_read():
+    def words(lines):
+        found = []
+        for i, line in enumerate(lines):
+            x = 100
+            for text in line.split():
+                found.append((x, 250 + 10 * i, x + 6 * len(text), 258 + 10 * i, text))
+                x += 6 * len(text) + 4
+        return found
+
+    tables = _label_values(words(["PCE:20.1%", "Voc=1.15V", "Jsc = 23.5 mA/cm 2", "FF:78.2%"]))
+
+    assert [" ".join(w[4] for w in row) for row in tables[0]["rows"]] == [
+        "PCE:20.1%", "Voc=1.15V", "Jsc = 23.5 mA/cm 2", "FF:78.2%",
+    ]
+
+
+def test_prose_expressions_and_repeated_labels_are_no_label_value_stack(tmp_path):
+    pdf = _page_pdf(tmp_path / "noise.pdf", [
+        *_stack(["a PCE of 20.05% (VOC: 1.22 V, JSC:", "20.71 mA cm-2, FF: 79.36%) was", "determined here"]),
+        *_stack(["y = 0.52x + 2.1", "R2 = 0.993"], x=300),
+        *_stack(["t = 0 h", "t = 100 h", "t = 500 h"], y=400),
+        *_stack(["PCE: 20.1%", "Voc: 1.1"], x=300, y=400),  # two lines only
+    ])
+
+    assert _table(pdf) == []

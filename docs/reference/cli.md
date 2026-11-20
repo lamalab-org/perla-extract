@@ -29,7 +29,8 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--parser [docling|pymupdf]` | `docling` | Explicit parser backend |
-| `--figure-table-parsing / --no-figure-table-parsing` | off | Docling only: rebuild numeric tables printed inside figures from the PDF words |
+| `--figure-table-parsing / --no-figure-table-parsing` | off | Docling only: rebuild numeric tables printed inside figures (text layer, or OCR for image figures) |
+| `--figure-table-ocr-dpi INTEGER` | `300` | Resolution (72–1200) at which `--figure-table-parsing` renders image figures for OCR |
 | `--claim-mode [auto|single|windowed]` | `auto` | One-call or windowed source-claim collection |
 | `--single-call-max-input-tokens INTEGER` | `90000` | Claim-input estimate at which auto mode uses windows |
 | `--claim-window-input-tokens INTEGER` | `60000` | Request budget used to size claim-reading windows |
@@ -50,19 +51,41 @@ from the model-facing evidence view.
 Docling does not pass on text inside figures, so a table drawn inside a figure (for
 example the J-V parameters inset in a J-V plot) never reaches the model.
 `--figure-table-parsing` (TOML: `figure_table_parsing = true` under `[extraction]`)
-takes Docling's figure regions and rebuilds such tables from PyMuPDF's word positions.
-Adjacent lines sharing at least two numeric columns (two rows, six numbers, rows mostly
-numeric) form a table, with their row labels, units and header lines. Axis tick labels
-(evenly spaced positions with linearly or logarithmically spaced values) are removed
-where they continue beyond the table, rotated text is ignored, and content of
-neighbouring panels is separated by the jump in column spacing. All distances are
-measured in text heights. Figures stored as images have no text layer and are not
-covered. Each table becomes one block
-of kind `figure_table`, placed after its figure's caption, with one citable row per
-line and a section label naming the figure. Its identifier is numbered after all other
-blocks, so existing block identifiers do not change. Row text colours and coloured
-legend markers are kept in the block's metadata for review; they are not quotable
-text, so a series that the figure marks only by colour is not assigned from it.
+takes Docling's figure regions and rebuilds such tables from the words inside them:
+PyMuPDF's words from the PDF text layer, or, for a figure stored as an image (at least
+half covered by raster images) whose text layer gives no table, words read by RapidOCR,
+the OCR engine installed with Docling, at 300 dpi by default. The text layer is always
+preferred. `--figure-table-ocr-dpi` (TOML: `figure_table_ocr_dpi`) changes the
+resolution: a higher one can recover small subscripts (`Voc` read as `V`), but OCR
+takes longer.
+
+Both kinds of words go through the same rules. Adjacent lines sharing at least two
+numeric columns form a table (two rows, six numbers, rows mostly numeric), with their
+row labels, units and header lines. Axis tick labels (evenly spaced positions with
+linearly or logarithmically spaced values) are removed where they continue beyond the
+table, and lines that only continue axis scales are not rows. A header line contains
+at least one word that is not a number, and a table whose rows mostly repeat one value
+(a legend repeated across panels, such as "2 days 2 days") is rejected. Rotated text is
+ignored, and content of neighbouring panels (legends, axes) is separated where the
+empty space between columns jumps. A device's parameters printed one per line
+(`PCE: 20.1%` / `Voc: 1.15 V` / `Jsc: 23.5 mA/cm2` / `FF: 78.2%`, with `:` or `=`) are
+read as well: at least three left-aligned lines that consist only of `label: number
+[unit]` pairs, with distinct labels and different values, plus one name directly above
+them ("Control"). Stacks side by side are read separately; prose, fit expressions
+(`y = 0.52x + 2.1`) and legends repeating one label (`t = 0 h`, `t = 100 h`) are not.
+All distances are measured in text heights.
+
+Each table becomes one block of kind `figure_table`, placed after its figure's caption,
+with one citable row per line and a section label naming the figure. Its identifier is
+numbered after all other blocks, so existing block identifiers do not change. Row text
+colours and coloured legend markers are kept in the block's metadata for review; they
+are not quotable text, so a series that the figure marks only by colour is not assigned
+from it. OCR can misread characters such as decimal points and minus signs: OCR blocks
+say so in their section label, record the lowest word confidence
+(`ocr_min_word_confidence`), and take row colours from the pixels, rounded to a coarse
+palette; their legends are not read. OCR takes a few seconds per image figure on a CPU,
+once per document thanks to the parse cache. The parse cache key and the run manifest
+record the option, the RapidOCR version and the OCR resolution.
 
 Only claim collection uses windows. The grounded ledgers from all windows are combined
 before a single global study-assembly call, so the final schema is never constructed

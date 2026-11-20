@@ -318,6 +318,7 @@ def _prepare_source(
             refresh_cache=config.refresh_document_cache,
             heartbeat_seconds=config.heartbeat_seconds,
             figure_table_parsing=config.figure_table_parsing,
+            figure_table_ocr_dpi=config.figure_table_ocr_dpi,
         )
         state.source_parsing = source_events
         write_json_atomic(

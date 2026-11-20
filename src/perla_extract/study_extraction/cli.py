@@ -131,7 +131,13 @@ OUTPUT_DIRECTORY = click.Path(path_type=Path, file_okay=False, resolve_path=True
     "--figure-table-parsing/--no-figure-table-parsing",
     "figure_table_parsing",
     default=default("figure_table_parsing"),
-    help="Docling only: rebuild numeric tables printed inside figures from PDF words.",
+    help="Docling only: rebuild numeric tables printed inside figures (text layer, or OCR for image figures).",
+)
+@click.option(
+    "--figure-table-ocr-dpi",
+    type=click.IntRange(72, 1200),
+    default=default("figure_table_ocr_dpi"),
+    help="Resolution for reading image figures by OCR with --figure-table-parsing; higher can recover subscripts but is slower.",
 )
 @click.option(
     "--claim-mode",

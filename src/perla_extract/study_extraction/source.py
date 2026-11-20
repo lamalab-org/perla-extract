@@ -536,7 +536,11 @@ def _docling_runtime() -> tuple[Any, Any, Any]:
 
 
 def _parse_docling(
-    path: Path, source: str, *, figure_table_parsing: bool = False
+    path: Path,
+    source: str,
+    *,
+    figure_table_parsing: bool = False,
+    figure_table_ocr_dpi: int = 300,
 ) -> list[EvidenceBlock]:
     """Adapt Docling structure without leaking its object model downstream.
 
@@ -549,7 +553,8 @@ def _parse_docling(
     With ``figure_table_parsing``, numeric tables printed inside figures are rebuilt
     from PyMuPDF's words within Docling's figure regions (see ``figure_tables``). They
     are placed after their figure's caption, but numbered after all other blocks, so
-    existing block identifiers stay unchanged.
+    existing block identifiers stay unchanged. Image figures without a usable text
+    layer are read by RapidOCR instead, rendered at ``figure_table_ocr_dpi``.
     """
 
     converter, ContentLayer, DocItemLabel = _docling_runtime()
@@ -672,7 +677,9 @@ def _parse_docling(
                 path.name,
                 ", ".join(map(str, pages)),
             )
-            blocks = _with_figure_tables(path, source, figures, blocks)
+            blocks = _with_figure_tables(
+                path, source, figures, blocks, ocr=True, ocr_dpi=figure_table_ocr_dpi
+            )
         else:
             logger.info(
                 "Figure table parsing: Docling found no figures in {}; PyMuPDF not applied",
@@ -686,6 +693,9 @@ def _with_figure_tables(
     source: str,
     figures: list[dict[str, Any]],
     blocks: list[EvidenceBlock],
+    *,
+    ocr: bool = False,
+    ocr_dpi: int = 300,
 ) -> list[EvidenceBlock]:
     """Insert figure-table blocks after their figure's caption.
 
@@ -699,7 +709,7 @@ def _with_figure_tables(
     placed: list[tuple[int, EvidenceBlock]] = []
     order = len(blocks)
     figure_indices: set[int] = set()
-    for item in figure_tables(path, figures):
+    for item in figure_tables(path, figures, ocr=ocr, ocr_dpi=ocr_dpi):
         figure_indices.add(item["figure_index"])
         figure = figures[item["figure_index"]]
         position = min(figure["after"], len(blocks))  # where the figure itself would be
@@ -717,7 +727,10 @@ def _with_figure_tables(
                     block_id=_block_id(source, item["page"], order, "figure_table", item["text"]),
                     source=source,
                     page=item["page"],
-                    section_path=[*section[-19:], section_label(caption)],
+                    section_path=[
+                        *section[-19:],
+                        section_label(caption, ocr=item.get("read_by_ocr", False)),
+                    ],
                     kind="figure_table",
                     text=item["text"],
                     bbox=item["bbox"],
@@ -770,6 +783,7 @@ def _cache_identity(
     parser: str,
     dependency_versions: dict[str, str],
     figure_table_parsing: bool = False,
+    figure_table_ocr_dpi: int = 300,
 ) -> dict[str, object]:
     """Describe all reproducibility-relevant inputs to a parsed document.
 
@@ -790,6 +804,8 @@ def _cache_identity(
     }
     if figure_table_parsing:  # only when enabled, so default cache keys are unchanged
         identity["figure_table_parsing"] = True
+        identity["rapidocr"] = _package_version("rapidocr")  # reads image figures
+        identity["figure_table_ocr_dpi"] = figure_table_ocr_dpi
     return identity
 
 
@@ -814,6 +830,7 @@ def parse_pdf(
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,
     figure_table_parsing: bool = False,
+    figure_table_ocr_dpi: int = 300,
 ) -> tuple[list[EvidenceBlock], dict[str, object]]:
     """Parse one PDF with the explicitly selected, reproducible backend.
 
@@ -829,6 +846,9 @@ def parse_pdf(
         )
     if figure_table_parsing and parser != "docling":
         raise ValueError("figure_table_parsing requires the docling parser")
+    low, high = 72, 1200
+    if type(figure_table_ocr_dpi) is not int or not low <= figure_table_ocr_dpi <= high:
+        raise ValueError(f"figure_table_ocr_dpi must be an integer from {low} to {high}")
     source_hash = _sha256(path)
     dependency_versions = _parser_dependency_versions(parser)
     if "not-installed" in dependency_versions.values():
@@ -846,6 +866,7 @@ def parse_pdf(
         parser=parser,
         dependency_versions=dependency_versions,
         figure_table_parsing=figure_table_parsing,
+        figure_table_ocr_dpi=figure_table_ocr_dpi,
     )
     key = hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -877,7 +898,12 @@ def parse_pdf(
         logger.info("Parsing {} with {}", path.name, parser)
         with heartbeat(f"{parser} parsing for {path.name}", heartbeat_seconds):
             parsed_blocks = (
-                _parse_docling(path, source, figure_table_parsing=figure_table_parsing)
+                _parse_docling(
+                    path,
+                    source,
+                    figure_table_parsing=figure_table_parsing,
+                    figure_table_ocr_dpi=figure_table_ocr_dpi,
+                )
                 if parser == "docling"
                 else _parse_pymupdf(path, source)
             )
@@ -920,6 +946,19 @@ def parse_pdf(
         "evidence_schema_sha256": identity["evidence_schema_sha256"],
         "cache_format_version": DOCUMENT_CACHE_FORMAT_VERSION,
         "figure_table_parsing": figure_table_parsing,
+        **(
+            {
+                "rapidocr_version": identity["rapidocr"],
+                "figure_table_ocr_dpi": figure_table_ocr_dpi,
+            }
+            if figure_table_parsing
+            else {}
+        ),
+        "figure_table_ocr_blocks": sum(
+            block.kind == "figure_table"
+            and block.metadata.get("derived_from", "").endswith("rapidocr_words")
+            for block in evidence_blocks
+        ),
         "figure_table_blocks": sum(block.kind == "figure_table" for block in evidence_blocks),
         "cache_hit": cache_hit,
         "parsed_block_count": len(parsed_blocks),
@@ -985,6 +1024,7 @@ def parse_documents(
     refresh_cache: bool = False,
     heartbeat_seconds: float = 20,
     figure_table_parsing: bool = False,
+    figure_table_ocr_dpi: int = 300,
 ) -> tuple[list[EvidenceBlock], list[dict[str, object]]]:
     """Build one evidence stream from a main article and optional supplement.
 
@@ -1002,6 +1042,7 @@ def parse_documents(
         refresh_cache=refresh_cache,
         heartbeat_seconds=heartbeat_seconds,
         figure_table_parsing=figure_table_parsing,
+        figure_table_ocr_dpi=figure_table_ocr_dpi,
     )
     events = [main_event]
     if supplement:
@@ -1013,6 +1054,7 @@ def parse_documents(
             refresh_cache=refresh_cache,
             heartbeat_seconds=heartbeat_seconds,
             figure_table_parsing=figure_table_parsing,
+            figure_table_ocr_dpi=figure_table_ocr_dpi,
         )
         blocks.extend(supplement_blocks)
         events.append(supplement_event)

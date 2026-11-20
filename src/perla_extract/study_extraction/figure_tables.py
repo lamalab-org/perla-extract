@@ -1,27 +1,40 @@
-"""Rebuild numeric tables printed inside figures from the PDF text layer.
+"""Rebuild numeric tables printed inside figures from the words inside them.
 
 Docling recognises figures but does not hand their inner text to the evidence stream,
 so a table drawn inside a figure (for example the J-V parameters inset in a J-V plot)
 never reaches the model. Docling's figure text, where available, also comes as large
-fragments that mix rows. This module combines the two backends: Docling supplies the
-figure regions, PyMuPDF supplies the words inside them with exact positions.
+fragments that mix rows. This module combines the backends: Docling supplies the
+figure regions, PyMuPDF (or, for image figures, RapidOCR) the words inside them with
+exact positions.
 
 Inside each figure region, axis tick labels are recognised as numbers at evenly spaced
 positions whose values are evenly spaced too (linear or logarithmic axes); a column of
 them is removed from a table only where it continues above or below the table, since a
-table column may legitimately hold evenly spaced values. The remaining words are grouped into printed lines, and lines are split where neighbouring
-panels meet. Adjacent line segments that share at least two numeric columns form a
-table (at least two rows and six numbers, rows mostly numeric); its row labels, units and the header lines
-directly above are kept. Each table becomes one block of kind ``figure_table`` whose
-text is exactly the words of the PDF, one printed row per line, so every row is
-citable verbatim. All distances are measured in text heights, so no rule depends on
-the size of a particular figure. Figures stored as images have no text layer and are
-out of reach.
+table column may legitimately hold evenly spaced values, and lines that only continue
+axis scales are no rows. The remaining words are grouped into printed lines. Adjacent
+lines that share at least two numeric columns form a table (at least two rows and six
+numbers, rows mostly numeric and holding different values); content of neighbouring
+panels, such as a legend beside the table, is separated where the empty space between
+columns jumps. Its row labels, units and the header lines directly above (which name
+quantities, so a line of numbers is none) are kept. Each table becomes one block of
+kind ``figure_table`` whose text is exactly the words read, one printed row per line,
+so every row is citable verbatim. A device's parameters printed one per line
+("PCE: 20.1%" / "Voc: 1.15 V" / ...) have one number per line and form no columns; such
+stacks of at least three left-aligned "label: value [unit]" lines with distinct labels
+are read separately (``_label_values``). All distances are measured in text heights,
+so no rule depends on the size of a particular figure.
+
+Figures stored as images have no text layer. With ``ocr`` enabled, a figure region that
+is mostly covered by raster images and yields no table from its text layer is rendered
+and read by RapidOCR (the OCR engine Docling already uses); its word boxes go through
+the same rules. OCR can misread characters, so such blocks say so in their section
+label and record the lowest word confidence; the PDF text layer is always preferred.
 
 Colour is recorded as metadata, not as text: figures often mark series (reference vs
 treated) only by colour. Each row's dominant number colour and the coloured legend
 markers inside the figure are kept for reviewers; assigning a series from colour is an
-inference and is never written into the quotable text.
+inference and is never written into the quotable text. For OCR'd figures the row colour
+is the ink colour of the pixels, rounded to a coarse palette, and legends are not read.
 """
 
 from __future__ import annotations
@@ -38,6 +51,12 @@ NUMERIC_WORD = re.compile(
     r"^[(\[]?[-+−–]?\d+(?:[.,]\d+)?(?:[eE][-+−–]?\d+)?(?:±\d+(?:[.,]\d+)?)?%?[)\]]?[,;]?$"
 )
 SECTION_LABEL = "Numbers printed inside a figure (rows rebuilt from the PDF text layer)"
+OCR_SECTION_LABEL = "Numbers read by OCR from a figure image (rows rebuilt from OCR words; digits may be misread)"
+# OCR: default render resolution, its allowed range, and the share of the figure
+# region raster images must cover.
+OCR_DPI = 300
+OCR_DPI_RANGE = (72, 1200)
+MIN_RASTER_SHARE = 0.5
 FIGURE_NUMBER = re.compile(
     r"^\s*((?:Supplementary\s+|Extended\s+Data\s+)?(?:Fig(?:ure)?s?\.?)\s*S?\d+[A-Za-z]?)",
     re.IGNORECASE,
@@ -46,15 +65,25 @@ FIGURE_NUMBER = re.compile(
 MIN_COLUMNS, MIN_ROWS, MIN_CELLS = 2, 2, 6
 # ... and in a typical row at least this share of the words must be numbers.
 MIN_NUMBER_SHARE = 0.5
+# A stack of "label: value" lines needs at least this many lines with distinct labels.
+MIN_LABEL_VALUES = 3
+SEPARATOR = re.compile(r"([:=])")
+LABEL_VALUE = re.compile(
+    r"^[(\[]?[-+−–]?\d+(?:[.,]\d+)?(?:[eE][-+−–]?\d+)?(?:±\d+(?:[.,]\d+)?)?"
+    r"(?P<unit>[%°A-Za-zµμΩ/·⋅^{}⁻¹²³\-−]*\d?)[)\]]?[,;]?$"
+)
+EXPONENT = re.compile(r"^[-−⁻]?\d$")
+UNIT_WORD = re.compile(r"^(?=.*[A-Za-z%°µμΩ])[%°A-Za-zµμΩ/·⋅^{}()⁻¹²³\-−\d]{1,12}[,;]?$")
 
 
-def section_label(caption: str | None) -> str:
+def section_label(caption: str | None, *, ocr: bool = False) -> str:
     """Name the figure in the label, so the block stays linked to it anywhere."""
+    label = OCR_SECTION_LABEL if ocr else SECTION_LABEL
     match = FIGURE_NUMBER.match(caption or "")
     if not match:
-        return SECTION_LABEL
+        return label
     number = re.sub(r"\s+", " ", match.group(1)).strip()
-    return f"{number}: numbers printed inside the figure (rows rebuilt from the PDF text layer)"
+    return f"{number}: {label[0].lower()}{label[1:].replace(' a figure', ' the figure')}"
 
 
 def _is_number(text: str) -> bool:
@@ -71,6 +100,11 @@ def _value(text: str) -> tuple[float, float] | None:
     mantissa = cleaned.lower().split("e")[0]
     decimals = len(mantissa.split(".")[1]) if "." in mantissa else 0
     return value, 0.5 * 10.0 ** (-decimals)
+
+
+def _magnitudes(row: list[tuple]) -> set[float]:
+    """The distinct absolute values printed in a row."""
+    return {abs(v[0]) for v in (_value(w[4]) for w in row if _is_number(w[4])) if v}
 
 
 def _centre(word: tuple) -> tuple[float, float]:
@@ -196,19 +230,30 @@ def _shared_columns(lines: list[list[tuple]], tolerance: float) -> list[tuple[fl
     return sorted(((a[0], a[3]) for a in anchors if len(a[2]) >= 2), key=lambda c: c[0])
 
 
-def _column_groups(columns: list[float]) -> list[list[float]]:  # positions only
-    """Split column positions where the spacing jumps: a gap more than three times the
-    typical column spacing separates one panel's table from content of another panel."""
+def _column_groups(columns: list[tuple[float, list[tuple]]]) -> list[list[float]]:
+    """Split columns where the empty space between them jumps.
+
+    ``columns`` holds (centre, words) from ``_shared_columns``. The empty space between
+    two neighbouring columns runs from the right edge of the left one's words to the
+    left edge of the right one's. Where it is more than three times the typical space
+    between columns, it separates one panel's table from content of another panel (a
+    legend, an axis). Empty space is used rather than the distance between centres, so
+    wide label cells or long numbers do not hide or fake such a jump. Returns the
+    centres of each group.
+    """
     if not columns:
         return []
-    gaps = [b - a for a, b in zip(columns, columns[1:])]
+    gaps = [
+        min(w[0] for w in right) - max(w[2] for w in left)
+        for (_, left), (_, right) in zip(columns, columns[1:])
+    ]
     typical = statistics.median(gaps) if gaps else 0.0
-    groups = [[columns[0]]]
-    for column, gap in zip(columns[1:], gaps):
-        if typical and gap > 3 * typical:
-            groups.append([column])
+    groups = [[columns[0][0]]]
+    for (centre, _), gap in zip(columns[1:], gaps):
+        if typical > 0 and gap > 3 * typical:
+            groups.append([centre])
         else:
-            groups[-1].append(column)
+            groups[-1].append(centre)
     return groups
 
 
@@ -258,7 +303,7 @@ def _rows(words: list[tuple]) -> list[dict[str, Any]]:
     tables = []
     for run in (r for r in runs if len(r) >= MIN_ROWS):
         shared = _shared_columns([lines[i] for i in run], tolerance)
-        groups = _column_groups([centre for centre, _ in shared])
+        groups = _column_groups(shared)
         columns = max(groups, key=len) if groups else []
         if len(columns) < MIN_COLUMNS:
             continue
@@ -271,6 +316,14 @@ def _rows(words: list[tuple]) -> list[dict[str, Any]]:
         ]
         if len(real) < MIN_COLUMNS:
             continue
+        # every data row has a value in one of those columns; lines that only continue
+        # axis scales (the ticks of two panels side by side) are no rows of the table,
+        # and the table spans its real columns only
+        real_words = {id(w) for centre, column_words in shared if centre in real for w in column_words}
+        run = [i for i in run if any(id(w) in real_words for w in lines[i])]
+        if len(run) < MIN_ROWS:
+            continue
+        columns = real
         spacing = statistics.median([b - a for a, b in zip(columns, columns[1:])])
         low, high = columns[0] - tolerance, columns[-1] + tolerance
 
@@ -310,6 +363,8 @@ def _rows(words: list[tuple]) -> list[dict[str, Any]]:
             within = [w for w in lines[index] if w[2] >= x0 - height and w[0] <= x1 + height]
             if not within:
                 continue  # text of another panel at this height: look further up
+            if all(_is_number(w[4]) for w in within):
+                continue  # headers name quantities and units; a line of numbers is ticks
             if top - max(w[3] for w in within) > 2 * height or len(headers) == 3:
                 break
             headers.insert(0, within)
@@ -336,14 +391,126 @@ def _rows(words: list[tuple]) -> list[dict[str, Any]]:
         if len(data_rows) < MIN_ROWS:
             continue
         density = statistics.median(sum(_is_number(w[4]) for w in row) / len(row) for row in data_rows)
+        # a table row holds different values; a row that repeats one value ("2 days
+        # 2 days", "5 5") is a legend or an axis repeated across panels. The sign is
+        # ignored, since OCR easily adds or drops a minus sign.
+        repeated = sum(len(_magnitudes(row)) < 2 for row in data_rows)
         if (
-            len(data_rows) < MIN_ROWS
+            2 * repeated >= len(data_rows)
+            or len(data_rows) < MIN_ROWS
             or cells < MIN_CELLS
             or density < MIN_NUMBER_SHARE
             or len(_shared_columns(data_rows, tolerance)) < MIN_COLUMNS
         ):
             continue
         tables.append({"rows": [*header_rows, *data_rows], "data_rows": len(data_rows)})
+    return tables
+
+
+def _pairs(chunk: list[tuple]) -> list[dict[str, Any]] | None:
+    """The "label: value [unit]" pairs a piece of a line consists of, or None.
+
+    A pair is one to four label words (the first starting with a letter), a colon or an
+    equals sign, one number and at most two unit words; the piece must consist of pairs
+    only, so prose ("a PCE of 20.1% (VOC: 1.22 V, JSC: ...") and expressions
+    ("y = 0.5x + 2") are none. Separators may be printed apart or attached to a word.
+    """
+    tokens: list[tuple[str, tuple]] = []
+    for word in chunk:
+        tokens += [(part, word) for part in SEPARATOR.split(word[4]) if part.strip()]
+    pairs: list[dict[str, Any]] = []
+    i = 0
+    while i < len(tokens):
+        start = i
+        while i < len(tokens) and tokens[i][0] not in ":=" and i - start < 4:
+            i += 1
+        if i == start or i >= len(tokens) or tokens[i][0] not in ":=" or not tokens[start][0][0].isalpha():
+            return None
+        label = " ".join(t for t, _ in tokens[start:i]).lower()
+        i += 1
+        if i >= len(tokens):
+            return None
+        value = LABEL_VALUE.match(tokens[i][0])
+        if not value:
+            return None
+        number = tokens[i][0]
+        i += 1
+        units = 0
+        while (
+            i < len(tokens)
+            and units < 2
+            # a unit word, or the raised exponent of one read apart ("mA/cm" "2")
+            and (UNIT_WORD.match(tokens[i][0]) or (units and EXPONENT.match(tokens[i][0])))
+            and not (i + 1 < len(tokens) and tokens[i + 1][0] in ":=")
+        ):
+            i += 1
+            units += 1
+        words = []
+        for _, word in tokens[start:i]:
+            if not words or words[-1] is not word:
+                words.append(word)
+        pairs.append({
+            "label": label,
+            "number": number,
+            "words": words,
+        })
+    return pairs or None
+
+
+def _label_values(words: list[tuple]) -> list[dict[str, Any]]:
+    """Stacks of "label: value" lines (PCE: 20.1% / Voc: 1.15 V / Jsc: ... / FF: ...).
+
+    A device's parameters are often printed one per line inside a J-V plot; such a stack
+    has one number per line and never forms a table of shared numeric columns. A stack
+    is at least ``MIN_LABEL_VALUES`` adjacent lines whose pairs start at the same left
+    edge, with distinct labels and different values; stacks side by side (two devices,
+    labels repeated) are read separately. One header line directly above it that names
+    no value ("Champion device", "Control") is kept.
+    """
+    if not words:
+        return []
+    height = statistics.median(w[3] - w[1] for w in words)
+    lines = _lines(words)
+    found = []  # (line index, pair)
+    for index, line in enumerate(lines):
+        for chunk in _chunks(line, height):
+            found += [(index, pair) for pair in _pairs(chunk) or []]
+    stacks: list[list[tuple[int, dict]]] = []
+    for index, pair in found:
+        x0 = pair["words"][0][0]
+        for stack in stacks:
+            last_index, last = stack[-1]
+            gap = min(w[1] for w in pair["words"]) - max(w[3] for w in last["words"])
+            if last_index < index and gap <= 2 * height and abs(last["words"][0][0] - x0) <= height:
+                stack.append((index, pair))
+                break
+        else:
+            stacks.append([(index, pair)])
+
+    tables = []
+    for stack in stacks:
+        labels = [pair["label"] for _, pair in stack]
+        values = {abs(v[0]) for v in (_value(re.sub(r"[^\d.,eE±+\-−–]", "", p["number"])) for _, p in stack) if v}
+        if len(stack) < MIN_LABEL_VALUES or len(set(labels)) < len(labels) or len(values) < 2:
+            continue
+        rows = [pair["words"] for _, pair in stack]
+        x0 = min(w[0] for row in rows for w in row)
+        x1 = max(w[2] for row in rows for w in row)
+        top = min(w[1] for w in rows[0])
+        headers = []
+        for index in range(stack[0][0] - 1, -1, -1):
+            within = [w for w in lines[index] if w[2] >= x0 - height and w[0] <= x1 + height]
+            if not within:
+                continue
+            text = "".join(w[4] for w in within)
+            if (
+                top - max(w[3] for w in within) <= 2 * height
+                and sum(c.isalpha() for c in text) >= 2  # a name, not a stray unit letter
+                and not any(_is_number(w[4]) or SEPARATOR.search(w[4]) for w in within)
+            ):
+                headers = [within]
+            break
+        tables.append({"rows": [*headers, *rows], "data_rows": len(rows)})
     return tables
 
 
@@ -444,17 +611,104 @@ def _legend(page, rect, height: float) -> list[dict[str, Any]]:
     return [{"label": e["label"], "marker_colours": e["marker_colours"]} for e in stacked]
 
 
-def figure_tables(path: Path, figures: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _raster_share(page, rect) -> float:
+    """Share of the region covered by raster images (overlaps may count twice)."""
+    import pymupdf
+
+    covered = 0.0
+    for info in page.get_image_info():
+        box = pymupdf.Rect(info["bbox"]) & rect
+        if not box.is_empty:
+            covered += box.width * box.height
+    return min(1.0, covered / max(rect.width * rect.height, 1e-9))
+
+
+def _ocr_words(engine, page, rect, dpi: int = OCR_DPI) -> tuple[list[tuple], Any, tuple[float, float]]:
+    """OCR words of a rendered region as PyMuPDF-style word tuples in page coordinates.
+
+    Each tuple is ``(x0, y0, x1, y1, text, confidence)``. Rotated text is dropped like
+    in the text-layer route: RapidOCR returns such a line as a box taller than wide.
+    Also returns the rendered image and its pixels per point, for ink colours.
+    """
+    import numpy as np
+    import pymupdf
+
+    pixmap = page.get_pixmap(clip=rect, dpi=dpi, colorspace=pymupdf.csRGB, alpha=False)
+    image = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(pixmap.h, pixmap.w, 3)
+    scale = (pixmap.w / rect.width, pixmap.h / rect.height)
+    result = engine(image, return_word_box=True)
+    words = []
+    for line_box, text, line_words in zip(
+        result.boxes if result.boxes is not None else [],
+        result.txts or [],
+        result.word_results or [],
+    ):
+        xs, ys = [p[0] for p in line_box], [p[1] for p in line_box]
+        if len(text.strip()) >= 2 and max(ys) - min(ys) > max(xs) - min(xs):
+            continue
+        for word, confidence, quad in line_words:
+            if not word.strip():
+                continue
+            wx, wy = [p[0] for p in quad], [p[1] for p in quad]
+            words.append(
+                (
+                    rect.x0 + min(wx) / scale[0],
+                    rect.y0 + min(wy) / scale[1],
+                    rect.x0 + max(wx) / scale[0],
+                    rect.y0 + max(wy) / scale[1],
+                    word.strip(),
+                    float(confidence),
+                )
+            )
+    return words, image, scale
+
+
+def _ink_colour(word: tuple, image, rect, scale: tuple[float, float]) -> str | None:
+    """Colour of the darker half of a word's pixels, rounded to steps of 0x33."""
+    x0 = max(0, int((word[0] - rect.x0) * scale[0]))
+    x1 = int((word[2] - rect.x0) * scale[0]) + 1
+    y0 = max(0, int((word[1] - rect.y0) * scale[1]))
+    y1 = int((word[3] - rect.y0) * scale[1]) + 1
+    pixels = image[y0:y1, x0:x1].reshape(-1, 3).astype(float)
+    if not len(pixels):
+        return None
+    brightness = pixels.mean(axis=1)
+    if brightness.max() - brightness.min() < 40:
+        return None
+    import numpy as np
+
+    ink = pixels[brightness <= (brightness.max() + brightness.min()) / 2]
+    return "#" + "".join(f"{min(255, round(v / 51) * 51):02x}" for v in np.median(ink, axis=0))
+
+
+def _ocr_engine():
+    """RapidOCR as installed with Docling, or None (logged once) when unavailable."""
+    try:
+        from rapidocr import RapidOCR
+
+        return RapidOCR(params={"Global.log_level": "error"})
+    except Exception as exc:  # noqa: BLE001 - OCR is an optional extra of Docling
+        logger.warning("Figure table OCR unavailable ({}); image figures are skipped", exc)
+        return None
+
+
+def figure_tables(
+    path: Path, figures: list[dict[str, Any]], *, ocr: bool = False, ocr_dpi: int = OCR_DPI
+) -> list[dict[str, Any]]:
     """Tables inside the given figure regions.
 
     ``figures`` holds ``{"page": 1-based page, "bbox": [left, top, right, bottom],
     "bottom_left_origin": bool}``; Docling usually measures from the bottom of the page,
     PyMuPDF from the top. Returns one item per table with its text, the figure region,
-    and colour metadata; callers turn the items into evidence blocks.
+    and colour metadata; callers turn the items into evidence blocks. With ``ocr``, a
+    region mostly covered by raster images whose text layer gives no table is read by
+    RapidOCR instead (see the module notes), rendered at ``ocr_dpi``.
     """
     import pymupdf
 
     found: list[dict[str, Any]] = []
+    engine: Any = None
+    ocr_figures = 0
     with pymupdf.open(path) as document:
         for figure_index, figure in enumerate(figures):
             if not 1 <= figure["page"] <= document.page_count:
@@ -471,17 +725,27 @@ def figure_tables(path: Path, figures: list[dict[str, Any]]) -> list[dict[str, A
                 for word in _horizontal_words(page, rect)
                 if rect.contains(pymupdf.Point((word[0] + word[2]) / 2, (word[1] + word[3]) / 2))
             ]
-            if not words:
-                continue
-            try:
-                tables = _rows(words)
-            except Exception as exc:  # noqa: BLE001 - one odd figure must not fail the parse
-                logger.debug("Figure table detection failed on page {}: {}", figure["page"], exc)
-                continue
+            tables = _detect(words, figure["page"])
+            image = scale = None
+            if not tables and ocr and _raster_share(page, rect) >= MIN_RASTER_SHARE:
+                if engine is None:
+                    engine = _ocr_engine() or False
+                if engine:
+                    ocr_figures += 1
+                    try:
+                        words, image, scale = _ocr_words(engine, page, rect, ocr_dpi)
+                    except Exception as exc:  # noqa: BLE001 - one odd image must not fail the parse
+                        logger.debug("Figure OCR failed on page {}: {}", figure["page"], exc)
+                        words = []
+                    tables = _detect(words, figure["page"])
             if not tables:
                 continue
-            spans = _span_colours(page, rect)
-            legend = _legend(page, rect, statistics.median(w[3] - w[1] for w in words))
+            read_by_ocr = image is not None
+            if read_by_ocr:
+                legend: list[dict[str, Any]] = []
+            else:
+                spans = _span_colours(page, rect)
+                legend = _legend(page, rect, statistics.median(w[3] - w[1] for w in words))
             for table in tables:
                 rows = table["rows"]
                 text = "\n".join(" ".join(w[4] for w in row) for row in rows)
@@ -490,11 +754,26 @@ def figure_tables(path: Path, figures: list[dict[str, Any]]) -> list[dict[str, A
                     weights: dict[str, int] = {}
                     for word in row:
                         if _is_number(word[4]):
-                            colour = _colour_of(word, spans)
+                            colour = (
+                                _ink_colour(word, image, rect, scale)
+                                if read_by_ocr
+                                else _colour_of(word, spans)
+                            )
                             if colour:
                                 weights[colour] = weights.get(colour, 0) + len(word[4])
                     row_colours.append(max(weights, key=weights.get) if weights else None)
                 all_words = [w for row in rows for w in row]
+                metadata: dict[str, Any] = {
+                    "derived_from": "docling_figure_region+"
+                    + ("rapidocr_words" if read_by_ocr else "pymupdf_words"),
+                    "figure_bbox": [round(v, 2) for v in rect],
+                    "data_rows": table["data_rows"],
+                    "row_text_colours": row_colours,
+                    "legend_marker_colours": legend,
+                }
+                if read_by_ocr:
+                    metadata["ocr_dpi"] = ocr_dpi
+                    metadata["ocr_min_word_confidence"] = round(min(w[5] for w in all_words), 3)
                 found.append(
                     {
                         "figure_index": figure_index,
@@ -506,13 +785,28 @@ def figure_tables(path: Path, figures: list[dict[str, Any]]) -> list[dict[str, A
                             max(w[3] for w in all_words),
                         ],
                         "text": text,
-                        "metadata": {
-                            "derived_from": "docling_figure_region+pymupdf_words",
-                            "figure_bbox": [round(v, 2) for v in rect],
-                            "data_rows": table["data_rows"],
-                            "row_text_colours": row_colours,
-                            "legend_marker_colours": legend,
-                        },
+                        "read_by_ocr": read_by_ocr,
+                        "metadata": metadata,
                     }
                 )
+    if ocr:
+        logger.info(
+            "Figure table OCR: {} image figure(s) of {} read by RapidOCR, {} table(s) found",
+            ocr_figures,
+            Path(path).name,
+            sum(item["read_by_ocr"] for item in found),
+        )
     return found
+
+
+def _detect(words: list[tuple], page: int) -> list[dict[str, Any]]:
+    """Tables among the words; a failure on one figure must not fail the parse."""
+    if not words:
+        return []
+    try:
+        tables = _rows(words)
+        used = {id(w) for table in tables for row in table["rows"] for w in row}
+        return tables + _label_values([w for w in words if id(w) not in used])
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Figure table detection failed on page {}: {}", page, exc)
+        return []
