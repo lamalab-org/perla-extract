@@ -16,12 +16,16 @@ import os
 import platform
 import random
 import re
-import resource
 import subprocess
 import sys
 import time
 from pathlib import Path
 from typing import Any
+
+try:
+    import resource
+except ImportError:  # Windows does not expose POSIX process resource counters.
+    resource = None
 
 import click
 import pymupdf
@@ -272,7 +276,7 @@ def worker(job_path: Path) -> None:
             for p in pages
         )
     )
-    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss if resource else None
     write_json_atomic(
         directory / "metrics.json",
         metrics
@@ -285,7 +289,9 @@ def worker(job_path: Path) -> None:
             "model_load_seconds": loaded - begin,
             "conversion_seconds": converted - loaded,
             "total_seconds": time.monotonic() - begin,
-            "peak_rss_mb": rss / (1024**2 if sys.platform == "darwin" else 1024),
+            "peak_rss_mb": rss / (1024**2 if sys.platform == "darwin" else 1024)
+            if rss is not None
+            else None,
             "provider_requests": 0,
         },
     )
