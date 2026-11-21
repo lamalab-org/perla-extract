@@ -60,19 +60,28 @@ not support MPS in the pinned Docling version. Apple Silicon uses CPU in this
 initial test; comparing MLX is a separate runtime experiment.
 For an initial smoke test, use a one-paper roster
 and `--page-range 4 4` **on both commands**, with a different output directory.
-Page numbers are inclusive and retain original PDF numbering. `--timeout 900`
-is a hard limit in seconds for each source/condition, including model loading.
+Page numbers are inclusive and retain original PDF numbering. The default hard
+limit for each source/condition is **max(900 seconds, 180 seconds × page count)**,
+including model loading. For example, an 11-page input receives 1,980 seconds.
+`--timeout` sets the minimum; `--seconds-per-page` sets the scaling allowance.
+Set `--seconds-per-page 0` for a fixed limit. Every condition for the same source
+receives the same allowance. These limits prevent stalled conversions, not
+guarantee completion on every machine.
 
 Repeat the same command to continue interrupted work. Finished attempts, including
 failures, are retained. Use a fresh output directory to retry failures or change
-settings. Conversions are isolated and shuffled with a fixed seed; cold model-load
-time and conversion time are reported separately. This is not a warm batch-throughput
-benchmark.
+settings. Conversions are isolated. Shorter papers run first, with the main
+article and SI kept together. All three conditions run consecutively for each
+source, in shuffled order with a fixed seed. Early results therefore represent
+shorter papers; use the complete roster before drawing an overall quality ranking.
+Cold model-load time and conversion time are reported separately. This is not a
+warm batch-throughput benchmark.
 
 ## Interpret
 
 - `plan.json`: frozen inputs, conditions, code hashes, versions and model revision.
-- `results.csv`: every source/condition, including failures and timeouts; time,
+- `results.csv` and `summary.json`: updated atomically after each finished attempt,
+  including failures and timeouts. The table includes time,
   peak process memory, table counts, geometry, and evidence size.
 - Each attempt: `docling.json`, model-facing `document.json`, `options.json`,
   `vlm-pages.json` (raw generated text, token counts and stop reasons),

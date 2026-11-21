@@ -10,7 +10,9 @@ from examples.parsing.compare import (
     conversion_complete,
     execute,
     literal_present,
+    order_paired_jobs,
     reference_probes,
+    save_progress,
 )
 from perla_extract.study_extraction.models import EvidenceBlock
 from perla_extract.study_extraction.source import _parser_implementation_sha256, _sha256
@@ -93,12 +95,19 @@ def test_timeout_is_reported_and_finished_attempt_is_not_retried(tmp_path, monke
     calls = []
 
     def timeout(*args, **kwargs):
-        calls.append(args)
+        calls.append((args, kwargs["timeout"]))
         raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
 
     monkeypatch.setattr(subprocess, "run", timeout)
     plan = {
-        "jobs": [{"paper_id": "paper", "source": "main", "condition": "granite"}],
+        "jobs": [
+            {
+                "paper_id": "paper",
+                "source": "main",
+                "condition": "granite",
+                "timeout_seconds": 1980,
+            }
+        ],
         "timeout_seconds": 1,
     }
     from pathlib import Path
@@ -112,7 +121,57 @@ def test_timeout_is_reported_and_finished_attempt_is_not_retried(tmp_path, monke
     execute(plan, tmp_path)
     execute(plan, tmp_path)
     assert len(calls) == 1
+    assert calls[0][1] == 1980
     metrics = json.loads((tmp_path / "paper/main/granite/metrics.json").read_text())
     assert metrics["status"] == "timeout"
     assert "timeout" in (tmp_path / "results.csv").read_text()
     assert json.loads((tmp_path / "summary.json").read_text())["complete"] == 0
+
+
+def test_order_keeps_full_paper_comparisons_together_without_dropping_conditions():
+    cases = []
+    for paper, source, pages in [
+        ("long", "main", 10),
+        ("short", "supplement", 2),
+        ("short", "main", 3),
+    ]:
+        for condition in ["standard", "granite", "granite_native"]:
+            cases.append(
+                {
+                    "paper_id": paper,
+                    "source": source,
+                    "condition": condition,
+                    "page_range": [1, pages],
+                }
+            )
+    ordered = order_paired_jobs(cases)
+    assert ordered == order_paired_jobs(cases)
+    assert [(x["paper_id"], x["source"]) for x in ordered] == [
+        ("short", "main")
+    ] * 3 + [("short", "supplement")] * 3 + [("long", "main")] * 3
+    for start in range(0, len(ordered), 3):
+        assert {x["condition"] for x in ordered[start : start + 3]} == {
+            "standard",
+            "granite",
+            "granite_native",
+        }
+
+
+def test_partial_batch_results_are_published_before_the_whole_study_finishes(tmp_path):
+    rows = [
+        {
+            "paper_id": "p",
+            "source": "main",
+            "condition": "standard",
+            "status": "complete",
+        }
+    ]
+    save_progress(rows, tmp_path, planned=3)
+    summary = json.loads((tmp_path / "summary.json").read_text())
+    assert (
+        summary["status"] == "running"
+        and summary["attempted"] == 1
+        and summary["planned"] == 3
+    )
+    assert "standard" in (tmp_path / "results.csv").read_text()
+    assert not (tmp_path / "results.csv.tmp").exists()

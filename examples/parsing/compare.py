@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import importlib.metadata
+import io
 import json
 import logging
 import math
@@ -46,6 +47,7 @@ MODEL = "ibm-granite/granite-docling-258M"
 REVISION = "982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe"
 CONDITIONS = ("standard", "granite", "granite_native")
 MAX_OUTPUT_TOKENS = 8192
+SECONDS_PER_PAGE = 180
 LOCATION = re.compile(r"^(main|supplement)_p(\d+)_")
 
 
@@ -318,9 +320,13 @@ def worker(job_path: Path) -> None:
 
 
 def make_plan(
-    papers_file: Path, device: str, page_range: tuple[int, int] | None, timeout: int
+    papers_file: Path,
+    device: str,
+    page_range: tuple[int, int] | None,
+    timeout: int,
+    seconds_per_page: int = SECONDS_PER_PAGE,
 ) -> dict:
-    """Seal source/reference bytes, code, model revision and randomized run order."""
+    """Seal inputs and resource limits before comparing complete documents."""
 
     papers = json.loads(papers_file.read_text())
     if not isinstance(papers, list) or not papers:
@@ -390,9 +396,12 @@ def make_plan(
                         "condition": condition,
                         "device": device,
                         "page_range": list(pages),
+                        "timeout_seconds": max(
+                            timeout, (pages[1] - pages[0] + 1) * seconds_per_page
+                        ),
                     }
                 )
-    random.Random(20261121).shuffle(jobs)
+    jobs = order_paired_jobs(jobs)
     from huggingface_hub.constants import HF_HUB_CACHE
 
     cache = Path(HF_HUB_CACHE)
@@ -415,6 +424,8 @@ def make_plan(
         "device": device,
         "conditions": CONDITIONS,
         "timeout_seconds": timeout,
+        "seconds_per_page": seconds_per_page,
+        "execution_order": "shortest papers first; all conditions together per source; shuffled condition order, seed 20261121",
         "jobs": jobs,
         "software_versions": versions,
         "python": platform.python_version(),
@@ -427,10 +438,66 @@ def make_plan(
     }
 
 
+def order_paired_jobs(jobs: list[dict]) -> list[dict]:
+    """Complete comparisons paper by paper, starting with smaller inputs.
+
+    Paper length uses all supplied main/SI pages. Conditions are shuffled within
+    each source so one parser does not always receive the first execution slot.
+    Early results consequently represent shorter papers, not the whole corpus.
+    """
+
+    groups: dict[tuple[str, str], list[dict]] = {}
+    pages: dict[str, int] = {}
+    for job in jobs:
+        key = (job["paper_id"], job["source"])
+        if key not in groups:
+            pages[key[0]] = (
+                pages.get(key[0], 0) + job["page_range"][1] - job["page_range"][0] + 1
+            )
+        groups.setdefault(key, []).append(job)
+    ordered = []
+    randomizer = random.Random(20261121)
+    for key in sorted(groups, key=lambda k: (pages[k[0]], k[0], k[1] != "main")):
+        variants = groups[key].copy()
+        randomizer.shuffle(variants)
+        ordered.extend(variants)
+    return ordered
+
+
+def save_progress(rows: list[dict], output: Path, planned: int) -> None:
+    """Publish readable results after every finished attempt, including failures."""
+
+    columns = list(
+        dict.fromkeys(
+            ["paper_id", "source", "condition", *(key for row in rows for key in row)]
+        )
+    )
+    buffer = io.StringIO(newline="")
+    writer = csv.DictWriter(buffer, fieldnames=columns)
+    writer.writeheader()
+    writer.writerows(rows)
+    temporary = output / "results.csv.tmp"
+    temporary.write_text(buffer.getvalue(), encoding="utf-8")
+    temporary.replace(output / "results.csv")
+    write_json_atomic(
+        output / "summary.json",
+        {
+            "status": "finished" if len(rows) == planned else "running",
+            "planned": planned,
+            "attempted": len(rows),
+            "complete": sum(row["status"] == "complete" for row in rows),
+            "provider_requests": 0,
+            "default_decision": "requires_downstream_extraction_comparison",
+            "note": "Literal visibility and parser success are not extraction precision or recall.",
+        },
+    )
+
+
 def execute(plan: dict, output: Path) -> None:
     """Run one isolated conversion at a time; retain every failure in the table."""
 
     rows = []
+    save_progress(rows, output, len(plan["jobs"]))
     for number, job in enumerate(plan["jobs"], 1):
         if plan.get("experiment_sha256") != _sha256(Path(__file__)) or plan.get(
             "adapter_sha256"
@@ -462,7 +529,7 @@ def execute(plan: dict, output: Path) -> None:
                         ),
                         stdout=log,
                         stderr=subprocess.STDOUT,
-                        timeout=plan["timeout_seconds"],
+                        timeout=job.get("timeout_seconds", plan["timeout_seconds"]),
                     )
                     if process.returncode or not metrics_path.exists():
                         raise RuntimeError(
@@ -484,21 +551,7 @@ def execute(plan: dict, output: Path) -> None:
             {key: job[key] for key in ("paper_id", "source", "condition")}
             | {key: value for key, value in metrics.items() if key != "errors"}
         )
-    columns = list(dict.fromkeys(key for row in rows for key in row))
-    with (output / "results.csv").open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=columns)
-        writer.writeheader()
-        writer.writerows(rows)
-    write_json_atomic(
-        output / "summary.json",
-        {
-            "attempted": len(rows),
-            "complete": sum(r["status"] == "complete" for r in rows),
-            "provider_requests": 0,
-            "default_decision": "requires_downstream_extraction_comparison",
-            "note": "Literal visibility and parser success are not extraction precision or recall.",
-        },
-    )
+        save_progress(rows, output, len(plan["jobs"]))
 
 
 @click.command()
@@ -516,7 +569,20 @@ def execute(plan: dict, output: Path) -> None:
     default=None,
     help="Inclusive PDF pages; omit for complete documents.",
 )
-@click.option("--timeout", type=click.IntRange(min=1), default=900, show_default=True)
+@click.option(
+    "--timeout",
+    type=click.IntRange(min=1),
+    default=900,
+    show_default=True,
+    help="Fixed limit, or minimum seconds when --seconds-per-page is supplied.",
+)
+@click.option(
+    "--seconds-per-page",
+    type=click.IntRange(min=0),
+    default=SECONDS_PER_PAGE,
+    show_default=True,
+    help="Scale each document's limit with page count, with --timeout as its minimum.",
+)
 @click.option(
     "--plan-only",
     is_flag=True,
@@ -525,7 +591,16 @@ def execute(plan: dict, output: Path) -> None:
 @click.option(
     "--worker", "worker_path", type=click.Path(exists=True, path_type=Path), hidden=True
 )
-def main(papers, output, device, page_range, timeout, plan_only, worker_path):
+def main(
+    papers,
+    output,
+    device,
+    page_range,
+    timeout,
+    seconds_per_page,
+    plan_only,
+    worker_path,
+):
     """Compare standard Docling, GraniteDocling, and Granite with native text."""
 
     if worker_path:
@@ -534,7 +609,9 @@ def main(papers, output, device, page_range, timeout, plan_only, worker_path):
     if papers is None or output is None:
         raise click.UsageError("--papers and --output are required")
     try:
-        plan = make_plan(papers.resolve(), device, page_range, timeout)
+        plan = make_plan(
+            papers.resolve(), device, page_range, timeout, seconds_per_page
+        )
         output = output.resolve()
         output.mkdir(parents=True, exist_ok=True)
         path = output / "plan.json"
