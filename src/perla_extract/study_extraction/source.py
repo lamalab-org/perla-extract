@@ -532,11 +532,31 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
 
     converter, ContentLayer, DocItemLabel = _docling_runtime()
     document = converter.convert(str(path)).document
+    return _docling_evidence_blocks(
+        document, path, source, content_layer_type=ContentLayer, item_label=DocItemLabel
+    )
+
+
+def _docling_evidence_blocks(
+    document: Any,
+    path: Path,
+    source: str,
+    *,
+    content_layer_type: Any,
+    item_label: Any,
+) -> list[EvidenceBlock]:
+    """Adapt a converted Docling document using the production evidence contract.
+
+    Keeping conversion separate lets local parser experiments compare Docling
+    pipelines without duplicating table, coordinate or context-link handling.
+    Native typography is attached identically for every pipeline.
+    """
+
     layout_items: list[dict[str, Any]] = []
     context_refs: dict[str, list[str]] = {}
     item_refs: list[str] = []
     items = document.iterate_items(
-        included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
+        included_content_layers={content_layer_type.BODY, content_layer_type.FURNITURE}
     )
     for item, hierarchy_level in items:
         label = _semantic_value(getattr(item, "label", ""))
@@ -551,11 +571,11 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             "include_in_evidence": not (
                 getattr(item, "label", None)
                 in {
-                    DocItemLabel.REFERENCE,
-                    DocItemLabel.PAGE_HEADER,
-                    DocItemLabel.PAGE_FOOTER,
+                    item_label.REFERENCE,
+                    item_label.PAGE_HEADER,
+                    item_label.PAGE_FOOTER,
                 }
-                or getattr(item, "content_layer", None) == ContentLayer.FURNITURE
+                or getattr(item, "content_layer", None) == content_layer_type.FURNITURE
             ),
         }
         kind = "text"

@@ -58,6 +58,7 @@ for reference agreement, uncertainty, run coverage and recorded costs;
 | --- | --- |
 | Try scoring without a model, PDFs or credentials | [Offline example](docs/workflows/scoring-example.md) |
 | Understand stages and context limits | [Extraction workflow](docs/workflows/extraction.md) |
+| Compare Docling and GraniteDocling locally | [Parser experiment](examples/parsing/README.md) |
 | Design a defensible scientific evaluation | [Validation method](docs/methods/validation-and-scale.md) |
 | Change or debug the code | [Maintainer guide](docs/development/maintaining.md) |
 | Review records, export data or discover papers | [Documentation](docs/index.md) |
