@@ -27,7 +27,6 @@ reasoning_effort = "medium"
 max_output_tokens = 40000
 
 [extraction]
-parser = "pymupdf"
 use_claim_ledger = false
 use_targeted_repair = false
 use_enrichment = false

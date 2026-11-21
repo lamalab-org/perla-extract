@@ -96,6 +96,7 @@ def test_python_and_cli_resolve_the_same_scientific_defaults(monkeypatch, tmp_pa
     cli.extract_study(pdf)
     result = CliRunner().invoke(cli.main, ["--pdf", str(pdf)])
     assert result.exit_code == 0, result.output
+    assert captured[0].parser == "docling"
     assert captured[0].scientific_settings() == captured[1].scientific_settings()
     assert (
         captured[0].scientific_settings()

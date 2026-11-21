@@ -93,13 +93,29 @@ chemical notation or a number's sign.
 
 For usable notes, assembly receives their supporting passages, one neighboring span
 on each side within the same block, and the main paper's opening page for metadata.
-This neighborhood is a cost-control heuristic. A distant table header, footnote, or
-cross-reference may still be needed to interpret a value. Facts omitted from both
+For a cited table, assembly keeps all its rows and Docling's explicitly linked
+caption/footnote blocks. Prose neighborhoods remain a cost-control heuristic;
+distant unlinked context may still be needed to interpret a value. Facts omitted from both
 the notes and selected text cannot reliably be recovered during draft review.
 
 With `--no-claims`, or when no usable notes remain, assembly and draft review receive
 **the complete parsed source, including SI**. Their citation schemas include the
 same complete source. This is the direct-extraction baseline.
+
+Docling rectangles use PDF points from the top-left corner; unavailable geometry
+stays absent. Table text comes from source cells, retaining separate header rows,
+decimal spelling and actual blank cells. An explicit spanning cell is repeated
+only over the positions it covers. `table_layout` records zero-based, half-open
+cell ranges and header roles; `context_block_ids` point to separately citable
+captions and footnotes. Structural indexes are not scientific values. Cache
+identity includes adapter code, Docling, docling-core and PyMuPDF versions.
+
+Measurement conditions can be stated separately from their outcomes. Extraction
+reads methods, headers and notes before attaching conditions to each explicitly
+covered measurement, citing both the condition and result passages. A shared J-V
+protocol does not supply conditions for EQE or aging tests; exceptions and
+conflicts remain explicit. The parser does not infer missing device-group labels
+from table row order.
 
 ## Context limits and model choice
 

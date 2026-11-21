@@ -408,11 +408,20 @@ def summarize(
         design, {key: _settings(value) for key, value in configurations.items()}
     )
     differences = []
+    parser_contrast = "parser" in factors
     for paper, repeat in pairs:
         keys = [(paper, repeat, arm) for arm in ARMS]
         if all(key in configurations for key in keys):
             control, treatment = (configurations[key] for key in keys)
             for name in ("source_sha256", "evidence_spans_sha256"):
+                if name == "evidence_spans_sha256" and parser_contrast:
+                    # Parsed evidence is the intervention. The PDF/SI hashes,
+                    # instructions, implementation and scoring remain checked.
+                    if not all(c.get(name) for c in (control, treatment)):
+                        study_issues.append(
+                            f"{paper}/{repeat}: parser comparisons require an evidence fingerprint in each arm"
+                        )
+                    continue
                 if (
                     name not in control
                     or name not in treatment
@@ -421,6 +430,12 @@ def summarize(
                     study_issues.append(
                         f"{paper}/{repeat}: paired runs must bind the same {name}"
                     )
+            if parser_contrast and not all(
+                c.get("parser_dependencies") for c in (control, treatment)
+            ):
+                study_issues.append(
+                    f"{paper}/{repeat}: parser comparisons require parser dependency fingerprints in each arm"
+                )
             left, right = _settings(control), _settings(treatment)
             changed = {
                 key: {"control": left.get(key), "treatment": right.get(key)}
@@ -431,6 +446,17 @@ def summarize(
             }
             differences.append(dict(paper_id=paper, repeat=repeat, fields=changed))
             unexpected = set(changed) - set(factors)
+            if parser_contrast:
+                # Different backends introduce different dependencies. Shared
+                # dependency versions still need their own declared contrast.
+                unexpected = {
+                    key
+                    for key in unexpected
+                    if not (
+                        key.startswith("parser_dependencies.")
+                        and (key not in left or key not in right)
+                    )
+                }
             if unexpected:
                 study_issues.append(
                     f"{paper}/{repeat}: undeclared configuration differences: {', '.join(sorted(unexpected))}"

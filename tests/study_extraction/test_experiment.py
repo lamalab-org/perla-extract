@@ -3,6 +3,7 @@
 import csv
 import json
 import shutil
+from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
@@ -95,6 +96,38 @@ def test_check_explains_change_without_running_or_creating_output(setup):
     assert result.exit_code == 0, result.output
     assert "4 runs" in result.output
     assert "claim_recall_passes: 1 → 2" in result.output
+    assert calls == []
+    assert not (path.parent / "results").exists()
+
+
+@pytest.mark.parametrize(
+    "filename,paper_count", [("experiment.toml", 30), ("examples/experiment.toml", 1)]
+)
+def test_shipped_experiments_parse_and_use_docling_by_default(filename, paper_count):
+    path = Path(__file__).resolve().parents[2] / filename
+    settings = experiment.ExperimentSettings.model_validate(
+        experiment.tomllib.loads(path.read_text())
+    )
+    assert len(settings.papers) == paper_count
+    for arm in ("control", "treatment"):
+        config = experiment.resolve_config(
+            pdf=Path("paper.pdf"),
+            **experiment._arm_settings(settings, arm, path.parent),
+        )
+        assert config.parser == "docling"
+
+
+def test_check_accepts_an_explicit_parser_ablation(setup):
+    path, calls, _ = setup
+    path.write_text(
+        path.read_text().replace(
+            "[treatment]\nclaim_recall_passes = 2",
+            '[treatment]\nclaim_recall_passes = 1\nparser = "docling"',
+        )
+    )
+    result = CliRunner().invoke(experiment.main, [str(path), "--check"])
+    assert result.exit_code == 0, result.output
+    assert 'parser: "pymupdf" → "docling"' in result.output
     assert calls == []
     assert not (path.parent / "results").exists()
 

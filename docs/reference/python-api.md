@@ -15,9 +15,10 @@ report = extract_study(
     pdf="paper.pdf",
     supplement="paper_si.pdf",
     output_dir="results/paper",
-    parser="pymupdf",
 )
 ```
+
+Docling is the default parser, matching the CLI and experiment commands.
 
 Refinement runs by default; `use_refinement=False` disables it.
 `use_targeted_repair=False` disables the audit-driven recovery call.

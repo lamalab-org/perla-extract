@@ -18,11 +18,13 @@ python -m pip install -e .
 ```bash
 export OPENAI_API_KEY="your-openai-key"
 perla-extract --pdf paper.pdf --supplement paper_si.pdf \
-  --model openai/gpt-6.1-sol --parser pymupdf \
+  --model openai/gpt-6.1-sol \
   --no-claims --no-refinement --no-targeted-repair --no-enrichment \
   --max-model-calls 1 --max-output-tokens 40000 \
   --output-dir results/paper
 ```
+
+Docling is the default parser; its first use may download local parsing models.
 
 Open `results/paper/extraction.json` for the records and `report.json` for progress,
 usage and issues. Omit `--supplement` when there is no SI. Use a new output directory
@@ -56,6 +58,7 @@ for reference agreement, uncertainty, run coverage and recorded costs;
 | --- | --- |
 | Try scoring without a model, PDFs or credentials | [Offline example](docs/workflows/scoring-example.md) |
 | Understand stages and context limits | [Extraction workflow](docs/workflows/extraction.md) |
+| Compare Docling and GraniteDocling locally | [Parser experiment](examples/parsing/README.md) |
 | Design a defensible scientific evaluation | [Validation method](docs/methods/validation-and-scale.md) |
 | Change or debug the code | [Maintainer guide](docs/development/maintaining.md) |
 | Review records, export data or discover papers | [Documentation](docs/index.md) |

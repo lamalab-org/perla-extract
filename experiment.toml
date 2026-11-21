@@ -9,7 +9,6 @@ reasoning_effort = "medium"
 max_output_tokens = 40000
 
 [extraction]
-parser = "pymupdf"
 use_claim_ledger = false
 use_targeted_repair = false
 use_enrichment = false
@@ -20,23 +19,6 @@ use_refinement = false
 
 [treatment]
 use_refinement = true
-
-[[papers]] block links one main article, its SI, and their ground truth.
-output = "results/reading-passes-dev"
-repeats = 1
-
-[stages.default]
-model = "openai/gpt-5.2"
-
-[extraction]
-parser = "pymupdf"
-max_model_calls = 14
-
-[control]
-claim_recall_passes = 1
-
-[treatment]
-claim_recall_passes = 2
 
 [[papers]]
 pdf = "papers/10.1002--adfm.201500335.pdf"
