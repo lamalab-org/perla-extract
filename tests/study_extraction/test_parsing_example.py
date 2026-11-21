@@ -5,9 +5,30 @@ import subprocess
 
 import pytest
 
-from examples.parsing.compare import audit, execute, literal_present, reference_probes
+from examples.parsing.compare import (
+    audit,
+    conversion_complete,
+    execute,
+    literal_present,
+    reference_probes,
+)
 from perla_extract.study_extraction.models import EvidenceBlock
 from perla_extract.study_extraction.source import _parser_implementation_sha256, _sha256
+
+
+def test_generated_text_at_the_output_limit_is_not_complete():
+    page = {
+        "raw_output": "<doctag>incomplete",
+        "tokens": 8192,
+        "stop_reason": "unspecified",
+    }
+    assert not conversion_complete("success", [page], 1, requires_vlm=True)
+    page.update(tokens=100, raw_output="<doctag>text</doctag>")
+    assert conversion_complete("success", [page], 1, requires_vlm=True)
+    assert not conversion_complete("success", [page], 2, requires_vlm=True)
+    page.update(raw_output=None, tokens=None, stop_reason=None)
+    assert not conversion_complete("success", [page], 1, requires_vlm=True)
+    assert conversion_complete("success", [page], 1, requires_vlm=False)
 
 
 @pytest.mark.parametrize("wrong", ["18.4", "8.40", "-8.4", "−8.4", "8.41"])

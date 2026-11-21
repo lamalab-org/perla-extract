@@ -45,6 +45,7 @@ from perla_extract.study_extraction.spans import evidence_payload
 MODEL = "ibm-granite/granite-docling-258M"
 REVISION = "982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe"
 CONDITIONS = ("standard", "granite", "granite_native")
+MAX_OUTPUT_TOKENS = 8192
 LOCATION = re.compile(r"^(main|supplement)_p(\d+)_")
 
 
@@ -204,7 +205,7 @@ def converter_for(condition: str, device: str):
         )
         vlm.model_spec.revision = REVISION
         vlm.model_spec.temperature = 0.0
-        vlm.model_spec.max_new_tokens = 8192
+        vlm.model_spec.max_new_tokens = MAX_OUTPUT_TOKENS
         vlm.force_backend_text = condition == "granite_native"
         options = VlmPipelineOptions(
             accelerator_options=accelerator,
@@ -213,6 +214,27 @@ def converter_for(condition: str, device: str):
         )
         pdf_option = PdfFormatOption(pipeline_cls=VlmPipeline, pipeline_options=options)
     return DocumentConverter(format_options={InputFormat.PDF: pdf_option}), options
+
+
+def conversion_complete(
+    status: str, pages: list[dict], expected: int, *, requires_vlm: bool
+) -> bool:
+    """Reject missing pages and incomplete generation, including unknown stop reasons.
+
+    Some runtimes return an unspecified stop reason. Reaching the token allowance
+    still makes that page incomplete; successful parsing alone cannot clear it.
+    """
+
+    return (
+        status == "success"
+        and len(pages) == expected
+        and not any(
+            p["stop_reason"] in {"length", "inference_error", "content_filtered"}
+            or (p["tokens"] is not None and p["tokens"] >= MAX_OUTPUT_TOKENS)
+            or (requires_vlm and not p["raw_output"])
+            for p in pages
+        )
+    )
 
 
 def worker(job_path: Path) -> None:
@@ -268,20 +290,18 @@ def worker(job_path: Path) -> None:
     write_json_atomic(directory / "vlm-pages.json", pages)
     metrics, probes = audit(blocks, job)
     write_json_atomic(directory / "literal-probes.json", probes)
-    partial = (
-        result.status.value != "success"
-        or len(result.pages) != job["page_range"][1] - job["page_range"][0] + 1
-        or any(
-            p["stop_reason"] in {"length", "inference_error", "content_filtered"}
-            for p in pages
-        )
+    complete = conversion_complete(
+        result.status.value,
+        pages,
+        job["page_range"][1] - job["page_range"][0] + 1,
+        requires_vlm=job["condition"] != "standard",
     )
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss if resource else None
     write_json_atomic(
         directory / "metrics.json",
         metrics
         | {
-            "status": "partial" if partial else "complete",
+            "status": "complete" if complete else "partial",
             "conversion_status": result.status.value,
             "errors": [e.model_dump(mode="json") for e in result.errors],
             "excluded_blocks": excluded,
