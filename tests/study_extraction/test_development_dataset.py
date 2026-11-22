@@ -18,14 +18,14 @@ def _sha(path):
 
 def _save(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2) + "\n")
+    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
 @pytest.fixture
 def fixture_dataset(tmp_path):
-    public = json.loads(DATASET.read_text())
+    public = json.loads(DATASET.read_text(encoding="utf-8"))
     original_release = (DATASET.parent / public["reference_release"]).resolve()
-    release = json.loads(original_release.read_text())
+    release = json.loads(original_release.read_text(encoding="utf-8"))
     row = next(
         r for r in public["papers"] if r["paper_id"] == "10.1002--adfm.201904856"
     )
@@ -42,7 +42,7 @@ def fixture_dataset(tmp_path):
         path = sources / row[role]["file"]
         path.write_bytes(("distinct test source: " + role).encode())
         row[role]["sha256"] = _sha(path)
-    manifest = json.loads((reference / "manifest.json").read_text())
+    manifest = json.loads((reference / "manifest.json").read_text(encoding="utf-8"))
     manifest["source_manifest"]["source_sha256"] = [
         row[r]["sha256"] for r in ("pdf", "supplement")
     ]
@@ -85,7 +85,7 @@ def test_source_roles_cannot_be_swapped(fixture_dataset):
 def test_reference_changes_cannot_silently_enter_the_dataset(fixture_dataset):
     dataset, sources, reference = fixture_dataset
     path = reference / "ground_truth.json"
-    truth = json.loads(path.read_text())
+    truth = json.loads(path.read_text(encoding="utf-8"))
     truth["performance_observations"][0]["metrics"][0]["raw_value"] = "999"
     _save(path, truth)
     with pytest.raises(ValueError, match="SHA256 mismatch"):
@@ -110,18 +110,18 @@ def test_export_exposes_article_si_and_reference_paths(fixture_dataset, tmp_path
         ["--dataset", str(dataset), "--sources", str(sources), "--output", str(output)],
     )
     assert result.exit_code == 0, result.output
-    papers = json.loads((output / "papers.json").read_text())
+    papers = json.loads((output / "papers.json").read_text(encoding="utf-8"))
     assert papers[0]["reference"] == str(reference)
     assert papers[0]["pdf"].endswith("adfm.201904856.pdf")
     assert papers[0]["supplement"].endswith("adfm.201904856-SI.pdf")
-    cohort = json.loads((output / "cohort.json").read_text())
+    cohort = json.loads((output / "cohort.json").read_text(encoding="utf-8"))
     assert cohort["papers"] == [{"paper_id": papers[0]["paper_id"]}]
     assert cohort["max_model_calls_per_paper"] == 1
 
 
 def test_missing_si_prevents_any_export(fixture_dataset, tmp_path):
     dataset, sources, _ = fixture_dataset
-    row = json.loads(dataset.read_text())["papers"][0]
+    row = json.loads(dataset.read_text(encoding="utf-8"))["papers"][0]
     (sources / row["supplement"]["file"]).unlink()
     output = tmp_path / "export"
     result = CliRunner().invoke(
@@ -135,7 +135,7 @@ def test_missing_si_prevents_any_export(fixture_dataset, tmp_path):
 
 def test_repeat_subset_export_names_the_derived_cohort(fixture_dataset, tmp_path):
     dataset, sources, _ = fixture_dataset
-    value = json.loads(dataset.read_text())
+    value = json.loads(dataset.read_text(encoding="utf-8"))
     value["papers"][0]["repeat_check"] = True
     _save(dataset, value)
     output = tmp_path / "repeat-export"
@@ -152,14 +152,14 @@ def test_repeat_subset_export_names_the_derived_cohort(fixture_dataset, tmp_path
         ],
     )
     assert result.exit_code == 0, result.output
-    cohort = json.loads((output / "cohort.json").read_text())
+    cohort = json.loads((output / "cohort.json").read_text(encoding="utf-8"))
     assert cohort["name"].endswith("-repeatability")
     assert len(cohort["papers"]) == 1
 
 
 def test_repeated_reference_is_rejected(fixture_dataset):
     dataset, sources, _ = fixture_dataset
-    value = json.loads(dataset.read_text())
+    value = json.loads(dataset.read_text(encoding="utf-8"))
     value["papers"] *= 2
     _save(dataset, value)
     with pytest.raises(ValueError, match="roster"):
