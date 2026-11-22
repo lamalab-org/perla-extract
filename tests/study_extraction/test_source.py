@@ -63,6 +63,40 @@ def test_pymupdf_parser_preserves_blocks_and_uses_cache(tmp_path):
     assert first["evidence_schema_sha256"] == second["evidence_schema_sha256"]
 
 
+def test_document_pair_removes_article_prefix_and_keeps_distinct_si_rows(
+    monkeypatch, tmp_path
+):
+    from perla_extract.study_extraction import source
+    from perla_extract.study_extraction.models import EvidenceBlock
+
+    def block(identifier, origin, text):
+        return EvidenceBlock(
+            block_id=identifier, source=origin, page=1, kind="table", text=text
+        )
+
+    article = "Device | Jsc | Voc | FF | PCE\nForward | 19.50 | 1.09 | 0.76 | 16.22"
+    distinct = "Device | Jsc | Voc | FF | PCE\nReverse | 19.65 | 1.12 | 0.76 | 16.72"
+
+    def parse(path, origin, **kwargs):
+        blocks = (
+            [block("main-table", origin, article)]
+            if origin == "main"
+            else [
+                block("si-copy", origin, article),
+                block("si-distinct", origin, distinct),
+            ]
+        )
+        return blocks, {"source": origin}
+
+    monkeypatch.setattr(source, "parse_pdf", parse)
+    blocks, events = source.parse_documents(tmp_path / "main.pdf", tmp_path / "si.pdf")
+    assert [b.block_id for b in blocks] == ["main-table", "si-distinct"]
+    assert blocks[0].metadata["duplicate_locations"] == [
+        {"source": "supplement", "page": 1, "block_id": "si-copy"}
+    ]
+    assert events[-1] == {"operation": "cross_document_deduplication", "skipped": 1}
+
+
 @pytest.mark.parametrize("invalid_cache", ["{", "[]"])
 def test_invalid_document_cache_is_rebuilt(tmp_path, invalid_cache):
     """Recover from an interrupted parser-cache write using the source PDF."""

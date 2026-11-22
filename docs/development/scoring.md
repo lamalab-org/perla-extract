@@ -153,7 +153,7 @@ Use a new output path. Read `calibration_coverage` for applicable, passed and
 inapplicable cases; the tool exits unsuccessfully if any applicable control fails.
 Synthetic conditions are explicitly marked and never written back into references.
 
-Evaluation format **17**, matcher **v24**, fact profile **v21**, explanation format
+Evaluation format **17**, matcher **v25**, fact profile **v22**, explanation format
 **6**, and study schema **8** are current. Ground-truth format **4** is unchanged.
 Archived schema-6/7 inputs load through the additive schema with unknown defaults;
 no treatment/protocol is inferred and no archived file is overwritten. Existing

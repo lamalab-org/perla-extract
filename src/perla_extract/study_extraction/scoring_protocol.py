@@ -120,7 +120,7 @@ def _condition_value(name: str, value: ReportedValue) -> ReportedValue:
     if (
         name == "illuminationspectrum"
         and re.fullmatch(
-            r"am\s*1[.]5\s*g(?:\s+(?:irradiation|illumination|spectrum))?",
+            r"(?:simulated\s+)?am\s*1[.]5\s*g(?:\s+(?:irradiation|illumination|spectrum))?",
             value.raw_value.strip(),
             re.I,
         )
@@ -142,6 +142,59 @@ def _condition_name(value: ReportedValue) -> str:
     return name
 
 
+def _conditions(
+    value: ReportedValue, path: str, supported: bool
+) -> tuple[MeasurementCondition, ...]:
+    """Split a complete, explicit irradiance/spectrum field without losing prose.
+
+    A printed quantity followed by AM1.5G is equivalent to two structured
+    conditions only when the quantity has irradiance dimensions. The shared
+    claim parser checks the number and unit metadata. Unconsumed qualifiers,
+    multiple quantities and unsupported units keep the original assertion.
+    Both derived components retain the original evidence and source path.
+    """
+    name = _condition_name(value)
+    match = (
+        re.fullmatch(
+            r"(?P<quantity>.+?)\s+(?:simulated\s+)?am\s*1[.]5\s*g"
+            r"(?:\s+(?:irradiation|illumination|spectrum))?",
+            value.raw_value.strip(),
+            re.I,
+        )
+        if name in {"measurementcondition", "illumination", "illuminationstandard"}
+        else None
+    )
+    if match:
+        quantity = value.model_copy(update={"raw_value": match["quantity"]})
+        claim = normalize_claim(quantity)
+        target = canonical_quantity(1, "W/m2")
+        if (
+            isinstance(claim, ScalarClaim)
+            and claim.canonical is not None
+            and target is not None
+            and claim.canonical.unit == target[1]
+        ):
+            return (
+                MeasurementCondition("illuminationintensity", quantity, (path,), True),
+                MeasurementCondition(
+                    "illuminationspectrum",
+                    value.model_copy(
+                        update={
+                            "name": "illumination spectrum",
+                            "raw_value": "AM1.5G",
+                            "value_number": None,
+                            "unit": None,
+                        }
+                    ),
+                    (path,),
+                    True,
+                ),
+            )
+    return (
+        MeasurementCondition(name, _condition_value(name, value), (path,), supported),
+    )
+
+
 def canonical_conditions(
     record: PerformanceObservation | PopulationStatistic, path: str = ""
 ) -> tuple[MeasurementCondition, ...]:
@@ -153,23 +206,19 @@ def canonical_conditions(
     containers are never inspected. This function does not mutate either input.
     """
     legacy = [
-        MeasurementCondition(
-            _condition_name(value),
-            _condition_value(_condition_name(value), value),
-            (f"{path}/metrics/{i}",),
-            True,
-        )
+        item
         for i, value in enumerate(record.metrics)
         if protocol_name(value.name) is not None
+        for item in _conditions(value, f"{path}/metrics/{i}", True)
     ]
     explicit = [
-        MeasurementCondition(
-            _condition_name(value),
-            _condition_value(_condition_name(value), value),
-            (f"{path}/measurement_conditions/{i}",),
+        item
+        for i, value in enumerate(record.measurement_conditions)
+        for item in _conditions(
+            value,
+            f"{path}/measurement_conditions/{i}",
             protocol_name(value.name) is not None,
         )
-        for i, value in enumerate(record.measurement_conditions)
     ]
     result = list(legacy)
     for item in explicit:

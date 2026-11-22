@@ -94,6 +94,12 @@ equivalent formatting, and present probes do not prove correct device attributio
 The native-visible subset diagnoses loss of existing PDF text; it cannot measure
 recognition of raster-only text. **These counts are not precision or recall.**
 
+For full-study comparisons, pass article and SI evidence through production's
+`source.parse_documents`, including its cross-document deduplication. Saved per-file
+conversions are not the complete production input stream. When replaying them,
+replace only the per-file parser read and retain the production combination step;
+record its skipped-block count and check caption/footnote links before inference.
+
 Inspect partial conversions, output-token limits, lost units/values, table headers
 and their associated rows before paying for extraction. Do not pick a winner from
 character counts, table counts or literal visibility alone.

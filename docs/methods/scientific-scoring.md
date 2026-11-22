@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 17, matcher `rich-study-hungarian-v24`, fact
-profile `core-scientific-facts-v21`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 17, matcher `rich-study-hungarian-v25`, fact
+profile `core-scientific-facts-v22`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -367,3 +367,14 @@ tolerance. Unitless absolute PCE/FF use the fixed percentage-point convention
 described above; other missing units remain unresolved. Ambiguity and missing owners remain in
 the denominators and explanations. A wrong FF value does not remove correct PCE
 credit. This contract uses the current reviewed schema and reference files.
+
+### Explicit combined illumination conditions
+
+Reference and predicted protocol fields use the same normalization boundary. A
+complete irradiance quantity followed by optional “simulated”, AM1.5G, and optional
+“irradiation”, “illumination” or “spectrum” is represented as irradiance and spectrum
+components. The existing quantity parser checks dimensional compatibility and any
+number/unit metadata. Each component retains the original evidence and source path.
+Unknown qualifiers, conflicting quantities and unsupported dimensions remain literal;
+this rule does not recover unstated conditions from nearby prose. Numeric matching
+tolerances and the percentage-point convention are unchanged.

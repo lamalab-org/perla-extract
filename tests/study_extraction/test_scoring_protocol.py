@@ -4,6 +4,7 @@ import pytest
 from test_scoring_contracts import study as cohort_study
 
 from perla_extract.study_extraction.evaluation import evaluate_study
+from perla_extract.study_extraction.scoring_protocol import canonical_conditions
 from tests.study_extraction.test_evaluation import quantity, study
 
 
@@ -13,6 +14,88 @@ def illuminated_measurement():
         quantity("illumination intensity", 100, "mW/cm2")
     )
     return result
+
+
+def combined_illumination(text):
+    return quantity("measurement condition", 100, None).model_copy(
+        update={"raw_value": text, "value_number": None}
+    )
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "100 mW cm -2 simulated AM1.5G irradiation",
+        "100 mW/cm² AM 1.5 G illumination",
+        "1000 W/m2 AM1.5G",
+    ],
+)
+@pytest.mark.parametrize("reverse", [False, True])
+@pytest.mark.parametrize("spectrum", ["AM1.5G", "simulated AM1.5G irradiation"])
+def test_explicit_combined_illumination_matches_structured_conditions(
+    raw, reverse, spectrum
+):
+    truth = study()
+    prediction = truth.model_copy(deep=True)
+    truth.performance_observations[0].metrics.append(combined_illumination(raw))
+    prediction.performance_observations[0].measurement_conditions = [
+        quantity("irradiance", 100, "mW/cm2"),
+        combined_illumination(spectrum).model_copy(
+            update={"name": "illumination spectrum"}
+        ),
+    ]
+    before = truth.model_dump()
+    left, right = (prediction, truth) if reverse else (truth, prediction)
+    score = evaluate_study(left, right).core_facts
+    assert score.fields["measurement:pce"].matched == 1
+    assert truth.model_dump() == before
+    conditions = canonical_conditions(truth.performance_observations[0], "/obs/0")
+    assert {c.name for c in conditions} == {
+        "illuminationintensity",
+        "illuminationspectrum",
+    }
+    assert all(c.source_paths == ("/obs/0/metrics/1",) for c in conditions)
+    assert all(
+        c.value.evidence == truth.performance_observations[0].metrics[1].evidence
+        for c in conditions
+    )
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "100 mW/cm2 AM1.5G at 85 C",
+        "100 mW/cm2 or 50 mW/cm2 AM1.5G",
+        "100 mA/cm2 AM1.5G",
+        "100 mW/cm2 AM1.5D",
+    ],
+)
+def test_unparsed_combined_protocol_keeps_the_complete_literal(raw):
+    record = study().performance_observations[0]
+    record.metrics.append(combined_illumination(raw))
+    conditions = canonical_conditions(record)
+    assert len(conditions) == 1
+    assert conditions[0].name == "measurementcondition"
+    assert conditions[0].value.raw_value == raw
+
+
+@pytest.mark.parametrize("irradiance,spectrum", [(50, "AM1.5G"), (100, "AM1.5D")])
+def test_combined_protocol_does_not_hide_conflicting_conditions(irradiance, spectrum):
+    truth = study()
+    truth.performance_observations[0].metrics.append(
+        combined_illumination("100 mW/cm2 AM1.5G")
+    )
+    prediction = truth.model_copy(deep=True)
+    prediction.performance_observations[0].metrics.pop()
+    prediction.performance_observations[0].measurement_conditions = [
+        quantity("irradiance", irradiance, "mW/cm2"),
+        combined_illumination(spectrum).model_copy(
+            update={"name": "illumination spectrum"}
+        ),
+    ]
+    score = evaluate_study(truth, prediction).core_facts
+    assert score.fields["measurement:pce"].matched == 0
+    assert score.recovery.fields["measurement:pce"].matched == 1
 
 
 @pytest.mark.parametrize("illumination", [50, None])
