@@ -1,0 +1,450 @@
+{
+  "name": "perla-development-30",
+  "scope": "Human-adjudicated, model-assisted development references; not held-out test data.",
+  "reference_release": "../../data/study_extraction/ground_truth/v2/release.json",
+  "reference_release_sha256": "f42515a15a6d4a4f0bbe9eea9728abf6cb52d2c881ead54e138929bd8242d538",
+  "repeat_selection": "Sort by combined PDF/SI page count, break ties by paper_id, divide into three groups of 10. Select 3 short, 3 medium and 4 long papers by ascending SHA256(20261122:paper_id).",
+  "papers": [
+    {
+      "paper_id": "10.1002--adfm.201500335",
+      "doi": "10.1002/adfm.201500335",
+      "source_pages": 8,
+      "pdf": {
+        "file": "10.1002--adfm.201500335.pdf",
+        "sha256": "4bcde6215559a4e20fef5fd25b7b42054489935a0f9d552f23b6f71260630162"
+      },
+      "supplement": null,
+      "repeat_check": true,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1002--adfm.201904856",
+      "doi": "10.1002/adfm.201904856",
+      "source_pages": 37,
+      "pdf": {
+        "file": "10.1002--adfm.201904856.pdf",
+        "sha256": "816d927fffc005f149526bdb5a7108e91e4d5c9e0200d05c4452dad5609ae995"
+      },
+      "supplement": {
+        "file": "10.1002--adfm.201904856-SI.pdf",
+        "sha256": "a9ef4ab78aad380bbe2d915d91141de6458be79475fdd8fb067b9010e76191e9"
+      },
+      "repeat_check": false,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1002--adfm.202212698",
+      "doi": "10.1002/adfm.202212698",
+      "source_pages": 34,
+      "pdf": {
+        "file": "10.1002--adfm.202212698.pdf",
+        "sha256": "955841c2434386e9a723a581c63f5a5f330fd4dd312a46573b370df07f02639a"
+      },
+      "supplement": {
+        "file": "10.1002--adfm.202212698-SI.pdf",
+        "sha256": "5dd3648ddb9aa20e409618bc03e267537af7d463c28760c29275ed6dd6392446"
+      },
+      "repeat_check": false,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1002--adma.202302143",
+      "doi": "10.1002/adma.202302143",
+      "source_pages": 38,
+      "pdf": {
+        "file": "10.1002--adma.202302143.pdf",
+        "sha256": "386dc4a6bdd97b9f7e7d3ccb48c8dbb174a2638c184ccd7e0a168ff978147eb2"
+      },
+      "supplement": {
+        "file": "10.1002--adma.202302143-SI.pdf",
+        "sha256": "adcddec397f74533b68433ca95319cbc57287431dcdcfe8d96be9019386bbf7b"
+      },
+      "repeat_check": false,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1002--adma.202305822",
+      "doi": "10.1002/adma.202305822",
+      "source_pages": 61,
+      "pdf": {
+        "file": "10.1002--adma.202305822.pdf",
+        "sha256": "8bbda35851239869e1fd8866ceaa63a6d74f4f4b72fcd7d2f2749e5d840d93cf"
+      },
+      "supplement": {
+        "file": "10.1002--adma.202305822-SI.pdf",
+        "sha256": "fa109d83493a20243fcc011421c03b6c2c473448d63f27d5da4950aee8cc64f7"
+      },
+      "repeat_check": false,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1002--aenm.201500477",
+      "doi": "10.1002/aenm.201500477",
+      "source_pages": 15,
+      "pdf": {
+        "file": "10.1002--aenm.201500477.pdf",
+        "sha256": "0d316a2baefba225c0953c417c293b92b9efe50b91993b76f8f93e07da8682d4"
+      },
+      "supplement": {
+        "file": "10.1002--aenm.201500477-SI.pdf",
+        "sha256": "f380797016a51587fb50a7fb33bc5d8165114777833e1028cada1f8f60e9b9d2"
+      },
+      "repeat_check": true,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1002--solr.201900370",
+      "doi": "10.1002/solr.201900370",
+      "source_pages": 50,
+      "pdf": {
+        "file": "10.1002--solr.201900370.pdf",
+        "sha256": "12f7dba655869894ff80f5daf9f49185deda7ac2b6acbc1508919c6682d6d738"
+      },
+      "supplement": {
+        "file": "10.1002--solr.201900370-SI.pdf",
+        "sha256": "0b63374ec4130bca60205be3457be23bea83fe0266c729b4108bb28136721967"
+      },
+      "repeat_check": false,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1002--solr.202100879",
+      "doi": "10.1002/solr.202100879",
+      "source_pages": 25,
+      "pdf": {
+        "file": "10.1002--solr.202100879.pdf",
+        "sha256": "645cc4cff1c9f5cd24c5e5e44786e68a897c3bbcf0b2014e1f14bc91fbdb89e3"
+      },
+      "supplement": {
+        "file": "10.1002--solr.202100879-SI.pdf",
+        "sha256": "4b5acf2d6eb41f2471440c322e8e31d03a3df1501bde0d4487bc951de4c9df01"
+      },
+      "repeat_check": false,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1002--solr.202300817",
+      "doi": "10.1002/solr.202300817",
+      "source_pages": 27,
+      "pdf": {
+        "file": "10.1002--solr.202300817.pdf",
+        "sha256": "23b98c6ea4844461e683726398d3ba649f969e5bd54de499e480dc342b4bd676"
+      },
+      "supplement": {
+        "file": "10.1002--solr.202300817-SI.pdf",
+        "sha256": "e33b0617ef9ed0f32c1f9e7f531202b51b761a6198742f7fff5428ce1fa4e776"
+      },
+      "repeat_check": true,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1016--j.jallcom.2023.170970",
+      "doi": "10.1016/j.jallcom.2023.170970",
+      "source_pages": 38,
+      "pdf": {
+        "file": "10.1016--j.jallcom.2023.170970.pdf",
+        "sha256": "69f2e7faf2c937dee85fb80af415064dff5eebb15a652331cb01082417889455"
+      },
+      "supplement": {
+        "file": "10.1016--j.jallcom.2023.170970-SI.pdf",
+        "sha256": "35686b0a788ccd72927a9247d98b2bee26a34d6cfa3acd2e71c864a60abdead2"
+      },
+      "repeat_check": false,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1016--j.jmst.2021.03.045",
+      "doi": "10.1016/j.jmst.2021.03.045",
+      "source_pages": 30,
+      "pdf": {
+        "file": "10.1016--j.jmst.2021.03.045.pdf",
+        "sha256": "8cddd23205207e79c87ef89d0893fb6f98fc8d938f4924be805203e9dc695900"
+      },
+      "supplement": {
+        "file": "10.1016--j.jmst.2021.03.045-SI.pdf",
+        "sha256": "2369bfdad5b1dbe2ed7eaccadc802f76f2e3e6fd2a249204825d47c6087b7fee"
+      },
+      "repeat_check": false,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1016--j.joule.2019.06.014",
+      "doi": "10.1016/j.joule.2019.06.014",
+      "source_pages": 78,
+      "pdf": {
+        "file": "10.1016--j.joule.2019.06.014.pdf",
+        "sha256": "97f63459c1635de2fcb10f531594a5f108f149eb26c742e185f60fc6f7f1532c"
+      },
+      "supplement": {
+        "file": "10.1016--j.joule.2019.06.014-SI.pdf",
+        "sha256": "4dad3a13686a035ec5a7d5385376ee5357a0c3407f16b3ac702ab4d196d58383"
+      },
+      "repeat_check": false,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1016--j.joule.2022.03.005",
+      "doi": "10.1016/j.joule.2022.03.005",
+      "source_pages": 78,
+      "pdf": {
+        "file": "10.1016--j.joule.2022.03.005.pdf",
+        "sha256": "d0f31cf49e9f8d0ead0ea782e85b511527aa36bc09c15c77052960fe4af4bdcf"
+      },
+      "supplement": {
+        "file": "10.1016--j.joule.2022.03.005-SI.pdf",
+        "sha256": "178d7b237c415b773a69be9ace1e03f850bf383f4c22aa386cd380aeeb5cf734"
+      },
+      "repeat_check": true,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1016--j.matlet.2016.07.004",
+      "doi": "10.1016/j.matlet.2016.07.004",
+      "source_pages": 10,
+      "pdf": {
+        "file": "10.1016--j.matlet.2016.07.004.pdf",
+        "sha256": "a2c688b6e6f166c44903a9fd907dbe9a2a0ca2ff7a47264670dd50c0a3f91184"
+      },
+      "supplement": null,
+      "repeat_check": false,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1016--j.matt.2023.09.006",
+      "doi": "10.1016/j.matt.2023.09.006",
+      "source_pages": 64,
+      "pdf": {
+        "file": "10.1016--j.matt.2023.09.006.pdf",
+        "sha256": "79dee9373f0fbdf166291de0a2c29a0681d7b6dfcb53e4c18eb6c29f4803fde0"
+      },
+      "supplement": {
+        "file": "10.1016--j.matt.2023.09.006-SI.pdf",
+        "sha256": "c86c869ab1e784e4df83a70ec3fcbb0002c75323602aa2efdb0f5cd059585d8b"
+      },
+      "repeat_check": true,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1016--j.nanoen.2016.05.023",
+      "doi": "10.1016/j.nanoen.2016.05.023",
+      "source_pages": 57,
+      "pdf": {
+        "file": "10.1016--j.nanoen.2016.05.023.pdf",
+        "sha256": "138fb558e1bfbce26aa541b12853aa93686de108324d1bc55584611b5f51350e"
+      },
+      "supplement": {
+        "file": "10.1016--j.nanoen.2016.05.023-SI.pdf",
+        "sha256": "2e756c5c51c143de8efeee323dc2f9534dec215ed5778f5904525ecead381d32"
+      },
+      "repeat_check": true,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1016--j.nanoen.2022.107416",
+      "doi": "10.1016/j.nanoen.2022.107416",
+      "source_pages": 25,
+      "pdf": {
+        "file": "10.1016--j.nanoen.2022.107416.pdf",
+        "sha256": "21efd47123933a4d5c4665d1f17fdd4657ded62d9ddbe770e85b700d03d9f234"
+      },
+      "supplement": {
+        "file": "10.1016--j.nanoen.2022.107416-SI.pdf",
+        "sha256": "20498b7034840396a0fd050e330661ea2677546e64ea3001336677b9194b6277"
+      },
+      "repeat_check": false,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1021--acs.chemmater.8b01521",
+      "doi": "10.1021/acs.chemmater.8b01521",
+      "source_pages": 20,
+      "pdf": {
+        "file": "10.1021--acs.chemmater.8b01521.pdf",
+        "sha256": "eb93a219dcd817f03875d6cdd00e2444a3747bd3da8ab403403018443bfe6e80"
+      },
+      "supplement": {
+        "file": "10.1021--acs.chemmater.8b01521-SI.pdf",
+        "sha256": "8c4a55a9a9dbff481ee133308555883e6a60bae553c9b3ee2ee7d319b78e9e78"
+      },
+      "repeat_check": false,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1021--acsaem.9b01928",
+      "doi": "10.1021/acsaem.9b01928",
+      "source_pages": 63,
+      "pdf": {
+        "file": "10.1021--acsaem.9b01928.pdf",
+        "sha256": "ae3fa0045e76387e9176ea9d032312a5fa50df592caff7944c7a09d4dcab5f79"
+      },
+      "supplement": {
+        "file": "10.1021--acsaem.9b01928-SI.pdf",
+        "sha256": "4323ab2b7497433e72d6716eb87d701defa8f904a886cf9d2cc112d5fd5b9f14"
+      },
+      "repeat_check": false,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1038--nature12340",
+      "doi": "10.1038/nature12340",
+      "source_pages": 8,
+      "pdf": {
+        "file": "10.1038--nature12340.pdf",
+        "sha256": "e2485c2cc9bc98468db687d8186b944ee8500555c7555b79f061b2e96dd36419"
+      },
+      "supplement": {
+        "file": "10.1038--nature12340-SI.pdf",
+        "sha256": "6a628a20326812aba486f14c2d8f20a3d3eb845e36e59fa6b697848ef7408317"
+      },
+      "repeat_check": true,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1038--nmat4014",
+      "doi": "10.1038/nmat4014",
+      "source_pages": 20,
+      "pdf": {
+        "file": "10.1038--nmat4014.pdf",
+        "sha256": "d77f1a12b1d895e2802cb38974988bb020af680590a77699435b1c46486a7250"
+      },
+      "supplement": {
+        "file": "10.1038--nmat4014-SI.pdf",
+        "sha256": "2a8752ffa0c393f41afdd8e312f8abc3328a910d210303f9cdb1a72a7bbeb690"
+      },
+      "repeat_check": false,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1038--s41467-020-20272-3",
+      "doi": "10.1038/s41467-020-20272-3",
+      "source_pages": 31,
+      "pdf": {
+        "file": "10.1038--s41467-020-20272-3.pdf",
+        "sha256": "6dd26d6887197a4eec5d675596bc2d8fc7193e5ad8d2c90bf4ec757ea457deeb"
+      },
+      "supplement": {
+        "file": "10.1038--s41467-020-20272-3-SI.pdf",
+        "sha256": "957b6b4657d9238f4370ccacc2c4558df9685dcba6efad1c42999b8d24e91bd2"
+      },
+      "repeat_check": true,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1038--s41467-021-27740-4",
+      "doi": "10.1038/s41467-021-27740-4",
+      "source_pages": 51,
+      "pdf": {
+        "file": "10.1038--s41467-021-27740-4.pdf",
+        "sha256": "2cec18413a1b26f5c3c5563f8ce821c156c5c9c2c88fba9624db677b69069b3c"
+      },
+      "supplement": {
+        "file": "10.1038--s41467-021-27740-4-SI.pdf",
+        "sha256": "8e904a10cbe976bf271775888c2ca86c26781c20a798c9c6d60690219205fe07"
+      },
+      "repeat_check": false,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1038--s41467-023-36141-8",
+      "doi": "10.1038/s41467-023-36141-8",
+      "source_pages": 60,
+      "pdf": {
+        "file": "10.1038--s41467-023-36141-8.pdf",
+        "sha256": "36857fda642c3bf9dc870be6c45d3a7e0ad4abd3ce0d0c77fca7920f25bd1a09"
+      },
+      "supplement": {
+        "file": "10.1038--s41467-023-36141-8-SI.pdf",
+        "sha256": "211ddba5a3d941fc75d9f4a6e2b6ee078fde3c84c27ed5a6d3f421c7da9ae32f"
+      },
+      "repeat_check": true,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1038--s41560-022-01102-w",
+      "doi": "10.1038/s41560-022-01102-w",
+      "source_pages": 39,
+      "pdf": {
+        "file": "10.1038--s41560-022-01102-w.pdf",
+        "sha256": "11a2a2e36efcc52665191fd29d831313ac858fc1d716bfa298c08f7ab5075e74"
+      },
+      "supplement": {
+        "file": "10.1038--s41560-022-01102-w-SI.pdf",
+        "sha256": "020d70f004ae4415a1bbb30de2a213a5ce86d9c4764b92c645b07a3af7c84c97"
+      },
+      "repeat_check": true,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1038--s41563-025-02163-4",
+      "doi": "10.1038/s41563-025-02163-4",
+      "source_pages": 68,
+      "pdf": {
+        "file": "10.1038--s41563-025-02163-4.pdf",
+        "sha256": "0f72110d01402cd5459ef02615221635cc6f08e5d9bc6c956425ac169ad0c2c1"
+      },
+      "supplement": {
+        "file": "10.1038--s41563-025-02163-4-SI.pdf",
+        "sha256": "c1184eb15402c127bbd29bea9e9e6ffdbbaa48fdae151e2377002b419607bf27"
+      },
+      "repeat_check": false,
+      "length_stratum": "long"
+    },
+    {
+      "paper_id": "10.1039--c5dt02388b",
+      "doi": "10.1039/c5dt02388b",
+      "source_pages": 26,
+      "pdf": {
+        "file": "10.1039--c5dt02388b.pdf",
+        "sha256": "975052ef40221fe4ec8ce0053ec1664e56277161cd273793ebd4928d4553611a"
+      },
+      "supplement": {
+        "file": "10.1039--c5dt02388b-SI.pdf",
+        "sha256": "319dd80522ba40cc9910543c28d2734ab57e23d7fec332bfbfa8e2431fcbc228"
+      },
+      "repeat_check": false,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1039--c5ta00568j",
+      "doi": "10.1039/c5ta00568j",
+      "source_pages": 6,
+      "pdf": {
+        "file": "10.1039--c5ta00568j.pdf",
+        "sha256": "0984dcbbfa477769ecabe61ac5fe871180b8e7ce81314ae7ad83f659b8fdd3a7"
+      },
+      "supplement": null,
+      "repeat_check": false,
+      "length_stratum": "short"
+    },
+    {
+      "paper_id": "10.1039--c7nr04692h",
+      "doi": "10.1039/c7nr04692h",
+      "source_pages": 29,
+      "pdf": {
+        "file": "10.1039--c7nr04692h.pdf",
+        "sha256": "4b42bafcda22b184e6392f983d2ddf68c669dda9e9e88b9c849065e5f0699cca"
+      },
+      "supplement": {
+        "file": "10.1039--c7nr04692h-SI.pdf",
+        "sha256": "b907b8a0fe693ca48bd9f54c1614023e77bee090da57fc6a55f20c80b78e3baf"
+      },
+      "repeat_check": false,
+      "length_stratum": "medium"
+    },
+    {
+      "paper_id": "10.1126--science.adf0194",
+      "doi": "10.1126/science.adf0194",
+      "source_pages": 47,
+      "pdf": {
+        "file": "10.1126--science.adf0194.pdf",
+        "sha256": "1e57da41e370849c71a2fc3feec4c460720b8cd8a33412901a2a679993d3c8f6"
+      },
+      "supplement": {
+        "file": "10.1126--science.adf0194-SI.pdf",
+        "sha256": "a147d6a0daeb31197fead6156397ec5feb10d486adf3d2a4a6022e42b27f6b49"
+      },
+      "repeat_check": false,
+      "length_stratum": "medium"
+    }
+  ]
+}

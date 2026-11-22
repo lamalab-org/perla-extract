@@ -20,7 +20,10 @@ jobs:
         env:
           PYTHONPATH: .:src
           PERLA_RUN_REFERENCE_RELEASE_TESTS: "1"
-        run: python -m pytest -q tests/study_extraction/test_reference_release.py
+        run: >-
+          python -m pytest -q
+          tests/study_extraction/test_reference_release.py
+          tests/study_extraction/test_development_dataset.py
       - name: Audit finalized references and declared review coverage
         env:
           PYTHONPATH: .:src

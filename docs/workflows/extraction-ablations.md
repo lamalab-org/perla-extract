@@ -3,6 +3,11 @@
 Edit one file. The command runs both arms, scores them against the references,
 and saves the comparison and plotting tables.
 
+For a fixed, reusable development cohort, use the
+[30-paper dataset and study plan](https://github.com/lamalab-org/perla-extract/tree/main/benchmarks/development).
+Its checker verifies article/SI roles and reference hashes without inference and
+exports inputs for the existing parser and extraction-cohort commands.
+
 ## 1. Set the question and papers
 
 From an [installed checkout](../getting-started.md#install), copy the one-paper
