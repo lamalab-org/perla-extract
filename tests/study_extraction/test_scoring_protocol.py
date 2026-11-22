@@ -40,6 +40,24 @@ def test_equivalent_irradiance_units_preserve_outcome_and_protocol_credit():
     assert evaluate_study(truth, prediction).core_facts.groups["performance"].f1 == 1
 
 
+def test_pdf_unit_glyphs_preserve_current_and_illumination_context():
+    truth = illuminated_measurement()
+    truth.performance_observations[0].metrics.append(quantity("Jsc", 21, "mA/cm2"))
+    prediction = truth.model_copy(deep=True)
+    metrics = prediction.performance_observations[0].metrics
+    metrics[1].unit = "mW cm‒2"
+    metrics[2].unit = "mA cm‒2"
+    score = evaluate_study(truth, prediction).core_facts
+    assert score.groups["performance"].matched == 3  # PCE, irradiance and Jsc.
+    assert score.groups["performance"].f1 == 1
+
+    metrics[1].unit = "W cm‒2"
+    score = evaluate_study(truth, prediction).core_facts
+    assert score.groups["performance"].matched == 0
+    assert score.recovery.fields["measurement:pce"].matched == 1
+    assert score.recovery.fields["measurement:jsc"].matched == 1
+
+
 def test_protocols_disambiguate_observations_without_using_their_outcomes():
     truth = illuminated_measurement()
     second = truth.performance_observations[0].model_copy(deep=True)

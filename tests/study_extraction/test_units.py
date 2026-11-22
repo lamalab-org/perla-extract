@@ -61,3 +61,28 @@ def test_unsupported_notation_has_the_same_result_across_pint_versions(unit):
 
     assert canonical_quantity(1, unit) is None
     assert not equivalent_unit_spelling(unit, "mA/cm2")
+
+
+@pytest.mark.parametrize("minus", ["\u2212", "\u2012", "\u2013", "\uf02d"])
+@pytest.mark.parametrize(
+    "printed,standard",
+    [
+        ("mA cm{minus}2", "mA/cm2"),
+        ("mW cm{minus}2", "mW/cm2"),
+        ("cm{minus}3", "1/cm3"),
+        ("mol L{minus}1", "mol/L"),
+    ],
+)
+def test_pdf_minus_glyphs_preserve_explicit_unit_powers(minus, printed, standard):
+    unit = printed.format(minus=minus)
+    assert canonical_quantity(70, unit) == canonical_quantity(70, standard)
+    assert equivalent_unit_spelling(unit, standard)
+    assert convert_reported_value(_reported_value(unit), standard) == pytest.approx(70)
+
+
+@pytest.mark.parametrize(
+    "different", ["A cm‒2", "MA cm‒2", "mA cm+2", "mA cm‒3", "mA/cm‒2"]
+)
+def test_typographic_minus_does_not_erase_scale_or_dimensions(different):
+    assert not equivalent_unit_spelling("mA cm‒2", different)
+    assert canonical_quantity(70, "mA cm‒2") != canonical_quantity(70, different)

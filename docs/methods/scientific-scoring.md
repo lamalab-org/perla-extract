@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 17, matcher `rich-study-hungarian-v22`, fact
-profile `core-scientific-facts-v19`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 17, matcher `rich-study-hungarian-v24`, fact
+profile `core-scientific-facts-v21`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 ## Evaluation unit and two score views
 
@@ -58,13 +58,19 @@ identical treatment descriptions alone do not establish the same cohort or test.
 For families with distinct, explicit layer positions on both sides, materials
 are compared in order. Let `L` be the length of their longest common material
 subsequence, and `n,m` their respective layer counts. The family similarity is
-`(2L + V)/(n + m + 1)`, where `V=1` only for equal, nonempty variant labels after
-spacing normalization. A missing or different label contributes zero.
-Thus exact arm labels can distinguish otherwise identical stacks, while lengthy
-prose contributes no additional weight. Candidate similarity must reach **0.35**.
+`(2L + V + D)/(n + m + 2)`, where `V=1` only for equal, nonempty variant labels after
+spacing normalization. `D` is the Jaccard overlap of the sets of literal words in
+the family labels, after removing words shared by every family label within each
+study (when that study has multiple families). Thus a generic heading cannot
+resolve a design tie. Missing/different variants contribute zero. Label words are
+case-insensitive and retain internal hyphens/slashes (`c-NiOx` and `cp-NiOx`, or
+`A/B` and `B/A`, remain distinct). No chemical synonym or language model is used
+to interpret these words. Labels can corroborate equally incomplete stacks; they
+do not make different materials equal. Repeating a word adds no weight.
+Candidate similarity must reach **0.35**.
 The threshold is a fixed matching policy, not a calibrated probability.
 
-An explicit, equal sample designation in family labels/variants supplies an
+An explicit, equal sample designation in family or specimen labels/variants supplies an
 independent anchor: its candidate score is `(content_similarity + 1) / 2`.
 Different known designations exclude the pair. The same bounded code parser is
 used for families, specimens and cohort labels; generated JSON IDs are excluded.
@@ -76,7 +82,8 @@ candidates remain subject to the same assignment-ambiguity check.
 For child records with an established parent correspondence, candidate similarity
 is `(content_similarity + 1) / 2`; without a known compatible parent it is the
 content similarity alone. The same 0.35 threshold applies. Null parent links are
-not evidence of correspondence. Parent/protocol agreement retains its assignment
+not evidence of correspondence. Ambiguous parent assignments supply no identity
+anchor or priority bonus to their children. Parent/protocol agreement retains its assignment
 priority, and alternative optimal assignments remain ambiguous. This lets a known
 device family support a specimen match despite different display prose, without
 using any measured outcome. Fact-level parent, treatment and protocol checks still
@@ -93,6 +100,9 @@ that different measurements used different physical specimens. The specimen
 similarity is `(C + U) / 2`. An absent, generic `other` or unreported method
 contributes zero measurement evidence. Repeated observations have no additional
 weight. Values, property names and metric completeness are excluded.
+The 0.35 eligibility cutoff is applied after this corroboration, before the
+parent/protocol assignment priority. A priority bonus cannot admit a specimen
+whose final identity similarity is below the cutoff.
 Explicit compact sample designations in label/variant prose reject
 contradictory candidates, preserving case and code order. Additional descriptive
 prose does not change the extracted code. The saved match exposes both codes,
@@ -178,6 +188,15 @@ speed` have the same dependencies. The target value never establishes step
 identity. Without an established ordered step, the conservative context remains.
 Population and stability outcomes do not inherit individual-measurement rules.
 
+Fabrication condition/property names additionally equate a separate final word
+`time` with `duration`. Thus `annealing time` and `annealing duration` agree even
+inside a compound preparation step. Qualifiers are retained: `first spin time`
+cannot match `second spin duration`, and a material qualifier cannot disappear.
+This rule does not apply to measurement or stability fields, or to words such as
+`lifetime`. Names are normalized independently on each side; values still require
+compatible units and the same numeric tolerance. No temperature, duration or
+outcome selects a process-step correspondence.
+
 The scorer does not compare citation block IDs or quoted numbers to establish
 identity. Its inputs lack the independently validated, shared source locations
 needed for precise observation anchors. Diagnostics therefore report source
@@ -257,6 +276,11 @@ as complete claims; a matching central number alone is insufficient. Offset unit
 are converted before comparison. Bounds, unknown units and contradictions between
 raw text, parsed number and unit are not silently discarded. Unsupported claims
 remain literal assertions.
+
+Before unit parsing, mathematical minus, figure/en dashes and the legacy
+Symbol-font minus are mapped to ASCII minus. Thus `mA cm‒2` and `mA/cm2` describe
+the same quantity. Unit prefixes, case, scale and dimensions remain significant;
+unsupported notation stays unparsed. Original strings and quotations are retained.
 
 For registered PV names, a recognized, dimensionally compatible trailing unit in brackets or parentheses
 (`PCE [%]`, `Voc (mV)`) supplies a missing unit field in the scoring projection.

@@ -106,8 +106,8 @@ For PV values, an unreported reference method/scan does not contradict extra
 prediction detail. Explicit contradictions and missing known reference conditions
 still prevent credit. See the [exact context rules](../methods/scientific-scoring.md#treatment-identity-and-context).
 
-Reports use format 17, matcher `rich-study-hungarian-v22` and fact profile
-`core-scientific-facts-v19`. Regenerate older reports from saved predictions before
+Reports use format 17, matcher `rich-study-hungarian-v24` and fact profile
+`core-scientific-facts-v21`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -433,11 +433,14 @@ The scorer pairs families first, followed by individual devices, performance
 observations, populations and stability tests. It pairs records only within the
 same type. Parent pairings can then guide the child pairings.
 
-Fully ordered families use `(2L+V)/(n+m+1)`: `L` is the longest common material
+Fully ordered families use `(2L+V+D)/(n+m+2)`: `L` is the longest common material
 subsequence, `n,m` are layer counts, and `V` is one for exactly equal nonempty
-variant labels after spacing normalization. Label length adds no weight. Missing
-and different labels both contribute zero. Exact arm labels can therefore
-preserve a distinction absent from the stack, without interpreting unknown prose.
+variant labels after spacing normalization. `D` is Jaccard overlap of literal
+family-label word sets, retaining internal hyphens and slashes and omitting words
+shared by every family heading within a study. Missing/different
+variants contribute zero; repeating label words adds no weight. Device candidates
+likewise use literal label words alongside their other identity features. Labels
+support alignment without inferring chemical synonyms or filling missing context.
 Incomplete orders use the conservative Jaccard feature fallback (materials,
 explicit positions, constituent names, absorber formulas and variant); missing
 layers use the raw stack/architecture fallback. Recipes and outcomes cannot
