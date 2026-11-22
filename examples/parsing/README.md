@@ -104,3 +104,33 @@ Voc and Jsc precision/recall, device attribution, processing, completion rate an
 total extraction cost. Report per-paper changes and pooled counts, retaining failed
 papers in the coverage denominator. Use all available development papers for this
 comparison; reserve independent papers for a later generalization claim.
+
+## Figure recovery screening
+
+Reuse complete standard conversions to test native figure text without another
+Docling run or an extraction-model call:
+
+```sh
+python -m examples.parsing.figures --baseline results/parsing --output results/figures
+```
+
+`figures.json` retains text, top-left PDF coordinates, font, color and explicit
+Docling caption references. `new_text` contains occurrences missing at that
+location in the baseline. The same number in another panel stays independent.
+`results.csv` compares the unchanged page-specific literal probes. This output
+is experimental; it is not added to the production extraction context.
+
+For a local LightOnOCR screen, prepare a JSON list of crops with `id`, `image`
+(absolute PNG path), and `image_sha256`, then run:
+
+```sh
+python -m examples.parsing.figure_ocr --selection crops.json --snapshot /path/to/pinned/snapshot --output results/figure-ocr
+```
+
+Use the LightOnOCR-3-1B revision in `figure_ocr.py` and Transformers with the
+`LightOnOcr` classes. MPS is the default; `--device cpu` explicitly selects CPU.
+The script verifies complete weight loading, uses an empty transcription prompt,
+and retains raw responses and completion status. A completed response can still
+be wrong: whole figures may produce descriptions, swap legends, or omit printed
+tables. Inspect source crops before treating any generated text as evidence.
+Native text cannot read raster labels; OCR cannot establish device identity.
