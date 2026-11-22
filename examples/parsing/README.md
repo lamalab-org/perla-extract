@@ -134,3 +134,16 @@ and retains raw responses and completion status. A completed response can still
 be wrong: whole figures may produce descriptions, swap legends, or omit printed
 tables. Inspect source crops before treating any generated text as evidence.
 Native text cannot read raster labels; OCR cannot establish device identity.
+
+`frontier_tables.py` runs a declared crop/model/caption matrix through the ordinary
+model client, including request limits, durable cost records and Langfuse capture:
+
+```sh
+python -m examples.parsing.frontier_tables --plan /path/to/experiment/plan.json
+```
+
+The sealed plan declares every input hash, slot and cost reservation. It is a
+development experiment, not a production fallback. Its output is literal table
+grids; source plots without printed result tables should return an empty list.
+Measure downstream field scores with the unchanged extractor and scorer before
+adding generated table text to production evidence.
