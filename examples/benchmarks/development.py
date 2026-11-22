@@ -57,7 +57,9 @@ def verify_dataset(dataset: Path, sources: Path | None = None) -> tuple[dict, li
     dataset = dataset.resolve()
     value = _read(dataset)
     release_path = (dataset.parent / value["reference_release"]).resolve()
-    _check_digest(release_path, value["reference_release_sha256"])
+    _check_digest(
+        release_path, value["reference_release_sha256"], reference_content=True
+    )
     raw_release = _read(release_path)
     release = ReferenceRelease.model_validate(raw_release)
     if release.split != "dev":

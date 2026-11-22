@@ -52,7 +52,7 @@ def fixture_dataset(tmp_path):
     _save(tmp_path / "release.json", release)
     public.update(
         reference_release="release.json",
-        reference_release_sha256=_sha(tmp_path / "release.json"),
+        reference_release_sha256=reference_content_digest(release),
         papers=[row],
     )
     dataset = tmp_path / "papers.json"
@@ -96,6 +96,8 @@ def test_reference_json_formatting_preserves_its_content_hash(fixture_dataset):
     dataset, sources, reference = fixture_dataset
     path = reference / "ground_truth.json"
     path.write_bytes(path.read_bytes() + b"\n")
+    release = dataset.parent / "release.json"
+    release.write_bytes(release.read_bytes() + b"\n")
     _, papers = verify_dataset(dataset, sources)
     assert len(papers) == 1
 

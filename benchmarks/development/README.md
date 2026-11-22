@@ -6,6 +6,8 @@
 [reference release](../../data/study_extraction/ground_truth/v2/release.json);
 answers are not copied into another ground-truth format. These model-assisted,
 human-finalized references have informed development; they are not a held-out test.
+Reference JSON uses the published canonical content-hash convention, so harmless
+formatting or line-ending changes do not alter its identity. PDF hashes bind exact bytes.
 
 From the repository root after installation, verify the references and your original PDFs:
 
