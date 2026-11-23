@@ -215,6 +215,7 @@ def test_quality_pass_receives_grounded_claims_and_retains_draft(tmp_path):
         supplement=None,
         output_dir=tmp_path,
         parser="pymupdf",
+        use_refinement=True,
     )
 
     result, draft_result, errors = _run_model_calls(config, client, [block], ledger)
@@ -538,6 +539,8 @@ def test_direct_and_empty_reading_send_full_source_at_provider_boundary(
             pdf=FIXTURE,
             output_dir=output,
             use_claim_ledger=use_claim_ledger,
+            use_refinement=True,
+            max_model_calls=6,
             use_targeted_repair=False,
             use_enrichment=False,
             model_cache_dir=tmp_path / "cache",
@@ -795,7 +798,12 @@ def test_reader_dry_run_does_not_claim_unknown_assembly_input_fits(
     )
     monkeypatch.setattr(workflow, "parse_documents", lambda *a, **kw: ([block], []))
     report = run_extraction(
-        ExtractionConfig(pdf=FIXTURE, output_dir=tmp_path / "output", dry_run=True)
+        ExtractionConfig(
+            pdf=FIXTURE,
+            output_dir=tmp_path / "output",
+            dry_run=True,
+            use_claim_ledger=True,
+        )
     )
     assert report["status"] == "dry_run"
     assert report["request_feasibility"]["assembly"] == "conditional_on_reader_output"

@@ -11,6 +11,11 @@ from click.testing import CliRunner
 from examples.scoring.run import build_example
 from perla_extract.study_extraction import experiment
 from perla_extract.study_extraction.artifacts import write_json_exclusive
+from perla_extract.study_extraction.configuration import resolve_config, tomllib
+from perla_extract.study_extraction.experiment_plan import (
+    ExperimentSettings,
+    _arm_settings,
+)
 from perla_extract.study_extraction.run_artifacts import file_digest, write_run_manifest
 
 
@@ -34,6 +39,7 @@ model = "openai/synthetic"
 [extraction]
 parser = "pymupdf"
 max_model_calls = 3
+use_claim_ledger = true
 [control]
 claim_recall_passes = 1
 [treatment]
@@ -45,14 +51,22 @@ reference = {json.dumps(str(reference.relative_to(tmp_path)))}
     calls = []
 
     def extract(config, *, fail=False):
-        calls.append(config)
+        if not config.dry_run:
+            calls.append(config)
         output = config.output_dir
         # The complete roster must already exist before observing any outcome.
         with (tmp_path / "results/runs.csv").open() as stream:
-            assert len(list(csv.DictReader(stream))) == 4
+            settings = ExperimentSettings.model_validate(
+                tomllib.loads(path.read_text())
+            )
+            assert len(list(csv.DictReader(stream))) == settings.repeats * len(
+                settings.methods
+            )
         output.mkdir(parents=True)
         report = {
-            "status": "failed" if fail else "complete",
+            "status": "dry_run"
+            if config.dry_run
+            else ("failed" if fail else "complete"),
             "errors": ["Provider request timed out"] if fail else [],
             "elapsed_seconds": 1,
             "usage": {
@@ -63,7 +77,11 @@ reference = {json.dumps(str(reference.relative_to(tmp_path)))}
                 "total_tokens": 15,
                 "cost": 1,
             },
-            "budget": {"provider_requests": 1, "cost_tracking_complete": True},
+            "budget": {
+                "provider_requests": 1,
+                "cost_tracking_complete": True,
+                "planned_calls_fit": True,
+            },
         }
         write_json_exclusive(output / "report.json", report)
         write_json_exclusive(
@@ -78,7 +96,7 @@ reference = {json.dumps(str(reference.relative_to(tmp_path)))}
                 "evidence_spans_sha256": "a" * 64,
             },
         )
-        if not fail:
+        if not fail or config.dry_run:
             for name in ("extraction.json", "document.json"):
                 shutil.copyfile(
                     original / "predictions/corrected" / name, output / name
@@ -105,14 +123,17 @@ def test_check_explains_change_without_running_or_creating_output(setup):
 )
 def test_shipped_experiments_parse_and_use_docling_by_default(filename, paper_count):
     path = Path(__file__).resolve().parents[2] / filename
-    settings = experiment.ExperimentSettings.model_validate(
-        experiment.tomllib.loads(path.read_text())
+    settings = ExperimentSettings.model_validate(tomllib.loads(path.read_text()))
+    assert (
+        len(settings.papers) == paper_count
+        if not settings.dataset
+        else len(json.loads((path.parent / settings.dataset).read_text())["papers"])
+        == paper_count
     )
-    assert len(settings.papers) == paper_count
     for arm in ("control", "treatment"):
-        config = experiment.resolve_config(
+        config = resolve_config(
             pdf=Path("paper.pdf"),
-            **experiment._arm_settings(settings, arm, path.parent),
+            **_arm_settings(settings, arm, path.parent),
         )
         assert config.parser == "docling"
 

@@ -283,3 +283,61 @@ def write_summary(result: dict, path: Path) -> None:
         if len(issues) > 10:
             lines.append(f"- {len(issues) - 10} further issues are in comparison.json.")
     write_bytes_exclusive(path, ("\n".join(lines) + "\n").encode("utf-8"))
+
+
+def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
+    """Explain named arms and count their shared baseline only once."""
+    spending = result["spending"]
+    cap = spending["cap_usd"]
+    lines = [
+        "# Experiment results",
+        "",
+        f"Baseline: **{baseline}**. Unique planned runs: **{len(result['runs'])}**.",
+        "Primary reports use the declared cohort; fixed-subset repeatability reports include both runs and are separate from primary effects. Repeats are not independent papers.",
+        "",
+        "## Run coverage and cost",
+        "",
+        "| Arm | Completed / planned | Automatically scored | Known provider spend (USD) | Complete cost |",
+        "| --- | ---: | ---: | ---: | --- |",
+    ]
+    for arm, counts in result["accounting"].items():
+        scored = sum(
+            r.get("reference_agreement_available", False)
+            for r in result["runs"]
+            if r["arm"] == arm
+        )
+        lines.append(
+            f"| {arm} | {counts['complete_runs']} / {counts['planned_runs']} | {scored} | {counts['known_cost_usd']:.6f} | {'yes' if counts['cost_tracking_complete'] else 'no'} |"
+        )
+    lines += [
+        "",
+        "Costs count each unique provider attempt once, including failures. Both candidate comparisons reuse the same baseline artifacts; do not sum their baseline costs.",
+        "",
+        f"New recorded provider cost: **${spending['known_run_cost_usd']:.6f}**. Unresolved attempt costs: **{spending['unresolved_attempts']}**.",
+        f"Committed spending, including prior spending and unknown-cost reservations: **${spending['committed_usd']:.6f}**. "
+        + (
+            f"Admission cap: **${cap:.2f}**."
+            if cap is not None
+            else "No campaign admission cap was declared."
+        ),
+        "",
+        "A reservation is an admission estimate, not a provider price guarantee. See `spending.json` for each attempt and `accounting.json` for totals.",
+        "",
+        "## Paired comparisons",
+        "",
+    ]
+    for name, comparison in result["comparisons"].items():
+        lines.append(
+            f"- [{name}](comparisons/{name}/summary.md): {comparison['reference_agreement']['status']}."
+        )
+    lines += [
+        "",
+        "## Read the plotting tables",
+        "",
+        "`figure-data/important_fields.csv` contains PCE, FF, Voc, Jsc and device/material field counts. Every table retains named arm, paper and repeat. Paired reports use control/treatment to mean baseline/candidate.",
+        "",
+        "Field metrics retain malformed and literal claims. `scoring_diagnostics.csv` names each field and distinguishes parsed quantities from literals and nonquantities. `subfield_scores.csv` separates qualitative and unparsed measurement claims; `field_strata.csv` separates measurement methods and statistical contexts.",
+        "",
+        "Use the linked paired reports for intervals and completion denominators. Scores on references with incomplete coverage are diagnostic agreement, not validated absolute precision. Empty cells mean unavailable, not zero.",
+    ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")

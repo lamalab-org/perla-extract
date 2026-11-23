@@ -19,6 +19,7 @@ import click
 
 from .artifacts import write_json_exclusive
 from .comparison_study import cohort_issues, load_study, same_setting, setting_issues
+from .configuration import active_method_settings
 from .evaluation import EvaluationReport, _study_digest, aggregate_evaluations
 from .figure_data import export_tables
 from .models import StudyExtraction
@@ -162,7 +163,9 @@ def _settings(configuration: dict) -> dict:
     if not isinstance(source, dict):
         raise ValueError("scientific_settings must be an object")
     settings = {
-        key: value for key, value in source.items() if key not in _RUNTIME_FIELDS
+        key: value
+        for key, value in active_method_settings(source).items()
+        if key not in _RUNTIME_FIELDS
     }
     for name in (
         "schema_sha256",
@@ -236,6 +239,44 @@ def read_roster(path: Path) -> list[dict]:
             "Every accounting_only paper and arm must appear in the paired roster"
         )
     return rows
+
+
+def arm_accounting(
+    arm_rows: list[dict], planned_runs: int, *, roster_valid: bool = True
+) -> dict:
+    """Count unique paid attempts, retaining failures and unknown prices."""
+    arm_paired = [row for row in arm_rows if row["quality_applicable"]]
+    complete = roster_valid and all(row["cost_available"] for row in arm_rows)
+    known = sum(row.get("accounting", {}).get("cost_usd", 0) for row in arm_rows)
+    paired_complete = sum(
+        row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
+        for row in arm_paired
+    )
+    # Include failed/accounting-only spend in the cost of obtaining completed
+    # outputs. Unknown cost and zero completions cannot produce a unit price.
+    per_complete = known / paired_complete if complete and paired_complete else None
+    return dict(
+        planned_runs=planned_runs,
+        listed_paired_runs=len(arm_paired),
+        paired_complete_runs=paired_complete,
+        paired_scored_runs=sum(row["quality_available"] for row in arm_paired),
+        completion_fraction=paired_complete / planned_runs if roster_valid else None,
+        listed_attempts=len(arm_rows),
+        accounting_only_runs=sum(not row["quality_applicable"] for row in arm_rows),
+        accounted_runs=sum("accounting" in row for row in arm_rows),
+        complete_runs=sum(
+            row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
+            for row in arm_rows
+        ),
+        known_cost_usd=known,
+        cost_tracking_complete=complete,
+        total_cost_usd=known if complete else None,
+        cost_per_completed_extraction_usd=per_complete,
+        projected_cost_usd={
+            str(count): per_complete * count if per_complete is not None else None
+            for count in (10_000, 50_000)
+        },
+    )
 
 
 def summarize(
@@ -440,9 +481,7 @@ def summarize(
             changed = {
                 key: {"control": left.get(key), "treatment": right.get(key)}
                 for key in left.keys() | right.keys()
-                if key not in left
-                or key not in right
-                or not same_setting(left[key], right[key])
+                if not same_setting(left.get(key), right.get(key))
             }
             differences.append(dict(paper_id=paper, repeat=repeat, fields=changed))
             unexpected = set(changed) - set(factors)
@@ -519,39 +558,8 @@ def summarize(
     accounting = {}
     for arm in ARMS:
         arm_rows = [row for row in rows if row["arm"] == arm]
-        arm_paired = [row for row in arm_rows if row["quality_applicable"]]
-        complete = not roster_issues and all(row["cost_available"] for row in arm_rows)
-        known = sum(row.get("accounting", {}).get("cost_usd", 0) for row in arm_rows)
-        paired_complete = sum(
-            row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
-            for row in arm_paired
-        )
-        # Include failed/accounting-only spend in the cost of obtaining completed
-        # outputs. Unknown cost and zero completions cannot produce a unit price.
-        per_complete = known / paired_complete if complete and paired_complete else None
-        accounting[arm] = dict(
-            planned_runs=len(design.expected_pairs()),
-            listed_paired_runs=len(arm_paired),
-            paired_complete_runs=paired_complete,
-            paired_scored_runs=sum(row["quality_available"] for row in arm_paired),
-            completion_fraction=paired_complete / len(design.expected_pairs())
-            if not roster_issues
-            else None,
-            listed_attempts=len(arm_rows),
-            accounting_only_runs=sum(not row["quality_applicable"] for row in arm_rows),
-            accounted_runs=sum("accounting" in row for row in arm_rows),
-            complete_runs=sum(
-                row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
-                for row in arm_rows
-            ),
-            known_cost_usd=known,
-            cost_tracking_complete=complete,
-            total_cost_usd=known if complete else None,
-            cost_per_completed_extraction_usd=per_complete,
-            projected_cost_usd={
-                str(count): per_complete * count if per_complete is not None else None
-                for count in (10_000, 50_000)
-            },
+        accounting[arm] = arm_accounting(
+            arm_rows, len(design.expected_pairs()), roster_valid=not roster_issues
         )
     control, treatment = (accounting[arm]["total_cost_usd"] for arm in ARMS)
     saving = (

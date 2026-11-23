@@ -115,7 +115,9 @@ def setting_issues(
         paper, repeat, arm = key
         for name, contrast in study.factors.items():
             expected = getattr(contrast, arm)
-            if name not in settings or not same_setting(settings[name], expected):
+            # An operation enabled in just one arm has no settings in the other.
+            # The contrast represents that absence explicitly as null.
+            if not same_setting(settings.get(name), expected):
                 actual = repr(settings[name]) if name in settings else "<missing>"
                 issues.append(
                     f"{paper}/{repeat}/{arm}: study factor {name} expected "
@@ -128,9 +130,7 @@ def setting_issues(
         changed = sorted(
             name
             for name in first_settings.keys() | settings.keys()
-            if name not in first_settings
-            or name not in settings
-            or not same_setting(first_settings[name], settings[name])
+            if not same_setting(first_settings.get(name), settings.get(name))
         )
         if changed:
             issues.append(

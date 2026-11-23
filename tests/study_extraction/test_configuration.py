@@ -211,3 +211,32 @@ def test_equivalent_output_and_reasoning_defaults_have_one_scientific_identity()
         },
     )
     assert plain.scientific_settings() == explicit.scientific_settings()
+
+
+def test_direct_defaults_match_cli_and_only_active_settings_are_compared():
+    from dataclasses import replace
+
+    from perla_extract.study_extraction.comparison import _settings
+
+    config = resolve_config("paper.pdf")
+    assert config.max_model_calls == 1
+    assert not any(
+        (
+            config.use_claim_ledger,
+            config.use_refinement,
+            config.use_targeted_repair,
+            config.use_enrichment,
+        )
+    )
+    assert set(config.scientific_settings()["effective_models"]) == {"assemble"}
+    changed = replace(
+        config,
+        claim_recall_passes=3,
+        deployments={"read": DeploymentSettings(model="provider/unused")},
+    )
+    assert _settings(
+        {"scientific_settings": config.scientific_settings()}
+    ) == _settings({"scientific_settings": changed.scientific_settings()})
+    enabled = replace(changed, use_claim_ledger=True, max_model_calls=5)
+    assert "read" in enabled.scientific_settings()["effective_models"]
+    assert enabled.scientific_settings()["claim_recall_passes"] == 3

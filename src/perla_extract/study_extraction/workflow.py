@@ -247,9 +247,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         dry_run=config.dry_run,
         paper=config.pdf.name,
         supplement=config.supplement.name if config.supplement else None,
-        models={
-            stage: policy.model for stage, policy in config.stage_policies().items()
-        },
+        models=config.scientific_settings()["effective_models"],
         readings=config.claim_recall_passes if config.use_claim_ledger else 0,
     )
     state = RunState()

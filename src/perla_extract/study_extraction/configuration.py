@@ -25,6 +25,12 @@ from .request_policy import ResolvedStagePolicy
 
 DEFAULT_EXTRACTION_MODEL = "openai/gpt-5.2"
 STAGES = ("read", "assemble", "refine", "repair", "enrich")
+STAGE_SWITCHES = {
+    "read": "use_claim_ledger",
+    "refine": "use_refinement",
+    "repair": "use_targeted_repair",
+    "enrich": "use_enrichment",
+}
 DEFAULT_OUTPUT_TOKENS = {
     "read": 30_000,
     "assemble": 80_000,
@@ -57,6 +63,33 @@ _OPERATIONAL = _PATHS | {
     "langfuse",
     "langfuse_capture_content",
 }
+
+
+def active_method_settings(settings: dict[str, Any]) -> dict[str, Any]:
+    """Compare enabled operations while retaining full configuration in run artifacts.
+
+    Historical reports without an explicit switch retain their entries. A disabled
+    reader's limits and deployments cannot constitute an extraction intervention.
+    """
+    result = dict(settings)
+    stages = {
+        stage
+        for stage in STAGES
+        if stage not in STAGE_SWITCHES
+        or settings.get(STAGE_SWITCHES[stage]) is not False
+    }
+    for name in ("effective_models", "deployments"):
+        if isinstance(result.get(name), dict):
+            result[name] = {k: v for k, v in result[name].items() if k in stages}
+    if settings.get("use_claim_ledger") is False:
+        for name in (
+            "claim_recall_passes",
+            "claim_mode",
+            "single_call_max_input_tokens",
+            "claim_window_input_tokens",
+        ):
+            result.pop(name, None)
+    return result
 
 
 def _validate_deployments(deployments: dict[str, DeploymentSettings]) -> None:
@@ -115,17 +148,17 @@ class ExtractionConfig:
     pdf: Path
     supplement: Path | None = None
     output_dir: Path = Path("study_extraction")
-    use_claim_ledger: bool = True
+    use_claim_ledger: bool = False
     claim_recall_passes: int = 2
-    use_enrichment: bool = True
-    use_refinement: bool = True
-    use_targeted_repair: bool = True
+    use_enrichment: bool = False
+    use_refinement: bool = False
+    use_targeted_repair: bool = False
     parser: str = "docling"
     claim_mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
     claim_window_input_tokens: int = 60_000
     assembly_max_input_tokens: int = 180_000
-    max_model_calls: int | None = None
+    max_model_calls: int | None = 1
     max_cost_usd: float | None = None
     max_total_tokens: int | None = None
     max_elapsed_seconds: float | None = None
@@ -278,7 +311,7 @@ class ExtractionConfig:
                 if policy.reasoning_effort == "omit"
                 else policy.reasoning_effort,
             }
-        return result
+        return active_method_settings(result)
 
 
 def implementation_sha256() -> str:
