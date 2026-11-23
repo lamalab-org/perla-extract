@@ -19,8 +19,7 @@ python -m pip install -e .
 export OPENAI_API_KEY="your-openai-key"
 perla-extract --pdf paper.pdf --supplement paper_si.pdf \
   --model openai/gpt-6.1-sol \
-  --no-claims --no-refinement --no-targeted-repair --no-enrichment \
-  --max-model-calls 1 --max-output-tokens 40000 \
+  --max-output-tokens 40000 \
   --output-dir results/paper
 ```
 
@@ -45,7 +44,7 @@ perla-experiment my-experiment.toml
 ```
 
 One TOML file defines both arms and the papers. Start with the one-paper example;
-the root `experiment.toml` lists all 30 frozen development references when you are
+the root `experiment.toml` uses the pinned 30-paper development dataset when you are
 ready to expand. Supply the original PDFs/SIs at the configured paths.
 The command handles extraction and scoring. Open the generated `summary.md` first
 for reference agreement, uncertainty, run coverage and recorded costs;

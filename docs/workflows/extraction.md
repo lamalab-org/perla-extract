@@ -4,10 +4,10 @@ PERLA reads a paper and its supplement, builds records for the reported study, a
 checks those records against the parsed source. The result is `extraction.json`.
 Database interpretation and export happen afterward and do not rewrite that result.
 
-The [quick start](../getting-started.md) uses one direct extraction call. The Python
-API's defaults include two source readings and a second review of the complete
-draft. Extra stages are configurable attempts to improve recovery and attribution;
-compare them against the direct baseline rather than assuming more passes help.
+The CLI and Python API default to one direct extraction attempt with source checks.
+Reading, refinement, targeted repair and enrichment are opt-in. Enable a stage and
+raise `max_model_calls` together when testing additional passes. Extra stages are
+hypotheses to test against the direct baseline.
 
 ```text
 source = parse(main_paper, supplement)
@@ -159,9 +159,8 @@ explicit model and context settings; the applied choices are recorded in
 
 ## Choosing a configuration
 
-Use the current default when reproducing the existing method. To establish whether
-its extra stages help a new dataset, start with complete-source extraction and
-checks (`--no-claims --no-refinement --no-targeted-repair --no-enrichment`). Then
+Start with the direct default: complete-source extraction and deterministic source
+checks. To reproduce an older multi-stage method, use its saved configuration. Then
 compare one change at a time: conditional repair, one reading, a second reading,
 and complete-draft review. Keep source files, models, output allowances, reference
 annotations, and scoring rules fixed for the comparison under study.

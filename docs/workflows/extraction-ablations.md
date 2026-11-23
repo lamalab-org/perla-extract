@@ -49,8 +49,11 @@ supplement = "papers/10.1002--adfm.201904856-SI.pdf"
 reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"
 ```
 
-The root `experiment.toml` lists all 30 included development references when you
-are ready for a larger study. Keep only the paper blocks you intend to run.
+The root `experiment.toml` uses the pinned 30-paper dataset and verifies article/SI
+roles. Set `sources` to the folder containing its original PDFs. For a three-model
+study with one shared baseline, use `benchmarks/development/study.toml`;
+[its README](https://github.com/lamalab-org/perla-extract/tree/main/benchmarks/development)
+gives the check, run and resume commands.
 
 `[stages.default]` selects the shared deployment. `[extraction]` applies to both arms; `[control]` and `[treatment]` change only the
 settings written there.
@@ -128,7 +131,11 @@ Unknown costs or no completed outputs leave these estimates unavailable.
 Run folders and response caches are separate for every paper, arm and repeat.
 Execution order is shuffled reproducibly. The intended cohort and arm settings are
 saved before execution; missing runs or inconsistent settings block the aggregate.
-An existing output directory is refused. Change `output` to start a new experiment.
+An existing output directory requires `--resume`. Resume checks the frozen code,
+runtime, sources and method, reuses sealed results and scores any completed output
+that still needs a score. It never repeats a reserved attempt: failed or uncertain
+slots remain in the denominator and unknown costs retain their reservations.
+Change `output` to start a different experiment.
 
 To ask a different question, change the setting in the two arm blocks—for example,
 `use_refinement = false` versus `true`. [Stage descriptions](extraction.md) explain

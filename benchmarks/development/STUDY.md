@@ -61,15 +61,18 @@ forms and genuine contradictory qualifiers symmetrically; add no paper-specific
 rules. Audit numeric versus qualitative PV assertions so plots are labeled
 correctly. Version the scorer once and rescore the saved pilots without inference
 to verify the behavior. Preserve all original evaluations. No paid study calls
-precede this check. The present repository baseline is matcher v25 / fact profile
-v22; the study must record the final tested scorer identifiers before starting.
+precede this check. The revised scorer is matcher v26 / fact profile v23. The saved-pilot rescore
+and offline validation accompany the PR. Paid runs start only after the user has
+reviewed that PR; starting a run freezes these identifiers and the implementation.
 
 Keep 1% relative / zero absolute numeric tolerance and the existing unitless
 PCE/FF percentage-point convention. Score every completed run against the same
 human reference. Report PCE, FF, Voc and Jsc individually, pooled PV fields,
 material/device identity, processing and stability. Separate paper-wide retrieval
-from strict device/context attribution. Preserve numeric, qualitative and
-unparsed-claim counts; do not silently discard malformed predictions. Unmatched
+from strict device/context attribution. Preserve parsed-quantity versus literal claim counts per field in the diagnostics;
+use subfield tables for qualitative and unparsed measurement assertions. PCE/FF/Voc/
+Jsc field denominators retain malformed and literal claims: these are field-agreement
+metrics, not numeric-only accuracy. Do not silently discard malformed predictions. Unmatched
 claims can expose scoring representation gaps as well as extraction omissions.
 
 Primary analysis uses the first run on all 30 papers. For each model contrast,

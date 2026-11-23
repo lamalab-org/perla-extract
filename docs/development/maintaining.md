@@ -15,7 +15,8 @@ The paths below are relative to the repository root.
 
 | Responsibility | Start reading | Boundary to preserve |
 | --- | --- | --- |
-| Experiment design and execution | `src/perla_extract/study_extraction/experiment.py` | Freeze the complete roster before calls; keep failed attempts |
+| Experiment inputs and design | `src/perla_extract/study_extraction/experiment_plan.py`, `development_dataset.py` | Verify sources and references before creating output |
+| Experiment execution and resumption | `study_extraction/experiment.py` → `experiment_state.py` | Preflight all inputs; reserve before requests; retain failed and uncertain slots |
 | Extraction stages | `study_extraction/workflow.py` under the same package | Each stage records its result and fallback |
 | Scientific record structure | `study_extraction/models.py` | Preparation, measurement and aging are different contexts |
 | Models, limits and provider requests | `study_extraction/configuration.py` → `request_policy.py` → `client.py` | Resolve one policy for planning and execution; missing usage stays unknown |
@@ -32,6 +33,12 @@ modules. `data/study_extraction/ground_truth/` contains frozen references, while
 `examples/` contains runnable demonstrations. The reference directory name `v2` is
 a historical path, not a choice of scoring algorithm. Use the current format and
 read the manifest for each reference's coverage and provenance.
+
+The normal method is a direct call followed by source checks. Optional reading,
+refinement, repair and enrichment require an explicit switch and a larger request
+budget. `configuration.py` resolves this once for both Python and CLI users.
+`scientific_settings()` projects enabled stages for comparison; the complete raw
+configuration still appears in each run for debugging and provenance.
 
 ## Trace one request limit
 

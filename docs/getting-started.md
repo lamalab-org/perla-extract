@@ -20,8 +20,7 @@ separate environment when you only want to try scoring.
 ```bash
 perla-extract --pdf paper.pdf --supplement paper_si.pdf \
   --model openai/gpt-6.1-sol \
-  --no-claims --no-refinement --no-targeted-repair --no-enrichment \
-  --max-model-calls 1 --max-output-tokens 40000 \
+  --max-output-tokens 40000 \
   --output-dir results/paper-check --dry-run
 ```
 
