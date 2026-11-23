@@ -155,6 +155,7 @@ def export_tables(result: dict, directory: Path) -> None:
             "arm",
             "repeat",
             "side",
+            "field",
             "path",
             "rule_id",
             "statistical_level",

@@ -106,8 +106,8 @@ For PV values, an unreported reference method/scan does not contradict extra
 prediction detail. Explicit contradictions and missing known reference conditions
 still prevent credit. See the [exact context rules](../methods/scientific-scoring.md#treatment-identity-and-context).
 
-Reports use format 17, matcher `rich-study-hungarian-v25` and fact profile
-`core-scientific-facts-v22`. Regenerate older reports from saved predictions before
+Reports use format 17, matcher `rich-study-hungarian-v26` and fact profile
+`core-scientific-facts-v23`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.

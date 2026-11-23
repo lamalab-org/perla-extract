@@ -36,6 +36,8 @@ UnitSource = Literal[
 
 
 class FactDiagnostic(StrictModel):
+    # Optional for older saved diagnostic payloads; new reports always name the field.
+    field: str | None = None
     path: str
     rule_id: str
     statistical_level: str | None
@@ -116,6 +118,7 @@ def diagnose_fact(
                 "reported" if fact.value.unit is not None else "raw_value"
             )
     return FactDiagnostic(
+        field=fact.field_key,
         path=fact.path,
         rule_id=requirements_for(fact.concept, fact.context).rule_id,
         statistical_level=level if isinstance(level, str) else None,

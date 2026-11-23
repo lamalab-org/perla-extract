@@ -261,3 +261,72 @@ def test_related_or_unknown_names_cannot_supply_a_voltage_range(name):
         evaluate_study(truth, prediction).core_facts.fields["measurement:pce"].matched
         == 0
     )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "certified PCE",
+        "certified power conversion efficiency",
+        "PCE (certified)",
+        "certified efficiency",
+    ],
+)
+@pytest.mark.parametrize("reverse", [False, True])
+def test_certified_pv_label_matches_explicit_certified_protocol(name, reverse):
+    truth = study()
+    truth.performance_observations[0].measurement_type = "certified_measurement"
+    prediction = truth.model_copy(deep=True)
+    prediction.performance_observations[0].metrics[0].name = name
+    left, right = (prediction, truth) if reverse else (truth, prediction)
+    score = evaluate_study(left, right).core_facts
+    assert score.fields["measurement:pce"].matched == 1
+    assert score.recovery.fields["measurement:pce"].matched == 1
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "relative certified PCE improvement",
+        "certified PCE retention",
+        "certified Isc",
+        "certified efficiency uncertainty",
+    ],
+)
+def test_unsupported_certified_names_are_not_absolute_pce(name):
+    from perla_extract.study_extraction.scoring_protocol import performance_name
+
+    assert performance_name(name, "certified_measurement") != "pce"
+
+
+def test_certification_contradiction_does_not_earn_attributed_credit():
+    truth = study()
+    truth.performance_observations[0].measurement_type = "certified_measurement"
+    prediction = truth.model_copy(deep=True)
+    observation = prediction.performance_observations[0]
+    observation.measurement_type = "jv_scan"
+    observation.metrics[0].name = "certified PCE"
+    score = evaluate_study(truth, prediction).core_facts
+    assert score.fields["measurement:pce"].matched == 0
+    assert score.recovery.fields["measurement:pce"].matched == 1
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_spectrum_am15g_alias_is_explicit_and_symmetric(reverse):
+    truth = study()
+    truth.performance_observations[0].measurement_conditions = [
+        combined_illumination("AM1.5G").model_copy(
+            update={"name": "illumination spectrum"}
+        )
+    ]
+    prediction = truth.model_copy(deep=True)
+    prediction.performance_observations[0].measurement_conditions[0].name = "spectrum"
+    left, right = (prediction, truth) if reverse else (truth, prediction)
+    assert evaluate_study(left, right).core_facts.fields["measurement:pce"].matched == 1
+    prediction.performance_observations[0].measurement_conditions[
+        0
+    ].raw_value = "AM1.5G at 85 C"
+    assert (
+        canonical_conditions(prediction.performance_observations[0])[0].name
+        == "spectrum"
+    )

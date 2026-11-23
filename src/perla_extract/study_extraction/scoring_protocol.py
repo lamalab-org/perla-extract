@@ -30,6 +30,25 @@ _PV_NAME = re.compile(
 
 def metric_definition(name: str) -> tuple[str, str | None, str | None, str | None]:
     """Return the base quantity and only qualifiers explicitly present in its name."""
+    certified = re.fullmatch(
+        r"certified\s+(.+)|(.+?)\s*\(certified\)", name.strip(), re.I
+    )
+    if certified:
+        label = certified[1] or certified[2]
+        quantity, statistic, method, unit = _metric_definition(label)
+        # Certification is a measurement qualification, not another quantity.
+        # Keep unsupported combinations literal instead of dropping qualifiers.
+        if (
+            quantity in {"pce", "ff", "voc", "jsc", "efficiency", "η"}
+            and method is None
+        ):
+            return quantity, statistic, "certified_measurement", unit
+        return property_name(name), None, None, None
+    return _metric_definition(name)
+
+
+def _metric_definition(name: str) -> tuple[str, str | None, str | None, str | None]:
+    """Parse a complete quantity/statistic/method/unit label with the closed grammar."""
     suffix = re.fullmatch(
         r"(.+?)\s*(?:\[([^\[\]()]+)\]|\(([^\[\]()]+)\))", name.strip()
     )
@@ -135,7 +154,7 @@ def _condition_name(value: ReportedValue) -> str:
     """Recognize explicitly stated air-mass illumination as a spectrum condition."""
     name = protocol_name(value.name) or property_name(value.name)
     if (
-        name in {"illumination", "illuminationstandard"}
+        name in {"illumination", "illuminationstandard", "spectrum"}
         and _condition_value("illuminationspectrum", value).raw_value == "AM1.5G"
     ):
         return "illuminationspectrum"

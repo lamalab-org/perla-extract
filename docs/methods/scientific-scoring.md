@@ -2,8 +2,18 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 17, matcher `rich-study-hungarian-v25`, fact
-profile `core-scientific-facts-v22`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 17, matcher `rich-study-hungarian-v26`, fact
+profile `core-scientific-facts-v23`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+
+Metric labels use a closed vocabulary and qualifier grammar. `certified PCE`,
+`certified power conversion efficiency` and `PCE (certified)` identify PCE with
+`certified_measurement` context. Certification is retained: a contradictory
+measurement type cannot earn attributed credit. Generic `efficiency` still needs
+an explicit photovoltaic measurement type. Relative improvements, retention and
+unrecognized suffixes remain separate literal concepts. Explicit `spectrum =
+AM1.5G` is the same illumination-spectrum condition as the long field name;
+additional unparsed qualifiers are retained. These rules apply independently to
+each input, without consulting the other side's values.
 
 ## Evaluation unit and two score views
 
