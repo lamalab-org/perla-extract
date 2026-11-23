@@ -23,16 +23,16 @@ perla-extract --pdf paper.pdf --supplement paper_si.pdf \
   --output-dir results/paper
 ```
 
-Docling is the default parser; its first use may download local parsing models.
+Docling parses the paper and SI. Open `extraction.json` for records and
+`report.json` for usage and issues. Omit `--supplement` when there is no SI.
 
-Open `results/paper/extraction.json` for the records and `report.json` for progress,
-usage and issues. Omit `--supplement` when there is no SI. Use a new output directory
-for each attempt. [Open models and other providers](docs/workflows/open-models.md)
-use the same workflow. This starts with one direct extraction call. Add reading,
-refinement or other stages only when a controlled comparison shows they help.
-The complete paper and SI must fit the input limit; the command fails before a
-model call when they do not. [Context limits](docs/workflows/open-models.md#understand-context-and-resource-limits)
-explain how to configure larger sources.
+| Optional pass | When to use it |
+| --- | --- |
+| Refinement | Test whether one source-and-draft review improves accuracy enough to justify its cost |
+| Enrichment | Produce separate composition/processing interpretations for database export |
+
+Both are off by default. [Stage and context details](docs/workflows/extraction.md)
+and [other providers](docs/workflows/open-models.md) are documented separately.
 
 ## Compare two extraction choices
 
@@ -43,12 +43,8 @@ perla-experiment my-experiment.toml --check
 perla-experiment my-experiment.toml
 ```
 
-One TOML file defines both arms and the papers. Start with the one-paper example;
-the root `experiment.toml` uses the pinned 30-paper development dataset when you are
-ready to expand. Supply the original PDFs/SIs at the configured paths.
-The command handles extraction and scoring. Open the generated `summary.md` first
-for reference agreement, uncertainty, run coverage and recorded costs;
-`figure-data/` contains plotting tables.
+Open the generated `summary.md` first; `figure-data/` contains plotting tables.
+For Astra versus cheaper models, use the [30-paper study](benchmarks/development).
 [Experiment guide](docs/workflows/extraction-ablations.md).
 
 ## Find what you need

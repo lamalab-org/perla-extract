@@ -1,145 +1,92 @@
 # Frontier quality and extraction cost
 
-Establish a frontier baseline against the existing human references, then measure
-how close cheaper deployments and one simple mixed-model workflow can come.
-Astra outputs never become labels. The development roster is fixed before this
-study; previous pilot outputs remain separate from its primary results.
+Measure Astra against human references, then compare cheaper models and one
+refinement workflow. **Paid execution starts after PR review.** Astra outputs
+never become labels; saved pilots remain separate from primary results.
 
-## Dataset
+## Fixed inputs and methods
 
-Use all **30 papers** in `papers.json`, including all **27 supplied SIs**. Their
-57 PDFs total 1,143 pages. Each source role has its own hash; the pinned public
-reference release supplies the ground-truth and manifest hashes. Do not substitute
-another PDF download, omit a difficult SI, or redefine a subset as held out.
-All references are human-adjudicated, model-assisted development records. Existing
-incomplete coverage/context-review flags remain visible. No new human labeling or
-model-generated adjudication is required for this development study.
+Use all 30 papers and 27 SIs in `papers.json`: 57 PDFs, 1,143 pages, with separate
+article/SI hashes and a pinned human-finalized reference release. These are
+model-assisted development references with existing coverage limitations;
+no new human labeling is required.
 
-The fixed repeatability subset contains 10 papers: 3 from the shortest third,
-3 from the middle third and 4 from the longest third by combined PDF/SI pages.
-Within each third select by ascending SHA256(`20261122:paper_id`). Selection uses
-source length, not extraction outcomes. Membership is stored in `papers.json`.
-
-## Direct-extraction comparison
-
-| Deployment | Reasoning | Primary papers | Additional repeats |
+| Deployment | Reasoning | Primary runs | Second runs |
 | --- | --- | ---: | ---: |
 | GPT-6.2 Astra | high | 30 | 10 |
 | GPT-6.1 Terra | medium | 30 | 10 |
 | GPT-6 Luna | medium | 30 | 10 |
 
-That is **90 primary runs**, then **30 additional repeatability runs**. The unit
-for statistical inference is the paper: **30**, not 120 runs or thousands of
-individual fields. Model and reasoning settings are deployment contrasts, not
-equal-compute model-only effects. API aliases and actual served model IDs must be
-recorded; neither establishes a frozen weight revision.
+Use Docling and production `parse_documents` to combine/deduplicate article and
+SI. Reuse identical prepared evidence across models. Direct arms make one attempt,
+with reader, refinement, repair and enrichment off; allow 180,000 estimated input
+and 40,000 output tokens. Model and reasoning are deployment contrasts, not
+model-only effects at equal compute. Record requested aliases and served IDs.
 
-Parse every article/SI with the same Docling implementation, then use production
-`parse_documents` to combine, deduplicate and attach context. Prepare once per
-paper and reuse identical evidence across deployments and repeats. Never build
-model input from the reference annotations. Use the current schema/prompt,
-40,000 output tokens and a 180,000 estimated-input limit. Disable reader,
-refinement, repair and enrichment for all direct arms. `astra.toml` is the
-ordinary configuration; cheaper deployments change only model and reasoning.
+Preflight every paper before paid calls. Resolve capacity failures with a common
+policy before freezing; never truncate or drop a difficult paper after scoring.
+Freeze evidence, methods, prompts/schema, code/dependencies, references and order.
+Use seed 20261122 to shuffle paper blocks and arms within each block. Each attempt
+has an independent response cache. Finish 90 primary runs before the 30 repeats.
 
-Preflight the **whole roster** before inference. If a full paper/SI does not fit,
-resolve and record a common capacity policy before freezing the study; do not
-truncate evidence or remove that paper after seeing its score. Freeze prepared
-inputs, code/dependency versions, methods, references and execution order. Use
-seed 20261122 to shuffle paper blocks and the three deployments within each
-paper. Finish the primary roster before optional repeats or hybrid tests.
-Each run owns an independent response cache and provider attempt. Repeats retain
-the same declared generation settings; they assess API repeatability, not extra
-independent papers or a sampling distribution over deliberately changed seeds.
+The fixed repeatability subset contains 3 short, 3 medium and 4 long papers by
+combined PDF/SI pages. Within each length third, select by ascending
+SHA256(`20261122:paper_id`); membership is committed in `papers.json`.
+Second runs keep identical declared settings and measure API repeatability.
 
-## Scoring prerequisite and analysis
+## Scoring and analysis
 
-Before freezing the new study, fix the known qualified-metric normalization gap
-through the shared scoring boundary: `certified power conversion efficiency`
-must remain PCE with its certification qualification preserved. Test equivalent
-forms and genuine contradictory qualifiers symmetrically; add no paper-specific
-rules. Audit numeric versus qualitative PV assertions so plots are labeled
-correctly. Version the scorer once and rescore the saved pilots without inference
-to verify the behavior. Preserve all original evaluations. No paid study calls
-precede this check. The revised scorer is matcher v26 / fact profile v23. The saved-pilot rescore
-and offline validation accompany the PR. Paid runs start only after the user has
-reviewed that PR; starting a run freezes these identifiers and the implementation.
+Freeze matcher **v26** / fact profile **v23**, tested on saved outputs before
+inference. Preserve original evaluations. Use **1% relative / zero absolute**
+numeric tolerance; unitless PCE/FF use percentage points (0.2 means 0.2%).
 
-Keep 1% relative / zero absolute numeric tolerance and the existing unitless
-PCE/FF percentage-point convention. Score every completed run against the same
-human reference. Report PCE, FF, Voc and Jsc individually, pooled PV fields,
-material/device identity, processing and stability. Separate paper-wide retrieval
-from strict device/context attribution. Preserve parsed-quantity versus literal claim counts per field in the diagnostics;
-use subfield tables for qualitative and unparsed measurement assertions. PCE/FF/Voc/
-Jsc field denominators retain malformed and literal claims: these are field-agreement
-metrics, not numeric-only accuracy. Do not silently discard malformed predictions. Unmatched
-claims can expose scoring representation gaps as well as extraction omissions.
+Report PCE, FF, Voc and Jsc individually, pooled PV fields, material/device
+identity, processing and stability. Separate paper-wide recovery from strict
+attribution. Retain malformed/literal claims in field denominators; diagnostic
+claim types prevent labeling field agreement as numeric-only accuracy.
+Report precision, recall, F1 and underlying counts; unsupported recall is unavailable.
 
-Primary analysis uses the first run on all 30 papers. For each model contrast,
-compute per-paper differences, weight papers equally and report 95% paired-paper
-bootstrap intervals (10,000 resamples; seed 20261122). Report pooled precision,
-recall, F1 and all denominators alongside those intervals. Fields with zero
-reference support have an explicit unavailable recall; they are not successful
-recoveries. Statistical panels must distinguish numerical PV claims from broader
-field-name agreement. Inspect the fixed 10-paper second runs separately for
-within-paper repeatability and failure changes. Do not pool them as 10 new papers.
+Primary effects are equal-paper mean differences on the 30 first runs, with
+95% paired-paper bootstrap intervals: 10,000 resamples, seed 20261122. Report the
+10-paper repeatability analysis separately, averaging repeats within papers.
+The independent unit remains the paper, never a fact or repeated run.
 
-Use two percentage points of paired mean F1 loss as a development target, with
-per-field recall and broader-domain regressions visible. A confidence interval
-crossing the target is inconclusive; 30 papers do not guarantee enough power to
-establish equivalence. These are development comparisons with existing coverage
-limitations, not validated absolute precision or held-out generalization claims.
+Use two percentage points of mean F1 loss as a development target, alongside
+per-field recall and domain regressions. An interval crossing that target is
+inconclusive; this sample cannot guarantee equivalence. Incomplete references
+support annotation-agreement comparisons, not absolute accuracy or held-out rankings.
+Show planned/completed/scored counts and failures. Any complete-pair estimate must
+name its denominator; missing runs do not silently disappear or become zero quality.
 
-Retain every planned slot, failed attempt, validation warning and unknown cost.
-Give planned/completed/scored counts and completion rates for each deployment.
-Any score conditional on complete pairs must name that denominator; do not make
-a failure disappear by replacing its slot or silently treating it as zero quality.
+## Refinement follow-up
 
-## One mixed-model comparison, after measuring the gap
+Choose at most one cheaper draft model after the direct comparison. On the fixed
+10-paper subset, compare direct cheaper/Astra results with one Astra review of the
+cheaper draft. Optionally add Astra draft + Astra review if the budget permits.
+Declare follow-up arms before requests and retain the same sources and scorer.
 
-Choose at most one cheaper draft model from the direct comparison. On the fixed
-10-paper subset compare its direct output, Astra direct, and one refinement by
-Astra using the existing refinement stage. An Astra-draft/Astra-refinement arm
-may be added as a quality-oriented review control if the budget admits it.
-Declare these arms before their requests. This stage uses full source plus draft
-and returns a full study; it may cost more than direct Astra. Do not assume a
-hybrid is cheaper, add a router, or introduce another extraction stage.
+Use the existing refinement stage: full source plus draft, returning a complete
+candidate. Reuse saved drafts where supported. Pipeline cost includes draft plus
+review; campaign accounting charges each real provider attempt once. Measure
+domain gains and collateral losses; refinement may cost more than direct Astra.
+Enrichment creates separate export interpretations and is outside this extraction
+comparison. No router or additional extraction stage is needed.
 
-Reuse immutable saved drafts where the existing stage contract permits. Attribute
-draft plus review cost to the hypothetical pipeline even when the draft is reused;
-charge its real provider attempt only once to the campaign ledger. Include full
-tokens, cached input, reasoning, latency, failed attempts and completion. Report
-which domain improves, not only an overall score. The hybrid analysis is an
-explicit follow-up on development data, not an independent validation of selection.
+## Spending and artifacts
 
-## Budget and release
+The approved **$150 campaign admission cap** retains **$11.38294587** in prior
+recorded cost and **$17.45** in unknown-cost holds. Priority: primary runs, then
+repeatability, then refinement. The earlier unexecuted four-paper Astra plan is
+superseded; it incurred no calls or reservations.
 
-The user approved a **$150 total campaign admission cap on 22 November 2026**.
-Carry **$11.38294587** known cost and retain **all $17.45** previous unknown-cost
-reservations: initial commitment **$28.83294587**, leaving **$121.16705413** for
-new admissions. The earlier unexecuted four-paper Astra plan is superseded by
-this larger study; no calls or reservations were made for that plan.
+Use one ledger and one active generative request. Persist a reservation before
+dispatch, including known spending and unresolved holds in admission checks.
+Settle only with complete accounting; otherwise retain the hold. A response can
+exceed its estimated reservation. Stop new admissions at the cap and retain every
+unfinished slot. Do not spend simply to complete a figure.
 
-Use one shared ledger and one active generative request. Before dispatch include
-all known cost, open reservations and retained unknown-cost reservations in the
-commitment check. Reserve per slot using its preflight input/output allowances
-and current provider rates, with a recorded margin. Settle only with complete
-usage/cost; otherwise retain the reservation. Do not treat unknown cost as zero.
-One observed-cost threshold or reservation cannot guarantee the final bill.
-Stop admissions before the approved cap; never spend to complete a figure.
-
-Budget priority is the 90-run primary comparison, then 30 repeatability checks,
-then the mixed-model follow-up. The cap is a limit, not a spending target or a
-promise that every optional arm will fit. If it stops the study, retain the full
-roster and report unfinished work. Do not silently shrink the cohort. Project
-costs for 10,000/50,000 completed outputs only with complete cost accounting and
-state the excluded parsing/infrastructure costs.
-
-Commit the roster, protocol and reusable checker before inference. Validate source
-bindings locally and reference integrity in CI. Capture full Langfuse prompts and
-responses, and keep local requests, responses, configurations and sealed manifests.
-Publish sanitized per-paper/field scores, failure codes and cost tables with the
-implementation commit and scorer version. Keep paper PDFs, raw prompts, credentials
-and private review history outside Git. Use existing extraction, scoring and
-comparison modules; this plan does not introduce a new experiment configuration
-format or a second scoring implementation.
+Capture full Langfuse traces and local requests, responses, configurations and
+sealed manifests. Publish sanitized per-paper/field scores, failure codes and
+costs with code/scorer versions. Cost projections require complete accounting and
+exclude parsing/infrastructure costs. PDFs, prompts, credentials and private review
+history stay outside Git. Use the existing extractor, scorer and comparator.

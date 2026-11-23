@@ -398,7 +398,7 @@ def execute(experiment: Experiment) -> dict:
                     stream.write(
                         "\n## Execution notes\n\nSee `errors.json` for all retained failures and stops.\n\n"
                     )
-                    for error in errors:
+                    for error in errors[:3]:
                         stream.write(f"- {error['run_dir']}: {error['error']}\n")
         return result
 

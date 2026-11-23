@@ -293,7 +293,7 @@ def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
         "# Experiment results",
         "",
         f"Baseline: **{baseline}**. Unique planned runs: **{len(result['runs'])}**.",
-        "Primary reports use the declared cohort; fixed-subset repeatability reports include both runs and are separate from primary effects. Repeats are not independent papers.",
+        "Primary and repeatability comparisons are separate; repeats are not independent papers.",
         "",
         "## Run coverage and cost",
         "",
@@ -311,7 +311,7 @@ def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
         )
     lines += [
         "",
-        "Costs count each unique provider attempt once, including failures. Both candidate comparisons reuse the same baseline artifacts; do not sum their baseline costs.",
+        "Costs include failures and count shared baseline attempts once.",
         "",
         f"New recorded provider cost: **${spending['known_run_cost_usd']:.6f}**. Unresolved attempt costs: **{spending['unresolved_attempts']}**.",
         f"Committed spending, including prior spending and unknown-cost reservations: **${spending['committed_usd']:.6f}**. "
@@ -321,7 +321,7 @@ def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
             else "No campaign admission cap was declared."
         ),
         "",
-        "A reservation is an admission estimate, not a provider price guarantee. See `spending.json` for each attempt and `accounting.json` for totals.",
+        "Reservations are estimates, not price guarantees. Details: `spending.json` and `accounting.json`.",
         "",
         "## Paired comparisons",
         "",
@@ -334,10 +334,10 @@ def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
         "",
         "## Read the plotting tables",
         "",
-        "`figure-data/important_fields.csv` contains PCE, FF, Voc, Jsc and device/material field counts. Every table retains named arm, paper and repeat. Paired reports use control/treatment to mean baseline/candidate.",
+        "`figure-data/important_fields.csv`: key field scores by arm, paper and repeat. Paired reports label baseline/candidate as control/treatment.",
         "",
-        "Field metrics retain malformed and literal claims. `scoring_diagnostics.csv` names each field and distinguishes parsed quantities from literals and nonquantities. `subfield_scores.csv` separates qualitative and unparsed measurement claims; `field_strata.csv` separates measurement methods and statistical contexts.",
+        "`scoring_diagnostics.csv`: value and context failures. `subfield_scores.csv` and `field_strata.csv`: domain and protocol breakdowns. Field counts retain malformed and literal claims.",
         "",
-        "Use the linked paired reports for intervals and completion denominators. Scores on references with incomplete coverage are diagnostic agreement, not validated absolute precision. Empty cells mean unavailable, not zero.",
+        "Paired reports contain intervals and denominators. Incomplete references measure annotation agreement, not validated accuracy. Empty cells mean unavailable.",
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
