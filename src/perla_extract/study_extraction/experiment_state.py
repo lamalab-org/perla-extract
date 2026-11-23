@@ -91,7 +91,8 @@ class CampaignSpending:
     def save(self) -> None:
         """Persist a reservation before provider work, not merely in process memory."""
         write_json_atomic(self.path, self.record.model_dump(mode="json"))
-        with self.path.open("rb") as stream:
+        # Windows flushing requires a write-capable handle.
+        with self.path.open("r+b") as stream:
             os.fsync(stream.fileno())
         if os.name != "nt":
             descriptor = os.open(self.path.parent, os.O_RDONLY)
