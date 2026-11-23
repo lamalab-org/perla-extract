@@ -1,9 +1,10 @@
-# Quality-oriented frontier baseline; measure it against the human references.
+# Candidate Astra direct baseline; settings are not yet calibrated.
 [stages.default]
 model = "openai/gpt-6.2-astra"
 api_key_env = "OPENAI_API_KEY"
 service_tier = "default"
 reasoning_effort = "high"
+# Shared study ceilings; output allowance includes reasoning.
 context_tokens = 262144
 max_input_tokens = 180000
 max_output_tokens = 40000
