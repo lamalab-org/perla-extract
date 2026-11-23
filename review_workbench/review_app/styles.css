@@ -293,9 +293,22 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .status-actions p { flex:1; min-width:220px; }
 #status,.success { color:var(--brand); }.error,#dialog-status,#import-status { color:var(--danger); }
 dialog { border:0; border-radius:18px; padding:0; box-shadow:0 24px 80px #0005; width:min(760px,92vw); }
-#record-dialog { width:min(1080px,96vw); }
 dialog::backdrop { background:#16201d99; backdrop-filter:blur(4px); }
 .dialog-card { display:grid; gap:12px; padding:20px; max-height:90vh; overflow:auto; }
+/* Record editor: a non-modal panel in the review column's grid cell, so the paper stays usable beside it. */
+.workspace-grid > .pdf-panel { grid-column:1; grid-row:1; }
+.workspace-grid > .review-panel { grid-column:-2 / -1; grid-row:1; }
+#record-dialog,#jv-dialog { grid-column:-2 / -1; grid-row:1; position:relative; inset:auto; z-index:4; width:auto; max-width:none; height:auto; max-height:none; margin:0; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); overflow:hidden; }
+#record-dialog[open],#jv-dialog[open] { display:flex; flex-direction:column; min-height:0; }
+#record-dialog > .dialog-card,#jv-dialog > .dialog-card { flex:1; min-height:0; max-height:none; }
+.workspace-grid[data-view="paper"] > #record-dialog[open],.workspace-grid[data-view="paper"] > #jv-dialog[open] { display:none; }
+.jv-columns,.jv-presets { display:flex; flex-wrap:wrap; gap:6px 14px; }
+.jv-table { display:grid; gap:4px; overflow-x:auto; }
+.jv-row { display:grid; grid-template-columns:minmax(118px,1.3fr) minmax(104px,1.1fr) repeat(var(--jv-columns,4),minmax(58px,1fr)) 28px; align-items:end; gap:4px; min-width:min-content; }
+.jv-row > input,.jv-row > select { min-width:0; }
+.jv-head { font-size:.72rem; color:var(--muted); }
+.jv-metric-head { display:grid; gap:2px; }
+.jv-metric-head input { font-size:.72rem; padding:2px 4px; }
 .dialog-heading button { border:0; font-size:1.4rem; }.dialog-actions span { flex:1; }
 .dependency-warning { border:1px solid #e5b8b5; border-radius:8px; padding:10px; background:#fff7f6; color:var(--danger); font-size:.8rem; }
 .dependency-warning ul { display:grid; gap:.35rem; margin:.45rem 0 0; padding-left:1.25rem; }
@@ -377,7 +390,7 @@ button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
   .stack-layer-main label,.stack-layer-actions { grid-column:2; }
   .stack-layer-advanced { margin-left:36px; }
 }
-@media (max-width:920px) { .workspace-grid:not([data-view="paper"]):not([data-view="review"]) { grid-template-columns:1fr; height:auto; }.workspace-grid:not([data-view="paper"]):not([data-view="review"]) .pdf-panel { max-height:70vh; } }
+@media (max-width:920px) { .workspace-grid:not([data-view="paper"]):not([data-view="review"]) { grid-template-columns:1fr; height:auto; } .workspace-grid > .pdf-panel,.workspace-grid > .review-panel { grid-column:auto; grid-row:auto; } #record-dialog,#jv-dialog { position:fixed; inset:76px 8px 8px; z-index:20; }.workspace-grid:not([data-view="paper"]):not([data-view="review"]) .pdf-panel { max-height:70vh; } }
 @media (max-width:900px) { header { height:auto; min-height:76px; align-items:flex-start; padding:12px; gap:12px; flex-wrap:wrap; }.header-actions { width:100%; flex-wrap:wrap; }.header-actions > * { flex:1 1 auto; }.header-actions .global-menu { flex:0 0 auto; margin-left:auto; }.dataset-picker { min-width:0; }.dataset-picker select { width:100%; } main { height:auto; min-height:calc(100vh - 76px); } }
 @media (max-width:650px) { header h1 { font-size:1.1rem; }.header-actions #reviewer { display:none; } main { display:block; }.paper-rail { max-height:250px; border-right:0; border-bottom:1px solid var(--line); }.paper-list { grid-template-columns:repeat(2,minmax(0,1fr)); } #workspace { padding:10px; overflow:visible; }.study-heading { padding:12px; }.study-actions { width:100%; justify-content:flex-start; }.study-actions > button { flex:1 1 auto; }.workspace-view-switch { width:100%; }.workspace-view-switch button { flex:1; }.file-section { grid-template-columns:1fr; }.file-section > button,.file-actions button { width:100%; }.file-actions { display:grid; }.workbook-upload { grid-column:1; grid-template-columns:1fr; }.composition-comparison,.context-grid,.record-facts,.editor-fields,.annotation-change { grid-template-columns:1fr; }.decision-actions,.record-management-actions { flex-wrap:wrap; }.decision-actions button { flex:1 1 100%; }.records-toolbar { position:static; }.reported-value { display:grid; }.annotation-paper-actions button { flex:1 1 100%; }.dialog-actions { flex-wrap:wrap; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition-duration:.01ms !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; } }

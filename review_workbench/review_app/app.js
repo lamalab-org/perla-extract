@@ -3,6 +3,7 @@ import { renderCoverage, readCoverage } from "./reference-coverage.js";
 import { createReviewSession } from "./review-session.js";
 import { renderRecordDetails, renderSubjectContext } from "./record-details.js";
 import { createRecordEditor } from "./record-editor.js";
+import { createJvTable } from "./jv-table.js";
 import { createFinalizationQueue } from "/adjudication.js";
 import { schemaCompatibilityMessage, reviewProgress, recordEvidenceSection } from "/review-state.js";
 
@@ -540,8 +541,22 @@ function renderPapers() {
   $("paper-list").replaceChildren(...(cards.length ? cards : [element("p", { className: "muted", text: "No imported papers in this split." })]));
 }
 
+/** The record editor is not modal, so leaving the paper must not silently drop unsaved work. */
+function leaveRecordEditor() {
+  if ($("record-dialog").open) {
+    if (recordEditor.changed && !window.confirm("Discard your unsaved changes to this record?")) return false;
+    $("record-dialog").close();
+  }
+  if ($("jv-dialog").open) {
+    if (jvTable.changed && !window.confirm("Discard the J-V rows you have not saved?")) return false;
+    $("jv-dialog").close();
+  }
+  return true;
+}
+
 async function selectPaper(paperId) {
   if (state.loadingPaperId) return;
+  if (!leaveRecordEditor()) return;
   state.loadingPaperId = paperId;
   renderPapers();
   if (state.bundle) setStatus(`Loading ${paperId}…`);
@@ -2049,27 +2064,61 @@ async function removeRecord() {
   } catch (error) { $("dialog-status").textContent = presentRequestError(error).message; }
 }
 
-async function searchEvidence() {
+// The record editor uses the plain ids; the J-V panel the same ids with a "jv-" prefix.
+const evidenceStatus = prefix => (prefix ? `${prefix}status` : "dialog-status");
+
+async function searchEvidence(prefix = "") {
   try {
-    const payload = await request(`/api/evidence/${state.split}/${encodeURIComponent(state.paperId)}?q=${encodeURIComponent($("evidence-query").value)}`);
+    const payload = await request(`/api/evidence/${state.split}/${encodeURIComponent(state.paperId)}?q=${encodeURIComponent($(`${prefix}evidence-query`).value)}`);
     const results = payload.blocks.map((block) => element("button", {
       className: "evidence-result",
       properties: { type: "button" },
-      events: { click: () => chooseEvidence(block) },
+      events: { click: () => chooseEvidence(block, prefix) },
     }, [element("span", { text: `${block.source} · p.${block.page}` }), block.text]));
-    $("evidence-results").replaceChildren(...(results.length ? results : [element("p", { className: "muted", text: "No evidence blocks found." })]));
-  } catch (error) { $("dialog-status").textContent = error.message; }
+    $(`${prefix}evidence-results`).replaceChildren(...(results.length ? results : [element("p", { className: "muted", text: "No evidence blocks found." })]));
+  } catch (error) { $(evidenceStatus(prefix)).textContent = error.message; }
 }
 
-function chooseEvidence(block) {
-  $("citation-block").value = block.block_id;
-  $("citation-quote").value = block.text.slice(0, 1600);
+function chooseEvidence(block, prefix = "") {
+  $(`${prefix}citation-block`).value = block.block_id;
+  $(`${prefix}citation-quote`).value = block.text.slice(0, 1600);
   if (state.bundle.sources.includes(block.source)) {
     state.source = block.source;
     state.page = block.page;
     $("pdf-source").value = state.source;
-    renderPdf().catch((error) => { $("dialog-status").textContent = `Could not render this evidence page: ${error.message}`; });
+    renderPdf().catch((error) => { $(evidenceStatus(prefix)).textContent = `Could not render this evidence page: ${error.message}`; });
   }
+}
+
+function openJvTable() {
+  document.querySelector(".add-record-menu").open = false;
+  if (!leaveRecordEditor()) return;
+  jvTable.open();
+}
+
+/** Each row becomes its own performance observation; saved one after another. */
+async function saveJvTable() {
+  const { observations, citation, problems } = jvTable.collect();
+  if (problems.length) return $("jv-status").textContent = problems.join(" ");
+  const button = $("save-jv");
+  button.disabled = true;
+  let saved = 0;
+  try {
+    for (const observation of observations) {
+      $("jv-status").textContent = `Saving row ${saved + 1} of ${observations.length}…`;
+      await reviewSession.saveRecord({
+        edit: { kind: "performance_observations", index: null, intent: "add", baseRevision: reviewSession.bundle.revision },
+        value: observation, citation, note: "Added with the J-V table",
+      });
+      saved += 1;
+    }
+    $("jv-dialog").close();
+    renderStudy();
+    setStatus(`Added ${saved} performance observation${saved === 1 ? "" : "s"}. Review them, then choose Matches source.`);
+  } catch (error) {
+    if (saved) { jvTable.removeSaved(saved); renderStudy(); }
+    $("jv-status").textContent = `${saved ? `Saved ${saved} row${saved === 1 ? "" : "s"}; they were removed from the table. ` : ""}Row ${saved + 1} was not saved: ${presentRequestError(error).message}`;
+  } finally { button.disabled = false; }
 }
 
 async function completeStage(stage) {
@@ -2597,13 +2646,14 @@ async function importPaper(event) {
   } catch (error) { $("import-status").textContent = error.message; }
 }
 
+const jvTable = createJvTable({ document, element, context: () => ({ bundle: state.bundle }), humanLabel });
 const recordEditor = createRecordEditor({
   document, element, context: () => ({ bundle: state.bundle, studySchema: state.studySchema }),
   collections: COLLECTIONS, humanLabel, singularCollection, recordKey, recordReferences,
   entityTitle, linkedRecordSummary, reviewReferencedRecord, focusCitation,
 });
 
-$("split").addEventListener("change", async (event) => { state.pdfAbortController?.abort(); reviewSession.reset(event.target.value); state.papers = []; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });
+$("split").addEventListener("change", async (event) => { if (!leaveRecordEditor()) { event.target.value = state.split; return; } state.pdfAbortController?.abort(); reviewSession.reset(event.target.value); state.papers = []; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });
 $("toggle-paper-list").addEventListener("click", () => setPaperListOpen(document.querySelector("main").classList.contains("paper-list-hidden")));
 document.querySelectorAll("[data-workspace-view]").forEach((button) => button.addEventListener("click", () => setWorkspaceView(button.dataset.workspaceView)));
 $("paper-filter").addEventListener("input", renderPapers);
@@ -2658,16 +2708,22 @@ $("show-unresolved").addEventListener("click", () => {
   setTab("records");
   renderReviewQueue();
 });
-$("close-record").addEventListener("click", () => $("record-dialog").close());
-$("cancel-record").addEventListener("click", () => $("record-dialog").close());
+$("close-record").addEventListener("click", leaveRecordEditor);
+$("cancel-record").addEventListener("click", leaveRecordEditor);
 $("save-record").addEventListener("click", saveRecord);
 $("remove-record").addEventListener("click", removeRecord);
 $("confirm-merge").addEventListener("click", confirmMerge);
 $("continue-reclassify").addEventListener("click", continueReclassification);
 $("reload-paper").addEventListener("click", reloadLatestPaper);
 $("reload-paper-dialog").addEventListener("click", reloadLatestPaper);
-$("search-evidence").addEventListener("click", searchEvidence);
+$("search-evidence").addEventListener("click", () => searchEvidence());
 $("evidence-query").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); searchEvidence(); } });
+$("jv-search-evidence").addEventListener("click", () => searchEvidence("jv-"));
+$("jv-evidence-query").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); searchEvidence("jv-"); } });
+$("add-jv-table").addEventListener("click", openJvTable);
+$("save-jv").addEventListener("click", saveJvTable);
+$("close-jv").addEventListener("click", leaveRecordEditor);
+$("cancel-jv").addEventListener("click", leaveRecordEditor);
 $("open-files").addEventListener("click", () => $("files-dialog").showModal());
 $("download-truth").addEventListener("click", (event) => runDownload(
   event.currentTarget,

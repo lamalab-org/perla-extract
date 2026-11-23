@@ -546,3 +546,13 @@ def test_reviewers_can_round_trip_a_device_or_paper_excel_review():
     assert "comments_only_from_older_workbook" in source
     assert "its value edits were not applied" in source
     assert "one validated revision" in source
+
+
+def test_record_editor_sits_over_the_review_column_and_guards_unsaved_work():
+    html = (APP / "index.html").read_text(encoding="utf-8")
+    grid = html[html.index('<div class="workspace-grid">') : html.index("</main>")]
+    assert '<dialog id="record-dialog">' in grid
+    source = (APP / "app.js").read_text(encoding="utf-8")
+    selection = source[source.index("async function selectPaper") :]
+    assert selection.index("leaveRecordEditor()") < selection.index("api.paper(")
+    assert '$("close-record").addEventListener("click", leaveRecordEditor)' in source

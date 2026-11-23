@@ -173,6 +173,7 @@
                     <option value="stability_tests">Stability test</option>
                   </select>
                   <button id="add-record">Create draft</button>
+                  <button id="add-jv-table" type="button" title="Enter J-V, stabilized, certified and EQE results of one device as table rows">J–V table…</button>
                 </div></details>
               </div>
             </div>
@@ -216,6 +217,55 @@
             <button id="reload-paper" type="button" hidden>Load latest saved version</button>
           </div>
         </section>
+        <!-- Record editor: opened non-modally over the review column so the paper stays visible. -->
+        <dialog id="record-dialog">
+          <form method="dialog" class="dialog-card">
+            <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button id="close-record" type="button" aria-label="Close">×</button></div>
+            <p id="record-dialog-help" class="callout"></p>
+            <div id="record-dependencies" class="dependency-warning" hidden></div>
+            <div class="editor-mode" role="group" aria-label="Record editor">
+              <button id="show-fields-editor" type="button" class="active" aria-pressed="true">Form</button>
+              <button id="show-json-editor" type="button" aria-pressed="false">Raw JSON (advanced)</button>
+            </div>
+            <div id="fields-editor-panel"><div id="structured-editor" class="structured-editor"></div></div>
+            <div id="json-editor-panel" hidden><p class="callout">Edit the complete JSON for this one record. Saving still validates the entire study and its evidence.</p><label>Raw record JSON<textarea id="record-json" rows="22" spellcheck="false"></textarea></label></div>
+            <details class="evidence-search"><summary id="evidence-search-label">Source evidence for this correction</summary>
+              <div class="evidence-picker">
+                <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
+                <button id="search-evidence" type="button">Search</button>
+              </div>
+              <div id="evidence-results"></div>
+              <label class="technical-evidence-field">Evidence block ID <span>Internal link to the highlighted source passage.</span><input id="citation-block" /></label>
+              <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
+            </details>
+            <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
+            <p id="record-save-help" class="save-explainer">Your change is saved with your name. Administrators can retrieve it. If no later edit changes the same record, you can undo it from <strong>My work &amp; undo</strong>.</p>
+            <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button id="cancel-record" type="button">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
+            <p id="dialog-status" role="status"></p>
+          </form>
+        </dialog>
+        <!-- Quick entry of J-V results: one row per performance observation of one device. -->
+        <dialog id="jv-dialog">
+          <form method="dialog" class="dialog-card">
+            <div class="dialog-heading"><div><span class="eyebrow">Performance observations</span><h2>Add J–V results</h2></div><button id="close-jv" type="button" aria-label="Close">×</button></div>
+            <p class="callout">One row per measurement of the chosen device, e.g. reverse and forward scan. Type each value exactly as printed; empty cells are left out. Every row is saved as its own performance observation, citing the quote below.</p>
+            <label>Device <select id="jv-device" aria-label="Measured device"></select></label>
+            <div id="jv-columns" class="jv-columns"></div>
+            <div id="jv-table" class="jv-table"></div>
+            <div id="jv-presets" class="jv-presets"></div>
+            <details class="evidence-search" open><summary>Source evidence for these rows</summary>
+              <div class="evidence-picker">
+                <label>Find evidence<input id="jv-evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
+                <button id="jv-search-evidence" type="button">Search</button>
+              </div>
+              <div id="jv-evidence-results"></div>
+              <label class="technical-evidence-field">Evidence block ID <span>Internal link to the highlighted source passage.</span><input id="jv-citation-block" /></label>
+              <label>Exact quote <span>Must contain every value in the rows, e.g. the table or sentence they come from.</span><textarea id="jv-citation-quote" rows="4"></textarea></label>
+            </details>
+            <div class="dialog-actions"><span></span><button id="cancel-jv" type="button">Cancel</button><button id="save-jv" type="button" class="primary">Save rows</button></div>
+            <p id="jv-status" role="status"></p>
+          </form>
+        </dialog>
       </div>
     </section>
   </main>
@@ -254,32 +304,6 @@
     </form>
   </dialog>
 
-  <dialog id="record-dialog">
-    <form method="dialog" class="dialog-card">
-      <div class="dialog-heading"><div><span id="record-kind" class="eyebrow"></span><h2 id="record-title">Edit record</h2></div><button id="close-record" type="button" aria-label="Close">×</button></div>
-      <p id="record-dialog-help" class="callout"></p>
-      <div id="record-dependencies" class="dependency-warning" hidden></div>
-      <div class="editor-mode" role="group" aria-label="Record editor">
-        <button id="show-fields-editor" type="button" class="active" aria-pressed="true">Form</button>
-        <button id="show-json-editor" type="button" aria-pressed="false">Raw JSON (advanced)</button>
-      </div>
-      <div id="fields-editor-panel"><div id="structured-editor" class="structured-editor"></div></div>
-      <div id="json-editor-panel" hidden><p class="callout">Edit the complete JSON for this one record. Saving still validates the entire study and its evidence.</p><label>Raw record JSON<textarea id="record-json" rows="22" spellcheck="false"></textarea></label></div>
-      <details class="evidence-search"><summary id="evidence-search-label">Source evidence for this correction</summary>
-        <div class="evidence-picker">
-          <label>Find evidence<input id="evidence-query" type="search" placeholder="Search extracted evidence…" /></label>
-          <button id="search-evidence" type="button">Search</button>
-        </div>
-        <div id="evidence-results"></div>
-        <label class="technical-evidence-field">Evidence block ID <span>Internal link to the highlighted source passage.</span><input id="citation-block" /></label>
-        <label>Exact quote <span>Trim this to the smallest passage that supports the correction.</span><textarea id="citation-quote" rows="3"></textarea></label>
-      </details>
-      <label><span id="mutation-note-label">Reason for correction</span> <span id="mutation-note-help">Explain what the extraction got wrong.</span><input id="mutation-note" placeholder="What did the extraction get wrong?" /></label>
-      <p id="record-save-help" class="save-explainer">Your change is saved with your name. Administrators can retrieve it. If no later edit changes the same record, you can undo it from <strong>My work &amp; undo</strong>.</p>
-      <div class="dialog-actions"><button id="remove-record" type="button" class="danger">Remove extra record</button><span></span><button id="reload-paper-dialog" type="button" hidden>Discard this edit and load latest</button><button id="cancel-record" type="button">Cancel</button><button id="save-record" type="button" class="primary">Save correction</button></div>
-      <p id="dialog-status" role="status"></p>
-    </form>
-  </dialog>
 
   <dialog id="merge-dialog">
     <form method="dialog" class="dialog-card">

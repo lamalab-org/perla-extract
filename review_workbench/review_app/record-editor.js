@@ -56,6 +56,7 @@ export function createRecordEditor({
   // Re-rendering after an added item must not collapse work in progress.
   let groups = new Map();
   let focusPath = null;
+  let initialJson = null;
   const RECORD_ID_PREFIXES = {
     device_families: "family", individual_devices: "device",
     performance_observations: "observation", population_statistics: "population",
@@ -234,7 +235,9 @@ export function createRecordEditor({
     $("save-record").hidden = intent === "remove" || resolving;
     $("mutation-note").closest("label").hidden = resolving;
     const dialog = $("record-dialog");
-    if (!dialog.open) dialog.showModal();
+    // Non-modal: the editor covers the review column while the paper stays usable.
+    if (!dialog.open) dialog.show();
+    initialJson = JSON.stringify(item);
     let editorError = null;
     try {
       renderStructuredEditor();
@@ -731,6 +734,12 @@ export function createRecordEditor({
     setMode: setRecordEditorMode,
     newDraft: newRecordDraft,
     get edit() { return edit ? structuredClone(edit) : null; },
+    /** Whether the open draft differs from what was loaded (unsaved work). */
+    get changed() {
+      if (!draft) return false;
+      if (!$("json-editor-panel").hidden && $("record-json").value !== JSON.stringify(draft.value, null, 2)) return true;
+      return JSON.stringify(draft.value) !== initialJson;
+    },
     setSource(source) { edit.source = structuredClone(source); },
     value() {
       // Programmatic textarea changes and invalid raw input must be checked on save.

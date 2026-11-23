@@ -20,7 +20,8 @@ export function editorDocument() {
     replaceChildren(...children) { this.children = []; this.append(...children); }
     setAttribute(name, value) { this.attributes[name] = value; }
     closest() { return this; }
-    showModal() { this.open = true; }
+    showModal() { this.open = true; this.modal = true; }
+    show() { this.open = true; this.modal = false; }
     close() { this.open = false; }
     focus() { this.focused = true; }
     scrollTo() {}

@@ -39,6 +39,7 @@ scientific record. Production operation and imports are described in the
 | --- | --- | --- |
 | Scientific field types and relationship constraints | `src/perla_extract/study_extraction/models.py` | The stored scientific contract changes |
 | Field controls, draft, JSON mode, schema defaults, stack editor | `review_workbench/review_app/record-editor.js` | A field needs a different control or editing behavior |
+| Quick entry of J-V, stabilized, certified and EQE results as one row per performance observation | `review_workbench/review_app/jv-table.js` | Rows need other metrics, units or measurement types |
 | Values, treatment context, measurement conditions and statistics shown on review cards | `review_workbench/review_app/record-details.js` | A stored scientific field must be visible before acceptance |
 | Pure relationship choices and review calculations | `review_workbench/review_app/review-state.js` | Owner options or review calculations change |
 | Authentication headers, endpoint methods, structured HTTP errors | `review_workbench/review_app/api-client.js` | The HTTP contract changes |

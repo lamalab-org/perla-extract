@@ -16,6 +16,10 @@ def run_javascript(script):
         ("api-client.js", "createApiClient, ReviewApiError"),
         ("review-session.js", "createReviewSession"),
         ("record-editor.js", "createRecordEditor, createDraftState"),
+        (
+            "jv-table.js",
+            "createJvTable, observationsFromRows, reportedNumber, valuesMissingFromQuote",
+        ),
         ("record-details.js", "renderRecordDetails, renderSubjectContext"),
         ("reference-coverage.js", "renderCoverage, readCoverage"),
     ):
@@ -354,6 +358,100 @@ editor.open('device_families',0);
 assert.equal(group('processing_steps').open,false);
 """
     )
+
+
+def test_editor_opens_beside_the_paper_and_reports_unsaved_work():
+    run_javascript(
+        EDITOR_SETUP
+        + """
+editor.open('individual_devices',0);
+const dialog = document.getElementById('record-dialog');
+assert.equal(dialog.open,true);
+assert.equal(dialog.modal,false);
+assert.equal(editor.changed,false);
+const label = document.getElementById('record-field-label');
+label.value = 'Renamed'; label.fire('input');
+assert.equal(editor.changed,true);
+label.value = 'Cell'; label.fire('input');
+assert.equal(editor.changed,false);
+editor.setMode('json');
+const raw = document.getElementById('record-json');
+raw.value = '{'; raw.fire('input');
+assert.equal(editor.changed,true);
+editor.open('individual_devices');
+assert.equal(editor.changed,false);
+"""
+    )
+
+
+def test_jv_rows_become_observations_with_only_reported_values():
+    run_javascript("""
+assert.equal(reportedNumber('23.5'),23.5);
+assert.equal(reportedNumber('\u22120.8'),-0.8);
+assert.equal(reportedNumber('1,12'),1.12);
+assert.equal(reportedNumber('20.6 \u00b1 0.3'),null);
+assert.equal(reportedNumber(''),null);
+const rows = [
+  {measurement_type:'jv_scan',scan_direction:'reverse',values:{PCE:'20.6',Voc:'1.12',Jsc:' ',FF:''}},
+  {measurement_type:'jv_scan',scan_direction:'forward',values:{}},
+  {measurement_type:'stabilized_power_output',scan_direction:'not_applicable',values:{PCE:'19.8 \u00b1 0.2'}},
+];
+const units = {PCE:'%',Voc:'V',Jsc:'mA cm-2',FF:'%',Rs:'',Rsh:'',HI:''};
+const result = observationsFromRows({rows,deviceId:'cell',units,usedIds:['observation-1']});
+assert.equal(result.length,2);
+assert.deepEqual(result.map(item => item.observation_id),['observation-2','observation-3']);
+assert.deepEqual(result[0].metrics,[
+  {name:'PCE',raw_value:'20.6',value_number:20.6,unit:'%',evidence:[]},
+  {name:'Voc',raw_value:'1.12',value_number:1.12,unit:'V',evidence:[]},
+]);
+assert.equal(result[0].device_id,'cell');
+assert.equal(result[0].scan_direction,'reverse');
+assert.deepEqual(result[0].measurement_conditions,[]);
+assert.equal(result[1].measurement_type,'stabilized_power_output');
+assert.equal(result[1].metrics[0].value_number,null);
+assert.deepEqual(valuesMissingFromQuote(result,'Reverse: 20.6 %, 1.12 V; stabilized 19.8 \u00b1 0.2 %'),[]);
+assert.deepEqual(valuesMissingFromQuote(result,'PCE of 20.6%'),['row 1 Voc "1.12"','row 2 PCE "19.8 \u00b1 0.2"']);
+""")
+
+
+def test_jv_table_collects_rows_for_one_device():
+    run_javascript("""
+const {document, element} = editorDocument();
+const bundle = {ground_truth:{individual_devices:[{device_id:'cell',label:'Champion'}],performance_observations:[]},
+  summary:{record_identifiers:{individual_devices:'device_id',performance_observations:'observation_id'}}};
+const table = createJvTable({document,element,context:() => ({bundle}),humanLabel:value => value});
+table.open();
+assert.equal(document.getElementById('jv-dialog').open,true);
+assert.equal(document.getElementById('jv-dialog').modal,false);
+assert.deepEqual(document.getElementById('jv-device').children.map(option => option.value),['','cell']);
+assert.equal(table.changed,false);
+const cell = (row,name,value) => { const node = document.getElementById(`jv-cell-${row}-${name}`); node.value = value; node.fire('input'); };
+cell(0,'PCE','20.6'); cell(0,'Voc','1.12');
+assert.equal(table.changed,true);
+const presets = descendants(document.getElementById('jv-presets'));
+presets.find(node => node.textContent === '+ Forward scan').fire('click');
+cell(0,'PCE','20.6');
+cell(1,'PCE','19.9');
+let {observations,problems} = table.collect();
+assert.match(problems.join(' '),/device/);
+assert.match(problems.join(' '),/evidence block/);
+document.getElementById('jv-device').value = 'cell';
+document.getElementById('jv-citation-block').value = 'main-3';
+document.getElementById('jv-citation-quote').value = 'Table 1 Champion reverse 20.6 1.12 forward 19.9';
+({observations,problems} = table.collect());
+assert.deepEqual(problems,[]);
+assert.deepEqual(observations.map(item => [item.scan_direction,item.metrics.map(metric => metric.raw_value)]),
+  [['reverse',['20.6','1.12']],['forward',['19.9']]]);
+const unit = document.getElementById('jv-unit-Voc'); unit.value = 'mV'; unit.fire('input');
+assert.equal(table.collect().observations[0].metrics[1].unit,'mV');
+const toggles = descendants(document.getElementById('jv-columns')).filter(node => node.type === 'checkbox');
+toggles.find(box => box.value === 'Rs').checked = true;
+toggles.find(box => box.value === 'Rs').fire('change');
+cell(0,'Rs','4.2');
+assert.match(table.collect().problems.join(' '),/Rs "4.2"/);
+table.removeSaved(1);
+assert.deepEqual(table.collect().observations.map(item => item.scan_direction),['forward']);
+""")
 
 
 def test_ordered_controls_update_the_same_draft_and_json_view():

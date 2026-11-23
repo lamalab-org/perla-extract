@@ -1349,6 +1349,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     "app.js",
                     "review-state.js",
                     "record-editor.js",
+                    "jv-table.js",
                     "record-details.js",
                     "reference-coverage.js",
                     "api-client.js",
