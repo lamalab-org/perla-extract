@@ -331,6 +331,9 @@ dialog::backdrop { background:#16201d99; backdrop-filter:blur(4px); }
 .editor-technical { grid-column:1 / -1; margin-top:2px; padding-top:7px; border-top:1px solid #e5ebe8; }
 .editor-technical > summary { width:max-content; color:#697570; cursor:pointer; font-size:.72rem; }
 .editor-technical > p { margin:7px 0 0; color:var(--muted); font-size:.7rem; }
+.layer-targets { display:grid; gap:4px; }
+.layer-target { display:flex; align-items:center; gap:6px; font-size:.78rem; }
+.layer-target input { width:auto; margin:0; }
 .device-identity-editor,.device-stack-editor,.device-related-editor { display:grid; gap:10px; padding:13px; border:1px solid var(--line); border-radius:10px; background:#fff; }
 .device-identity-editor h3,.device-stack-editor h3,.device-related-editor h3 { margin:0; font-size:.95rem; }
 .device-stack-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; }

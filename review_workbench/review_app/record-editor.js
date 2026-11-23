@@ -52,6 +52,20 @@ export function createRecordEditor({
   const pointerPart = value => String(value).replaceAll("~", "~0").replaceAll("/", "~1");
   let draft = null;
   let edit = null;
+  // Which collapsible sections the reviewer opened or closed, keyed by field path.
+  // Re-rendering after an added item must not collapse work in progress.
+  let groups = new Map();
+  let focusPath = null;
+  const RECORD_ID_PREFIXES = {
+    device_families: "family", individual_devices: "device",
+    performance_observations: "observation", population_statistics: "population",
+    stability_tests: "stability",
+  };
+  // Nested lists whose items carry their own identifier.
+  const ITEM_IDENTIFIERS = {
+    layers: ["layer_id", "layer"], absorbers: ["absorber_id", "absorber"],
+    processing_steps: ["step_id", "step"], checkpoints: ["checkpoint_id", "checkpoint"],
+  };
   const MATERIAL_FORMS = [
     "self_assembled_monolayer", "monolayer", "compact_layer",
     "mesoporous_layer", "nanostructured_layer", "bulk_heterojunction", "other",
@@ -121,9 +135,59 @@ export function createRecordEditor({
     replaceNestedValue(path, next);
   }
 
-  function newRecordDraft(kind) {
-    return draftFromSchema(context().studySchema.properties[kind].items);
+  function usedIdentifiers(...values) {
+    const used = new Set();
+    const visit = (node) => {
+      if (Array.isArray(node)) node.forEach(visit);
+      else if (node && typeof node === "object") {
+        for (const [key, item] of Object.entries(node)) {
+          if (key.endsWith("_id") && typeof item === "string" && item) used.add(item);
+          else visit(item);
+        }
+      }
+    };
+    values.forEach(visit);
+    return used;
   }
+
+  function freshIdentifier(prefix, used) {
+    let suffix = 1;
+    while (used.has(`${prefix}-${suffix}`)) suffix += 1;
+    return `${prefix}-${suffix}`;
+  }
+
+  function newRecordDraft(kind) {
+    const value = draftFromSchema(context().studySchema.properties[kind].items);
+    const identifier = context().bundle?.summary?.record_identifiers?.[kind];
+    if (identifier && value && typeof value === "object" && Object.hasOwn(value, identifier) && !value[identifier]) {
+      value[identifier] = freshIdentifier(RECORD_ID_PREFIXES[kind] || kind, usedIdentifiers(context().bundle.ground_truth));
+    }
+    return value;
+  }
+
+  /** A new list item; items that carry their own ID get a readable unique one. */
+  function newArrayItem(path, itemSchema, label) {
+    const item = newNestedValue(itemSchema, label);
+    const own = ITEM_IDENTIFIERS[path.at(-1)];
+    if (own && item && typeof item === "object" && Object.hasOwn(item, own[0]) && !item[own[0]]) {
+      item[own[0]] = freshIdentifier(own[1], usedIdentifiers(context().bundle?.ground_truth, edit.value));
+    }
+    return item;
+  }
+
+  function expand(...paths) {
+    for (const path of paths) groups.set(JSON.stringify(path), true);
+  }
+
+  /** A collapsible section that keeps its open/closed state across re-renders. */
+  function rememberedDetails(path, fallback, className, children) {
+    const key = JSON.stringify(path);
+    const node = element("details", { className, properties: { open: groups.has(key) ? groups.get(key) : fallback } }, children);
+    node.addEventListener("toggle", (event) => { groups.set(key, Boolean(event.currentTarget.open)); });
+    return node;
+  }
+
+  const fieldIdPart = part => encodeURIComponent(String(part)).replaceAll("-", "%2D");
 
   function copiedRecordDraft(kind, item) {
     const draft = structuredClone(item);
@@ -145,6 +209,8 @@ export function createRecordEditor({
     const resolving = intent === "resolve-links";
     draft = createDraftState(item);
     edit = { kind, index, get value() { return draft.value; }, intent, references, baseRevision: context().bundle.revision };
+    groups = new Map();
+    focusPath = null;
     $("record-kind").textContent = COLLECTIONS[kind];
     $("record-title").textContent = index == null
       ? `Add missing ${singularCollection(kind).toLowerCase()}`
@@ -328,7 +394,7 @@ export function createRecordEditor({
   function renderLayerAdvanced(layer, index) {
     const fields = ["constituents", "material_form_raw", "material_form", "reported_properties"]
       .map((key) => structuredNode(key, layer[key], ["layers", index, key]));
-    return element("details", { className: "stack-layer-advanced" }, [
+    return rememberedDetails(["#layer", layer.layer_id], false, "stack-layer-advanced", [
       element("summary", { text: "Composition, form, and properties" }),
       element("div", { className: "editor-fields" }, fields),
     ]);
@@ -397,7 +463,21 @@ export function createRecordEditor({
     const relationship = path.length === 1
       ? relationshipChoices(path[0], edit.kind, context().bundle.ground_truth, context().bundle.summary.record_identifiers, value)
       : null;
-    if (relationship) {
+    const layerLink = isLayerLink(path.slice(0, -1), path.at(-1)) && path.at(-1) === "layer_id";
+    if (layerLink) {
+      displayLabel = "Absorber layer";
+      editOriginal = null;
+      const layers = edit.value.layers || [];
+      const known = layers.some(layer => layer.layer_id === value);
+      input = element("select", {}, [
+        element("option", { text: "Not linked", properties: { value: "", selected: value == null || value === "" } }),
+        ...layers.map((layer, layerIndex) => element("option", {
+          text: `${layerIndex + 1} · ${layer.material || "(no material yet)"} · ${humanLabel(layer.role || "not_reported")}`,
+          properties: { value: layer.layer_id, selected: layer.layer_id === value },
+        })),
+        ...(value && !known ? [element("option", { text: `Unknown layer (${value})`, properties: { value, selected: true } })] : []),
+      ]);
+    } else if (relationship) {
       const nullable = value === null || fieldSchema.anyOf?.some(choice => choice.type === "null");
       displayLabel = relationship.target === "device_families" ? "Linked device family" : "Linked individual device";
       editOriginal = nullable ? null : value;
@@ -425,7 +505,7 @@ export function createRecordEditor({
       const numeric = typeof value === "number" || fieldType === "number" || fieldType === "integer";
       input = element("input", { properties: { value: value ?? "", type: numeric ? "number" : "text", placeholder: value === null ? "Not reported" : "" } });
     }
-    const inputId = `record-field-${path.map((part) => encodeURIComponent(String(part)).replaceAll("-", "%2D")).join("-")}`;
+    const inputId = `record-field-${path.map(fieldIdPart).join("-")}`;
     input.id = inputId;
     input.addEventListener("input", () => updateEditValue(path, input.value, editOriginal));
     return element("div", { className: "editor-field" }, [
@@ -444,9 +524,39 @@ export function createRecordEditor({
     return key === "sequence" || key.endsWith("_id") || key.endsWith("_ids");
   }
 
+  /** Links from an absorber or processing step to the family's layers are shown as choices. */
+  function isLayerLink(parentPath, key) {
+    if (edit.kind !== "device_families" || parentPath.length !== 2) return false;
+    return (parentPath[0] === "absorbers" && key === "layer_id")
+      || (parentPath[0] === "processing_steps" && key === "target_layer_ids");
+  }
+
+  function layerTargets(path, selected) {
+    const layers = edit.value.layers || [];
+    const stale = (selected || []).filter(id => !layers.some(layer => layer.layer_id === id));
+    const options = [
+      ...layers.map((layer, index) => [layer.layer_id, `${index + 1} · ${layer.material || "(no material yet)"} · ${humanLabel(layer.role || "not_reported")}`]),
+      ...stale.map(id => [id, `Unknown layer (${id})`]),
+    ];
+    const boxes = options.map(([id, text]) => {
+      const box = element("input", { properties: { type: "checkbox", checked: (selected || []).includes(id), value: id } });
+      box.addEventListener("change", () => {
+        const current = new Set(path.reduce((node, key) => node[key], edit.value) || []);
+        if (box.checked) current.add(id); else current.delete(id);
+        draft.replace(path, options.map(([optionId]) => optionId).filter(optionId => current.has(optionId)));
+        $("record-json").value = JSON.stringify(edit.value, null, 2);
+      });
+      return element("label", { className: "layer-target" }, [box, element("span", { text })]);
+    });
+    return element("section", { className: "editor-field layer-targets" }, [
+      element("strong", { text: "Target layers" }),
+      ...(boxes.length ? boxes : [element("p", { className: "muted", text: "Add layers to the device stack first." })]),
+    ]);
+  }
+
   function technicalFields(entries, path) {
     if (!entries.length) return null;
-    return element("details", { className: "editor-technical" }, [
+    return rememberedDetails([...path, "#technical"], false, "editor-technical", [
       element("summary", { text: "Technical details" }),
       element("p", { text: "Record links and identifiers. Most corrections do not need these." }),
       element("div", { className: "editor-fields" }, entries.map(([key, value]) => structuredNode(key, value, [...path, key]))),
@@ -455,6 +565,7 @@ export function createRecordEditor({
 
   function moveOrderedItem(path, index, targetIndex) {
     if (!draft.reorder(path, index, targetIndex)) return;
+    expand([...path, targetIndex]);
     $("record-json").value = JSON.stringify(edit.value, null, 2);
     renderStructuredEditor();
     const pathKey = JSON.stringify(path);
@@ -510,17 +621,23 @@ export function createRecordEditor({
         element("p", { className: "muted", text: "Not reported. Add only when supported by the source; new values use the selected citation." }),
         element("button", {
           text: `Add ${humanLabel(label)}`, properties: { type: "button" },
-          events: { click: () => replaceNestedValue(path, newNestedValue(node, label)) },
+          events: { click: () => {
+            expand(path);
+            focusPath = path;
+            replaceNestedValue(path, newNestedValue(node, label));
+          } },
         }),
       ]);
     }
+    if (isLayerLink(path.slice(0, -1), path.at(-1)) && Array.isArray(value)) return layerTargets(path, value);
     if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
     const array = Array.isArray(value);
     const entries = array
       ? value.map((item, index) => [item?.label || item?.name || item?.material || item?.operation || `Item ${index + 1}`, item, index])
       : Object.entries(value).filter(([key]) => key !== "evidence").map(([key, item]) => [key, item, key]);
-    const technical = array ? [] : entries.filter(([key]) => isTechnicalRecordField(key));
-    const primary = array ? entries : entries.filter(([key]) => !isTechnicalRecordField(key));
+    const technicalKey = key => isTechnicalRecordField(key) && !isLayerLink(path, key);
+    const technical = array ? [] : entries.filter(([key]) => technicalKey(key));
+    const primary = array ? entries : entries.filter(([key]) => !technicalKey(key));
     const ordered = array && isOrderedArray(value);
     const children = primary.map(([childLabel, item, key]) => {
       const child = ordered
@@ -539,7 +656,12 @@ export function createRecordEditor({
       children.push(element("button", {
         text: `Add item to ${humanLabel(label)}`,
         properties: { type: "button", disabled: value.length >= (schema.maxItems ?? Infinity) },
-        events: { click: () => replaceArrayItems(path, [...value, newNestedValue(schema.items, label)]) },
+        events: { click: () => {
+          const added = [...path, value.length];
+          expand(path, added);
+          focusPath = added;
+          replaceArrayItems(path, [...value, newArrayItem(path, schema.items, label)]);
+        } },
       }));
       children.push(element("p", { className: "muted", text: "New values use the selected source citation on save. Check that it supports each added value." }));
     }
@@ -548,13 +670,26 @@ export function createRecordEditor({
       events: { click: () => replaceNestedValue(path, null) },
     }));
     const count = array ? ` (${value.length})` : "";
-    return element("details", { className: "editor-group", properties: { open } }, [
+    return rememberedDetails(path, open, "editor-group", [
       element("summary", { text: `${humanLabel(label)}${count}` }),
       element("div", { className: "editor-fields" }, children.length ? children : [element("p", { className: "muted", text: "No editable fields" })]),
     ]);
   }
 
+  /** Redraw the form without losing the reviewer's place; focus a just-added item. */
   function renderStructuredEditor() {
+    const card = $("record-dialog").querySelector?.(".dialog-card");
+    const scroll = card?.scrollTop;
+    renderEditorContent();
+    if (card && scroll != null) card.scrollTop = scroll;
+    if (!focusPath) return;
+    const prefix = `record-field-${focusPath.map(fieldIdPart).join("-")}-`;
+    focusPath = null;
+    const fields = document.querySelectorAll("#structured-editor input, #structured-editor select, #structured-editor textarea");
+    [...fields].find(node => node.id?.startsWith(prefix))?.focus();
+  }
+
+  function renderEditorContent() {
     const entries = Object.entries(edit.value).filter(([key]) => key !== "evidence");
     if (edit.kind !== "device_families") {
       $("structured-editor").replaceChildren(...entries.map(([key, value]) => structuredNode(key, value, [key], true)));

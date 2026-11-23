@@ -266,6 +266,96 @@ assert.equal(new Set(editor.value().layers.map(layer => layer.layer_id)).size,2)
     )
 
 
+FAMILY_SCHEMA = """
+const text = {type:'string'};
+const nullableText = {anyOf:[{type:'string'},{type:'null'}]};
+schema.properties.device_families = {items:{properties:{
+  family_id:text, label:text, evidence:{type:'array'},
+  layers:{type:'array',items:{properties:{layer_id:text,sequence:{type:'integer'},material:text,role:text,evidence:{type:'array'}}}},
+  absorbers:{type:'array',items:{properties:{absorber_id:text,layer_id:nullableText,label:text,evidence:{type:'array'}}}},
+  processing_steps:{type:'array',items:{properties:{step_id:text,sequence:{type:'integer'},operation:text,
+    target_layer_ids:{type:'array',items:text},evidence:{type:'array'}}}},
+}}};
+bundle.summary.record_identifiers.device_families = 'family_id';
+const family = {family_id:'control',label:'Control',evidence:[citation],
+  layers:[{layer_id:'a',sequence:1,material:'SnO2',role:'electron_transport_layer',evidence:[citation]},
+    {layer_id:'b',sequence:2,material:'FAPbI3',role:'absorber',evidence:[citation]}],
+  absorbers:[{absorber_id:'absorber-1',layer_id:'b',label:'FAPbI3',evidence:[citation]}],
+  processing_steps:[{step_id:'step-1',sequence:1,operation:'spin coating',target_layer_ids:['a','b'],evidence:[citation]}]};
+bundle.ground_truth.device_families[0] = family;
+const all = () => descendants(document.getElementById('structured-editor'));
+const group = name => all().find(node => node.tag === 'details' && node.children[0]?.textContent?.startsWith(name));
+"""
+
+
+def test_editor_gives_new_records_and_nested_items_readable_unique_ids():
+    run_javascript(
+        EDITOR_SETUP
+        + FAMILY_SCHEMA
+        + """
+editor.open('individual_devices');
+assert.equal(editor.value().device_id,'device-1');
+editor.open('device_families');
+assert.equal(editor.value().family_id,'family-1');
+editor.open('device_families',0);
+all().find(node => node.textContent === 'Add item to absorbers').fire('click');
+assert.equal(editor.value().absorbers[1].absorber_id,'absorber-2');
+all().find(node => node.textContent === 'Add item to processing_steps').fire('click');
+assert.equal(editor.value().processing_steps[1].step_id,'step-2');
+assert.equal(family.absorbers.length,1);
+"""
+    )
+
+
+def test_editor_links_absorbers_and_steps_to_layers_by_choice():
+    run_javascript(
+        EDITOR_SETUP
+        + FAMILY_SCHEMA
+        + """
+editor.open('device_families',0);
+const link = document.getElementById('record-field-absorbers-0-layer_id');
+assert.equal(link.tag,'select');
+assert.deepEqual(link.children.map(option => option.value),['','a','b']);
+assert.match(link.children[2].textContent,/FAPbI3/);
+link.value = 'a'; link.fire('input');
+assert.equal(editor.value().absorbers[0].layer_id,'a');
+link.value = ''; link.fire('input');
+assert.equal(editor.value().absorbers[0].layer_id,null);
+const boxes = all().filter(node => node.type === 'checkbox');
+assert.deepEqual(boxes.map(box => [box.value, box.checked]),[['a',true],['b',true]]);
+boxes[0].checked = false; boxes[0].fire('change');
+assert.deepEqual(editor.value().processing_steps[0].target_layer_ids,['b']);
+boxes[0].checked = true; boxes[0].fire('change');
+assert.deepEqual(editor.value().processing_steps[0].target_layer_ids,['a','b']);
+assert.deepEqual(JSON.parse(document.getElementById('record-json').value).processing_steps[0].target_layer_ids,['a','b']);
+assert.deepEqual(family.processing_steps[0].target_layer_ids,['a','b']);
+"""
+    )
+
+
+def test_editor_keeps_opened_sections_open_after_adding_an_item():
+    run_javascript(
+        EDITOR_SETUP
+        + FAMILY_SCHEMA
+        + """
+editor.open('device_families',0);
+assert.equal(group('processing_steps').open,false);
+const steps = group('processing_steps'); steps.open = true; steps.fire('toggle');
+all().find(node => node.textContent === 'Add item to absorbers').fire('click');
+assert.equal(group('processing_steps').open,true);
+assert.equal(group('absorbers').open,true);
+const added = all().filter(node => node.tag === 'details' && node.className === 'editor-group')
+  .find(node => node.children[0]?.textContent === 'Item 2');
+assert.equal(added.open,true);
+const absorbers = group('absorbers'); absorbers.open = false; absorbers.fire('toggle');
+all().find(node => node.textContent === 'Add item to processing_steps').fire('click');
+assert.equal(group('absorbers').open,false);
+editor.open('device_families',0);
+assert.equal(group('processing_steps').open,false);
+"""
+    )
+
+
 def test_ordered_controls_update_the_same_draft_and_json_view():
     run_javascript(
         EDITOR_SETUP
