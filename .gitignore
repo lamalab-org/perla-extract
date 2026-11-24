@@ -291,3 +291,6 @@ output
 !tests/test_files
 
 uv.lock
+
+# Raw OpenAlex downloads contain publisher abstracts: keep locally, never commit
+annotation/sample_*.json
