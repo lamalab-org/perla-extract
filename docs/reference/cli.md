@@ -276,7 +276,7 @@ workflow guide. `OPENALEX_API_KEY` and `ZOTERO_API_KEY` are never written to bot
 artifacts. Command-line values take precedence.
 
 For named model arms and a pinned dataset, use
-[`benchmarks/development/study.toml`](https://github.com/lamalab-org/perla-extract/blob/main/benchmarks/development/study.toml).
+[`benchmarks/test/study.toml`](https://github.com/lamalab-org/perla-extract/blob/main/benchmarks/test/study.toml).
 `baseline` names the reused control, `[arms.NAME]` supplies overrides and
 `reservation_usd`, and `[budget]` caps campaign admission including prior spending
 and unknown reservations. `config` loads an ordinary extraction TOML.

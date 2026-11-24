@@ -15,9 +15,11 @@ flowchart LR
 
 ## 1. Know what the reference establishes
 
-The public v2 release contains 30 model-assisted, finalized development references.
-These papers have informed extraction and scoring changes. Do not relabel a subset
-as held out now: its feedback has already influenced the system.
+The 30 human-corrected references serve as the test set. Development uses
+strong model-generated references on separate papers; see the
+[study protocol](https://github.com/lamalab-org/perla-extract/blob/main/benchmarks/STUDY.md).
+The archived v2 release retains its original `dev` metadata. These papers already
+informed extraction/scoring changes, so they are not an untouched holdout.
 
 An audit with matcher v14 / fact profile v11 on 15 November 2026 counted:
 

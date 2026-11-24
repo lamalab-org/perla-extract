@@ -1,6 +1,6 @@
 {
-  "name": "perla-development-30",
-  "scope": "Human-adjudicated, model-assisted development references; not held-out test data.",
+  "name": "perla-human-test-30",
+  "scope": "Human-corrected test references. Earlier extraction/scoring development used these papers; this is not an untouched evaluation set.",
   "reference_release": "../../data/study_extraction/ground_truth/v2/release.json",
   "reference_release_sha256": "1417b44c9ddf7e3d1453a9a8fb761408ef2aa335418b2faa4bfb0b477d9a2a3b",
   "repeat_selection": "Sort by combined PDF/SI page count, break ties by paper_id, divide into three groups of 10. Select 3 short, 3 medium and 4 long papers by ascending SHA256(20261122:paper_id).",
@@ -446,5 +446,6 @@
       "repeat_check": false,
       "length_stratum": "medium"
     }
-  ]
+  ],
+  "role": "test"
 }

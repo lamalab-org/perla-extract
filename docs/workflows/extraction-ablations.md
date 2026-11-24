@@ -5,7 +5,7 @@
 | Question | Start with |
 | --- | --- |
 | Does one draft review help? | `examples/experiment.toml`: direct extraction versus one refinement |
-| How close are cheaper models to Astra? | [30-paper study](https://github.com/lamalab-org/perla-extract/tree/main/benchmarks/development): Astra, Terra and Luna |
+| How close are cheaper models to Astra? | [Model-labeled development set](https://github.com/lamalab-org/perla-extract/tree/main/benchmarks/development) |
 
 **Refinement** re-reads the source and draft; measure its gain against its cost.
 **Enrichment** produces separate composition/processing interpretations for export;
@@ -14,7 +14,7 @@ it does not rewrite the scored `extraction.json`. Both are off by default.
 ## Check, then run
 
 From an [installed checkout](../getting-started.md#install), copy the one-paper
-example to the repository root and edit its model and source paths:
+example to the repository root and use separate model-labeled development papers:
 
 ```sh
 cp examples/experiment.toml my-experiment.toml
@@ -59,3 +59,7 @@ references cannot establish absolute precision. Missing/failed runs remain visib
 Empty values mean unavailable, not zero. Cost projections include failures and
 require complete accounting. See [scientific methods](../methods/validation-and-scale.md)
 and the [offline scoring example](scoring-example.md) for details.
+
+Tune on model-generated development references. After freezing settings, use the
+[human test recipe](https://github.com/lamalab-org/perla-extract/tree/main/benchmarks/test).
+The human test repeatability subset must not be used to calibrate settings.

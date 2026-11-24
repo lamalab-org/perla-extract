@@ -1,4 +1,4 @@
-"""Verify the development roster and export inputs for the existing cohort tools.
+"""Verify a reference-bound paper roster before extraction or scoring.
 
 The committed roster binds main and SI files separately to their original bytes.
 The pinned reference release supplies the scientific answers and their hashes.
@@ -58,8 +58,9 @@ def verify_dataset(dataset: Path, sources: Path | None = None) -> tuple[dict, li
     )
     raw_release = _read(release_path)
     release = ReferenceRelease.model_validate(raw_release)
-    if release.split != "dev":
-        raise ValueError("The development dataset requires development references")
+    if value.get("role") not in {"dev", "test"}:
+        raise ValueError("Dataset role must be dev or test")
+    # The current role is prospective; the pinned release retains its original split.
     entries = {r["paper_id"]: r for r in raw_release["papers"]}
     ids = [r["paper_id"] for r in value["papers"]]
     if len(set(ids)) != len(ids) or set(ids) != set(entries):

@@ -1,1 +1,1 @@
-"""Reusable development datasets and experiment preparation."""
+"""Reference-bound paper rosters and experiment preparation."""

@@ -1,4 +1,4 @@
-"""Verify the development roster and export inputs for the existing cohort tools.
+"""Verify the reference-bound roster and export inputs for the existing cohort tools.
 
 The committed roster binds main and SI files separately to their original bytes.
 The pinned reference release supplies the scientific answers and their hashes.
@@ -13,12 +13,12 @@ from pathlib import Path
 
 import click
 
-# Re-export for scripts that already import this checker.
-from perla_extract.study_extraction.development_dataset import (
+from perla_extract.study_extraction.reference_dataset import (
     verify_dataset as verify_dataset,
 )
 
-DATASET = Path(__file__).resolve().parents[2] / "benchmarks/development/papers.json"
+DATASET = Path(__file__).resolve().parents[2] / "benchmarks/test/papers.json"
+
 
 def export_inputs(value: dict, papers: list, output: Path) -> None:
     """Write ordinary parser/cohort inputs without introducing another run format."""
@@ -27,7 +27,7 @@ def export_inputs(value: dict, papers: list, output: Path) -> None:
         "format_version": 1,
         "name": value["name"],
         "purpose": value["scope"],
-        "split": "dev",
+        "split": value["role"],
         "max_model_calls_per_paper": 1,
         "papers": [{"paper_id": r["paper_id"]} for r in papers],
     }
@@ -53,7 +53,7 @@ def export_inputs(value: dict, papers: list, output: Path) -> None:
 def main(
     dataset: Path, sources: Path | None, output: Path | None, repeat_subset: bool
 ) -> None:
-    """Check the fixed development set; optionally export verified local paths."""
+    """Check the fixed reference set; optionally export verified local paths."""
     if output is not None and sources is None:
         raise click.UsageError(
             "--output requires --sources so exported file paths are verified"
@@ -62,7 +62,7 @@ def main(
         value, papers = verify_dataset(dataset, sources)
         source_count = sum(1 + (r["supplement"] is not None) for r in value["papers"])
         click.echo(
-            f"Verified {len(papers)} development references and {source_count} source bindings."
+            f"Verified {len(papers)} {value['role']} references and {source_count} source bindings."
         )
         click.echo(
             "PDF bytes: verified by role."

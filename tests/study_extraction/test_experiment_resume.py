@@ -12,10 +12,10 @@ from perla_extract.study_extraction.experiment_state import (
     CampaignSpending,
     campaign_lock,
 )
-from tests.study_extraction.test_development_dataset import (
+from tests.study_extraction.test_experiment import setup as setup
+from tests.study_extraction.test_reference_dataset import (
     fixture_dataset as fixture_dataset,
 )
-from tests.study_extraction.test_experiment import setup as setup
 
 
 def test_three_named_arms_share_baseline_and_resume_without_provider_work(setup):
@@ -236,6 +236,7 @@ model = "openai/luna"
 """)
     plan = experiment.prepare(path)
     assert len(plan.attempts) == 6
+    assert plan.dataset_role == "test"
     assert len(plan.repeat_papers) == 1
     assert [a.repeat for a in plan.ordered_attempts()] == [1, 1, 1, 2, 2, 2]
     assert len({a.config.model_cache_dir for a in plan.attempts}) == 6

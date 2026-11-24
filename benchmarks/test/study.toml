@@ -1,7 +1,7 @@
-# Edit sources to the folder containing the original PDFs named in papers.json.
-# Run only after reviewing the PR and passing --check; execution makes paid calls.
-output = "../../results/development-models"
-config = "astra.toml"
+# Final human-test evaluation: freeze models, prompts and scorer on separate dev papers first.
+# Update budget carry with all development spending/holds before execution.
+output = "../../results/human-test"
+config = "../development/astra.toml"
 dataset = "papers.json"
 sources = "../../papers"
 baseline = "astra"

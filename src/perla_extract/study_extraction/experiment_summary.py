@@ -27,6 +27,8 @@ def write_summary(result: dict, path: Path) -> None:
         "## Compared settings",
         "",
     ]
+    if result.get("dataset_role"):
+        lines[2:2] = [f"Dataset role: **{result['dataset_role']}**.", ""]
     for name, values in sorted(study["factors"].items()):
         control, treatment = (
             json.dumps(values[arm], ensure_ascii=False)
@@ -292,7 +294,7 @@ def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
     lines = [
         "# Experiment results",
         "",
-        f"Baseline: **{baseline}**. Unique planned runs: **{len(result['runs'])}**.",
+        f"Dataset role: **{result.get('dataset_role') or 'unspecified'}**. Baseline: **{baseline}**. Unique planned runs: **{len(result['runs'])}**.",
         "Primary and repeatability comparisons are separate; repeats are not independent papers.",
         "",
         "## Run coverage and cost",

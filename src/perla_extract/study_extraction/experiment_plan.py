@@ -23,8 +23,8 @@ from .configuration import (
     resolve_config,
     tomllib,
 )
-from .development_dataset import verify_dataset
 from .models import StrictModel
+from .reference_dataset import verify_dataset
 from .reference_io import load_reference
 from .run_artifacts import file_digest
 
@@ -128,6 +128,7 @@ class Experiment:
     settings: ExperimentSettings
     repeat_papers: list[str]
     resume: bool = False
+    dataset_role: str | None = None
 
     @property
     def study(self) -> ComparisonStudy:
@@ -232,11 +233,13 @@ def prepare(path: Path, *, resume: bool = False) -> Experiment:
         inputs[config_path] = file_digest(config_path)
     papers = settings.papers
     repeat_papers = []
+    dataset_role = None
     if settings.dataset:
         dataset_path = _path(path.parent, settings.dataset)
         value, resolved = verify_dataset(
             dataset_path, _path(path.parent, settings.sources)
         )
+        dataset_role = value["role"]
         papers = [
             Paper.model_validate({k: v for k, v in row.items() if k != "paper_id"})
             for row in resolved
@@ -347,5 +350,13 @@ def prepare(path: Path, *, resume: bool = False) -> Experiment:
         if arm != settings.baseline
     }
     return Experiment(
-        path, output, studies, attempts, inputs, settings, repeat_papers, resume
+        path,
+        output,
+        studies,
+        attempts,
+        inputs,
+        settings,
+        repeat_papers,
+        resume,
+        dataset_role,
     )

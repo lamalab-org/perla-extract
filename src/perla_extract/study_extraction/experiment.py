@@ -52,6 +52,7 @@ from .workflow import run_extraction
 def _identity(experiment: Experiment) -> dict:
     return {
         "inputs": {str(p): digest for p, digest in experiment.inputs.items()},
+        "dataset_role": experiment.dataset_role,
         "implementation_sha256": implementation_sha256(),
         "runtime_versions": runtime_versions(),
         "parser_dependencies": {
@@ -234,6 +235,7 @@ def _paired_output(
         bootstrap_samples=10000,
         seed=experiment.settings.order_seed,
     )
+    result["dataset_role"] = experiment.dataset_role
     if stopped:
         _block(result, f"Experiment stopped: {stopped}")
     write_json_atomic(directory / "comparison.json", result)
@@ -294,6 +296,7 @@ def _results(
                 unique_runs[(row["paper_id"], row["arm"], row["repeat"])] = row
     result = {
         "comparisons": comparisons,
+        "dataset_role": experiment.dataset_role,
         "spending": spending.summary(),
         "runs": list(unique_runs.values()),
         "accounting": {
@@ -404,6 +407,8 @@ def execute(experiment: Experiment) -> dict:
 
 
 def _show_input_mapping(experiment: Experiment) -> None:
+    if experiment.dataset_role:
+        click.echo(f"Dataset role: {experiment.dataset_role}")
     click.echo("Paper/SI/reference mapping (source fingerprints verified):")
     for attempt in experiment.attempts:
         if attempt.arm != experiment.settings.baseline or attempt.repeat != 1:

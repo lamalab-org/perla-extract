@@ -44,7 +44,8 @@ perla-experiment my-experiment.toml
 ```
 
 Open the generated `summary.md` first; `figure-data/` contains plotting tables.
-For Astra versus cheaper models, use the [30-paper study](benchmarks/development).
+Build [model-generated development references](benchmarks/development) to tune
+Astra versus cheaper models; evaluate frozen choices on the [human test set](benchmarks/test).
 [Experiment guide](docs/workflows/extraction-ablations.md).
 
 ## Find what you need
@@ -58,9 +59,9 @@ For Astra versus cheaper models, use the [30-paper study](benchmarks/development
 | Change or debug the code | [Maintainer guide](docs/development/maintaining.md) |
 | Review records, export data or discover papers | [Documentation](docs/index.md) |
 
-Extraction reads PDF text and tables. Evidence citations and passing software checks
-do not prove scientific correctness. The included 30-paper reference set is development
-data; use independent review and untouched papers for final accuracy claims.
+The human-corrected references are our test set. They already informed earlier
+development, so results must disclose that history rather than claim an untouched
+holdout. Model-generated development labels measure teacher agreement.
 
 ## Authors
 

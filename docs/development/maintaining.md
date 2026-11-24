@@ -15,7 +15,7 @@ The paths below are relative to the repository root.
 
 | Responsibility | Start reading | Boundary to preserve |
 | --- | --- | --- |
-| Experiment inputs and design | `src/perla_extract/study_extraction/experiment_plan.py`, `development_dataset.py` | Verify sources and references before creating output |
+| Experiment inputs and design | `src/perla_extract/study_extraction/experiment_plan.py`, `reference_dataset.py` | Verify sources and references before creating output |
 | Experiment execution and resumption | `study_extraction/experiment.py` → `experiment_state.py` | Preflight all inputs; reserve before requests; retain failed and uncertain slots |
 | Extraction stages | `study_extraction/workflow.py` under the same package | Each stage records its result and fallback |
 | Scientific record structure | `study_extraction/models.py` | Preparation, measurement and aging are different contexts |

@@ -23,7 +23,7 @@ jobs:
         run: >-
           python -m pytest -q
           tests/study_extraction/test_reference_release.py
-          tests/study_extraction/test_development_dataset.py
+          tests/study_extraction/test_reference_dataset.py
       - name: Audit finalized references and declared review coverage
         env:
           PYTHONPATH: .:src

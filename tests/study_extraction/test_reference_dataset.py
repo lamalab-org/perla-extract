@@ -8,7 +8,7 @@ from collections import Counter
 import pytest
 from click.testing import CliRunner
 
-from examples.benchmarks.development import DATASET, main, verify_dataset
+from examples.benchmarks.dataset import DATASET, main, verify_dataset
 from perla_extract.study_extraction.reference_io import reference_content_digest
 
 
@@ -62,6 +62,7 @@ def fixture_dataset(tmp_path):
 
 def test_committed_roster_pins_all_references_and_repeat_subset():
     value, papers = verify_dataset(DATASET)
+    assert value["role"] == "test"
     assert len(papers) == 30
     assert sum(1 + (r["supplement"] is not None) for r in value["papers"]) == 57
     assert sum(r["source_pages"] for r in value["papers"]) == 1143
@@ -116,6 +117,7 @@ def test_export_exposes_article_si_and_reference_paths(fixture_dataset, tmp_path
     assert papers[0]["supplement"].endswith("adfm.201904856-SI.pdf")
     cohort = json.loads((output / "cohort.json").read_text(encoding="utf-8"))
     assert cohort["papers"] == [{"paper_id": papers[0]["paper_id"]}]
+    assert cohort["split"] == "test"
     assert cohort["max_model_calls_per_paper"] == 1
 
 

@@ -119,7 +119,8 @@ def test_check_explains_change_without_running_or_creating_output(setup):
 
 
 @pytest.mark.parametrize(
-    "filename,paper_count", [("experiment.toml", 30), ("examples/experiment.toml", 1)]
+    "filename,paper_count",
+    [("benchmarks/test/study.toml", 30), ("examples/experiment.toml", 1)],
 )
 def test_shipped_experiments_parse_and_use_docling_by_default(filename, paper_count):
     path = Path(__file__).resolve().parents[2] / filename
@@ -130,7 +131,7 @@ def test_shipped_experiments_parse_and_use_docling_by_default(filename, paper_co
         else len(json.loads((path.parent / settings.dataset).read_text())["papers"])
         == paper_count
     )
-    for arm in ("control", "treatment"):
+    for arm in settings.methods:
         config = resolve_config(
             pdf=Path("paper.pdf"),
             **_arm_settings(settings, arm, path.parent),
