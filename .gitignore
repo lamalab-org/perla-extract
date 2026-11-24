@@ -292,5 +292,5 @@ output
 
 uv.lock
 
-# Raw OpenAlex downloads contain publisher abstracts: keep locally, never commit
-annotation/sample_*.json
+# For the most part, annotation does not need to be tracked, exceptions are added whenever needed.
+annotation/*
