@@ -58,6 +58,9 @@ def test_prepare_bundles_only_runtime_and_rich_schema(tmp_path):
     for asset in (
         "record-editor.js",
         "jv-table.js",
+        "process-templates.js",
+        "process-step-card.js",
+        "material-suggestions.js",
         "record-details.js",
         "api-client.js",
         "review-session.js",

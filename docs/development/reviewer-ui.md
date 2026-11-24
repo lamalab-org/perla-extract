@@ -40,6 +40,9 @@ scientific record. Production operation and imports are described in the
 | Scientific field types and relationship constraints | `src/perla_extract/study_extraction/models.py` | The stored scientific contract changes |
 | Field controls, draft, JSON mode, schema defaults, stack editor | `review_workbench/review_app/record-editor.js` | A field needs a different control or editing behavior |
 | Quick entry of J-V, stabilized, certified and EQE results as one row per performance observation | `review_workbench/review_app/jv-table.js` | Rows need other metrics, units or measurement types |
+| Processing-step categories, their methods and parameters (names the scorer and NOMAD export recognize), copying steps between families | `review_workbench/review_app/process-templates.js` | A category, method or parameter is added or renamed, or layer matching for copies changes |
+| The typed card of one processing step in the family editor | `review_workbench/review_app/process-step-card.js` | Step editing behaves differently |
+| Material spellings as papers write them, as separate lists for layer materials, constituents and step materials (solvents only in steps) | `review_workbench/review_app/material-suggestions.js` | A common spelling or material is missing, or appears in the wrong field |
 | Values, treatment context, measurement conditions and statistics shown on review cards | `review_workbench/review_app/record-details.js` | A stored scientific field must be visible before acceptance |
 | Pure relationship choices and review calculations | `review_workbench/review_app/review-state.js` | Owner options or review calculations change |
 | Authentication headers, endpoint methods, structured HTTP errors | `review_workbench/review_app/api-client.js` | The HTTP contract changes |
@@ -78,10 +81,27 @@ backend. Keep assertions on behavior rather than function placement or copied
 source snippets. After changing a user journey, repeat it in the synthetic UI;
 the lightweight DOM test fixture does not establish browser layout or accessibility.
 
-New browser modules must be included in `server.py`'s static-asset allowlist.
+New browser modules must be included in `server.py`'s static-asset allowlist. `test_process_steps.py` checks this for every module imported from `app.js`.
 `prepare.py` copies the complete `review_app` directory into deployment bundles.
 
 Optional nested objects have **Add** and **Clear** controls. Lists have item controls
 that respect schema minimum/maximum lengths; ordered items retain their sequence.
 New nested values receive the selected citation when saved, while existing citations
 stay intact. Check that this passage supports each added value before saving.
+
+## Processing steps
+
+In the family editor, each processing step is a card: its category (recognized from
+`operation`, never stored) decides the method suggestions and parameter fields. Filled
+parameters become `conditions`; empty ones are never saved. Annealing is a separate step
+(`+ Annealing after this step`) with `temperature` and `duration`; a step with several
+targets can be split into one step per layer.
+
+**Copy steps from** appends another family's saved steps. Each copied step targets the
+layer of this family with the same material, otherwise the layer with the same function
+at the same rank (only when both families have equally many layers of that function).
+Steps whose layer has no counterpart are not copied and are listed in the status line.
+Copies keep values and citations and get new step identifiers.
+
+`test_process_steps.py` sends families built this way through the Python model,
+grounding validation, NOMAD export and scorer.

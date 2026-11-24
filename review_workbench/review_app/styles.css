@@ -401,3 +401,26 @@ button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
 .record-citation { margin-top:.8rem; }
 .record-citation + .record-citation { padding-top:.8rem; border-top:1px solid var(--line); }
 #pending-record-action button { margin:.25rem .5rem .25rem 0; }
+
+/* Processing step cards (process-step-card.js). */
+.process-step-card { display:grid; gap:8px; padding:9px; border:1px solid #cbd9d3; border-radius:9px; background:#f8fbf9; }
+.process-step-head { display:grid; grid-template-columns:minmax(140px,1fr) minmax(170px,1.4fr); gap:8px; }
+.process-step-warning { margin:0; color:var(--danger); font-size:.75rem; }
+.process-materials,.process-parameters { display:grid; gap:4px; }
+.process-materials > .muted,.process-parameters > .muted { font-size:.7rem; }
+.process-material { display:flex; align-items:center; gap:6px; }
+.process-parameter { display:grid; grid-template-columns:minmax(120px,1fr) minmax(70px,1fr) 78px; align-items:center; gap:6px; font-size:.78rem; }
+.process-parameter > input { min-width:0; }
+.process-other { grid-template-columns:minmax(100px,1fr) minmax(70px,1fr) 70px 28px; }
+.process-others > summary { cursor:pointer; color:var(--muted); font-size:.72rem; }
+.process-presets,.process-step-actions,.process-copy { display:flex; flex-wrap:wrap; align-items:end; gap:6px; }
+@media (max-width:640px) { .process-step-head,.process-parameter { grid-template-columns:1fr; } }
+/* A processing step stacks card, targets and actions; its controls never overflow the card. */
+.process-step > .editor-fields { grid-template-columns:1fr; }
+.process-step-card,.process-step-card * { min-width:0; box-sizing:border-box; }
+.process-step-card label { display:grid; gap:4px; }
+.process-step-card input,.process-step-card select { width:100%; }
+.process-step-card button,.process-step-actions button,.process-presets button { justify-self:start; width:auto; }
+.process-material > input { flex:1; }
+.process-material > button { flex:none; }
+.process-copy label { display:grid; gap:4px; font-size:.78rem; }

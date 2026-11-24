@@ -4,6 +4,8 @@ import { createReviewSession } from "./review-session.js";
 import { renderRecordDetails, renderSubjectContext } from "./record-details.js";
 import { createRecordEditor } from "./record-editor.js";
 import { createJvTable } from "./jv-table.js";
+import { conditionsMissingFromQuote, stepProblems } from "./process-templates.js";
+import { fillMaterialDatalists } from "./material-suggestions.js";
 import { createFinalizationQueue } from "/adjudication.js";
 import { schemaCompatibilityMessage, reviewProgress, recordEvidenceSection } from "/review-state.js";
 
@@ -2035,6 +2037,14 @@ async function saveRecord() {
     const note = $("mutation-note").value.trim();
     const reclassifying = recordEditor.edit.intent === "reclassify";
     if (reclassifying && !note) throw new Error("Explain why the original record type was wrong.");
+    if (kind === "device_families") {
+      // Processing values without their own citation are cited by this quote, so they must occur in it.
+      const steps = value.processing_steps || [];
+      const problems = steps.flatMap((step, position) => stepProblems(step, `Processing step ${step.sequence ?? position + 1}`));
+      if (problems.length) throw new Error(problems.join(" "));
+      const missing = conditionsMissingFromQuote(steps, quote);
+      if (missing.length && !window.confirm(`These processing values are not in the quote: ${missing.join(", ")}. The server will probably reject them. Save anyway?`)) return;
+    }
     await reviewSession.saveRecord({ edit: recordEditor.edit, value, citation, note });
     $("record-dialog").close();
     renderStudy();
@@ -2647,6 +2657,7 @@ async function importPaper(event) {
 }
 
 const jvTable = createJvTable({ document, element, context: () => ({ bundle: state.bundle }), humanLabel });
+fillMaterialDatalists(document, element);
 const recordEditor = createRecordEditor({
   document, element, context: () => ({ bundle: state.bundle, studySchema: state.studySchema }),
   collections: COLLECTIONS, humanLabel, singularCollection, recordKey, recordReferences,
@@ -2724,6 +2735,7 @@ $("add-jv-table").addEventListener("click", openJvTable);
 $("save-jv").addEventListener("click", saveJvTable);
 $("close-jv").addEventListener("click", leaveRecordEditor);
 $("cancel-jv").addEventListener("click", leaveRecordEditor);
+
 $("open-files").addEventListener("click", () => $("files-dialog").showModal());
 $("download-truth").addEventListener("click", (event) => runDownload(
   event.currentTarget,

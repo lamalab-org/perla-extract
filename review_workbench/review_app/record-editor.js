@@ -1,4 +1,7 @@
 import { relationshipChoices } from "./review-state.js";
+import { createStepCard } from "./process-step-card.js";
+import { STEP_PRESETS, annealingStepFor, categoryOf, copySteps, splitPerTarget } from "./process-templates.js";
+import { SUGGESTION_LISTS } from "./material-suggestions.js";
 
 /** One record draft shared by the field controls and the raw JSON editing mode.
  * Invalid JSON never replaces the last valid draft; callers must surface the error.
@@ -414,6 +417,7 @@ export function createRecordEditor({
     stackRaw.addEventListener("input", () => updateEditValue(["full_stack_raw"], stackRaw.value, edit.value.full_stack_raw));
     const cards = layers.map((layer, index) => {
       const material = element("input", { properties: { value: layer.material || "", placeholder: "Layer material", required: true } });
+      material.setAttribute("list", SUGGESTION_LISTS.layer.id);
       material.addEventListener("input", () => {
         layer.material = material.value;
         $("record-json").value = JSON.stringify(edit.value, null, 2);
@@ -510,6 +514,9 @@ export function createRecordEditor({
     }
     const inputId = `record-field-${path.map(fieldIdPart).join("-")}`;
     input.id = inputId;
+    // A constituent name gets precursor, ion and dopant suggestions; the typed text is saved as is.
+    const textInput = !layerLink && !relationship && !fieldSchema.enum && typeof value !== "boolean";
+    if (textInput && path.at(-1) === "name" && path.at(-3) === "constituents") input.setAttribute("list", SUGGESTION_LISTS.constituent.id);
     input.addEventListener("input", () => updateEditValue(path, input.value, editOriginal));
     return element("div", { className: "editor-field" }, [
       element("div", { className: "editor-field-heading" }, [
@@ -609,6 +616,94 @@ export function createRecordEditor({
     ]);
   }
 
+  function isProcessingStep(path) {
+    return edit.kind === "device_families" && path.length === 2 && path[0] === "processing_steps" && typeof path[1] === "number";
+  }
+
+  /** Insert a step at a position; the new step gets the next readable identifier and stays open. */
+  function insertStep(position, step) {
+    const steps = [...(edit.value.processing_steps || [])];
+    if (!step.step_id) step.step_id = freshIdentifier("step", usedIdentifiers(context().bundle?.ground_truth, edit.value));
+    steps.splice(position, 0, step);
+    const added = ["processing_steps", position];
+    expand(["processing_steps"], added);
+    replaceArrayItems(["processing_steps"], steps);
+  }
+
+  /** Append another family's steps, retargeted to this family's layers by material, then function. */
+  function copyStepsControl() {
+    const identifier = context().bundle?.summary?.record_identifiers?.device_families || "family_id";
+    const others = (context().bundle?.ground_truth?.device_families || [])
+      .filter(family => family[identifier] !== edit.value[identifier] && (family.processing_steps || []).length);
+    if (!others.length) return null;
+    const source = element("select", { attributes: { "aria-label": "Family to copy processing steps from" } }, others.map(family => element("option", {
+      text: `${family.label || family[identifier]} · ${family.processing_steps.length} step${family.processing_steps.length === 1 ? "" : "s"}`,
+      properties: { value: family[identifier] },
+    })));
+    source.id = "record-copy-steps-source";
+    const copy = () => {
+      const family = others.find(item => item[identifier] === source.value) || others[0];
+      const used = usedIdentifiers(context().bundle?.ground_truth, edit.value);
+      const { steps, skipped } = copySteps(family, edit.value, () => {
+        const id = freshIdentifier("step", used);
+        used.add(id);
+        return id;
+      });
+      const current = edit.value.processing_steps || [];
+      steps.forEach((_step, offset) => expand(["processing_steps", current.length + offset]));
+      expand(["processing_steps"]);
+      replaceArrayItems(["processing_steps"], [...current, ...steps]);
+      $("dialog-status").textContent = `Copied ${steps.length} step${steps.length === 1 ? "" : "s"} from ${family.label || family[identifier]}. `
+        + (skipped.length ? `Not copied, because this family has no matching layer: ${skipped.join("; ")}. ` : "")
+        + "Change what differs, remove what this family did not get, and check the target layers.";
+    };
+    return element("div", { className: "process-copy" }, [
+      element("label", {}, [element("span", { text: "Copy steps from" }), source]),
+      element("button", { text: "Copy steps", properties: { type: "button" }, events: { click: copy } }),
+    ]);
+  }
+
+  function splitStep(index) {
+    const steps = [...edit.value.processing_steps];
+    const used = usedIdentifiers(context().bundle?.ground_truth, edit.value);
+    const parts = splitPerTarget(steps[index], () => {
+      const id = freshIdentifier("step", used);
+      used.add(id);
+      return id;
+    });
+    steps.splice(index, 1, ...parts);
+    parts.forEach((_part, offset) => expand(["processing_steps", index + offset]));
+    replaceArrayItems(["processing_steps"], steps);
+    $("dialog-status").textContent = `Split into ${parts.length} steps, one per target layer. Check each copy's values against the paper.`;
+  }
+
+  /** One processing step as a typed card: category decides methods and parameters. */
+  function renderProcessStep(step, index) {
+    const path = ["processing_steps", index];
+    const sync = (rerender) => {
+      $("record-json").value = JSON.stringify(edit.value, null, 2);
+      if (rerender) { expand(path); renderStructuredEditor(); }
+    };
+    const layers = edit.value.layers || [];
+    const targets = (step.target_layer_ids || [])
+      .map(id => layers.find(layer => layer.layer_id === id)?.material || id).join(", ");
+    const action = (text, click) => element("button", { text, properties: { type: "button" }, events: { click } });
+    const actions = [
+      categoryOf(step.operation)?.id !== "annealing"
+        ? action("+ Annealing after this step", () => insertStep(index + 1, annealingStepFor(step))) : null,
+      (step.target_layer_ids || []).length > 1 ? action("Split per target layer", () => splitStep(index)) : null,
+    ].filter(Boolean);
+    return rememberedDetails(path, false, "editor-group process-step", [
+      element("summary", { text: `${step.operation || "New step"}${targets ? ` → ${targets}` : ""}` }),
+      element("div", { className: "editor-fields" }, [
+        createStepCard({ element, step, idPrefix: `record-step-${index}`, onChange: sync, materialList: SUGGESTION_LISTS.process.id, layers }),
+        layerTargets([...path, "target_layer_ids"], step.target_layer_ids || []),
+        actions.length ? element("div", { className: "process-step-actions" }, actions) : null,
+        technicalFields([["step_id", step.step_id], ["sequence", step.sequence]], path),
+      ].filter(Boolean)),
+    ]);
+  }
+
   function isOrderedArray(value) {
     return value.length > 1 && value.every((item) => item && typeof item === "object" && Object.hasOwn(item, "sequence"));
   }
@@ -633,6 +728,7 @@ export function createRecordEditor({
       ]);
     }
     if (isLayerLink(path.slice(0, -1), path.at(-1)) && Array.isArray(value)) return layerTargets(path, value);
+    if (isProcessingStep(path) && value && typeof value === "object") return renderProcessStep(value, path[1]);
     if (value == null || typeof value !== "object") return structuredLeaf(label, value, path);
     const array = Array.isArray(value);
     const entries = array
@@ -655,6 +751,18 @@ export function createRecordEditor({
     });
     const technicalSection = technicalFields(technical, path);
     if (technicalSection) children.push(technicalSection);
+    if (array && schema.items && edit.kind === "device_families" && path.length === 1 && path[0] === "processing_steps") {
+      children.push(element("div", { className: "process-presets" }, STEP_PRESETS.map(preset => element("button", {
+        text: preset.label, properties: { type: "button", disabled: value.length >= (schema.maxItems ?? Infinity) },
+        events: { click: () => {
+          const step = newArrayItem(path, schema.items, label);
+          step.operation = preset.operation;
+          insertStep(value.length, step);
+        } },
+      }))));
+      const copy = copyStepsControl();
+      if (copy) children.push(copy);
+    }
     if (array && schema.items) {
       children.push(element("button", {
         text: `Add item to ${humanLabel(label)}`,
