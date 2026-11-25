@@ -1,6 +1,6 @@
 import { relationshipChoices } from "./review-state.js";
 import { createStepCard, resetStepCardState } from "./process-step-card.js";
-import { STEP_PRESETS, copySteps, splitPerTarget } from "./process-templates.js";
+import { STEP_PRESETS, citeStep, copySteps, splitPerTarget } from "./process-templates.js";
 import { SUGGESTION_LISTS } from "./material-suggestions.js";
 
 /** One record draft shared by the field controls and the raw JSON editing mode.
@@ -681,6 +681,24 @@ export function createRecordEditor({
     $("dialog-status").textContent = `Split into ${parts.length} steps, one per target layer. Check each copy's values against the paper.`;
   }
 
+  /** Cite this step's values with the quote in the evidence fields, so that each step can
+   * have its own sentence; values not in that quote stay uncited.
+   */
+  function citeThisStep(step, sync) {
+    const blockId = $("citation-block").value.trim();
+    const quote = $("citation-quote").value.trim();
+    if (!blockId || !quote) {
+      $("dialog-status").textContent = "Select the sentence about this step in the paper first; it fills the evidence block and quote.";
+      return;
+    }
+    const { cited, missing } = citeStep(step, { block_id: blockId, quote });
+    sync(true);
+    $("dialog-status").textContent = [
+      cited.length ? `Cited ${cited.join(", ")} with the selected quote.` : "No uncited value of this step is in the selected quote.",
+      missing.length ? `Not in this quote: ${missing.join(", ")}. Select the sentence that contains them and cite again.` : "",
+    ].filter(Boolean).join(" ");
+  }
+
   /** One processing step as a typed card: category decides methods and parameters. */
   function renderProcessStep(step, index) {
     const path = ["processing_steps", index];
@@ -693,6 +711,7 @@ export function createRecordEditor({
       .map(id => layers.find(layer => layer.layer_id === id)?.material || id).join(", ");
     const action = (text, click) => element("button", { text, properties: { type: "button" }, events: { click } });
     const actions = [
+      action("Cite selected evidence for this step", () => citeThisStep(step, sync)),
       (step.target_layer_ids || []).length > 1 ? action("Split per target layer", () => splitStep(index)) : null,
     ].filter(Boolean);
     return rememberedDetails(path, false, "editor-group process-step", [

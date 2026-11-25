@@ -172,6 +172,14 @@ const split = T.splitPerTarget({...step, step_id:'s1', target_layer_ids:['a','b'
 assert.deepEqual(split.map(item => [item.step_id, item.target_layer_ids]), [['s1',['a']],['s2',['b']],['s3',['c']]]);
 assert.deepEqual(T.conditionsMissingFromQuote([{sequence:3, conditions:[{name:'spin speed', raw_value:'4000', evidence:[]}]}], 'at 3000 rpm'),
   ['step 3 spin speed "4000"']);
+// Each step can be cited with its own sentence; only values in that sentence are cited.
+const own = {conditions:[{name:'spin speed', raw_value:'3000', unit:'rpm', evidence:[]}, {name:'annealing temperature', raw_value:'150', unit:'°C', evidence:[]},
+  {name:'treatment duration', raw_value:'15', unit:'min', evidence:[{block_id:'b0', quote:'15 min'}]}], evidence:[]};
+const sentence = {block_id:'b1', quote:'SnO2 was spin-coated at 3,000 rpm... at 3000 r.p.m. for 30 s'};
+assert.deepEqual(T.citeStep(own, sentence), {cited:['spin speed'], missing:['annealing temperature "150"']});
+assert.deepEqual(own.conditions.map(item => item.evidence[0]?.block_id ?? null), ['b1', null, 'b0'], 'cited values keep their own quote');
+assert.equal(own.evidence[0].block_id, 'b1');
+assert.deepEqual(T.conditionsMissingFromQuote([own], 'annealed at 150 °C'), [], 'the save quote only has to cover the rest');
 assert.match(T.stepProblems({operation:' ', materials:[''], conditions:[{name:'', raw_value:'1'}]}).join(' '), /method.*no name.*empty material/);
 """)
 

@@ -391,6 +391,23 @@ export function conditionsMissingFromQuote(steps, quote) {
   ).map(problem => problem.replace(/^row 1/, `step ${step.sequence ?? index + 1}`)));
 }
 
+/** Cite a step's uncited values with one quote, e.g. the sentence that describes this step.
+ * Only values that occur in the quote are cited; the step itself is cited if it has no evidence.
+ * Returns the names cited and the values still missing (cited later by the save quote).
+ */
+export function citeStep(step, citation) {
+  const cited = [];
+  const missing = [];
+  for (const condition of step.conditions || []) {
+    if (condition.evidence?.length) continue;
+    const absent = valuesMissingFromQuote([{ metrics: [condition] }], citation.quote).length;
+    if (absent) missing.push(`${condition.name} "${condition.raw_value}"`);
+    else { condition.evidence = [{ ...citation }]; cited.push(condition.name); }
+  }
+  if (!step.evidence?.length) step.evidence = [{ ...citation }];
+  return { cited, missing };
+}
+
 /** Problems that the schema would reject: an empty operation, unnamed parameters, empty materials. */
 export function stepProblems(step, label = "Step") {
   const problems = [];

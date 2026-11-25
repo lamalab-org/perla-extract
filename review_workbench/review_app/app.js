@@ -2043,7 +2043,7 @@ async function saveRecord() {
       const problems = steps.flatMap((step, position) => stepProblems(step, `Processing step ${step.sequence ?? position + 1}`));
       if (problems.length) throw new Error(problems.join(" "));
       const missing = conditionsMissingFromQuote(steps, quote);
-      if (missing.length && !window.confirm(`These processing values are not in the quote: ${missing.join(", ")}. The server will probably reject them. Save anyway?`)) return;
+      if (missing.length && !window.confirm(`These processing values are not in the quote: ${missing.join(", ")}. The server will probably reject them. To cite each step with its own sentence, select that sentence and choose \"Cite selected evidence for this step\" in the step. Save anyway?`)) return;
     }
     await reviewSession.saveRecord({ edit: recordEditor.edit, value, citation, note });
     $("record-dialog").close();
