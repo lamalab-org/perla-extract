@@ -2,6 +2,8 @@
 
 import csv
 import json
+import subprocess
+import sys
 
 import pytest
 
@@ -12,6 +14,7 @@ def test_public_example_preserves_corrections_and_expected_scores(tmp_path):
     output = tmp_path / "example"
     summary = build_example(output)
     assert summary["passed"]
+    assert summary["case_count"] == 5
     truth_dir = output / "truth" / "dev" / "10.0000--synthetic"
     events = json.loads((truth_dir / "review_events.json").read_text())
     assert {event["path"] for event in events if event.get("path")} >= {
@@ -26,8 +29,31 @@ def test_public_example_preserves_corrections_and_expected_scores(tmp_path):
             (output / "predictions" / name / "evaluation.json").read_text()
         )
         assert report["benchmark"]["paper_id"] == "10.0000--synthetic"
-        assert report["prediction_validation"]["status"] == "verified"
+        assert report["prediction_validation"]["status"] == (
+            "needs_review" if name == "raw_parsed_conflict" else "verified"
+        )
         assert report["run_efficiency"]["live_calls"] == 0
+        nomad = json.loads(
+            (output / "predictions" / name / "nomad_export.json").read_text()
+        )
+        mapping = next(
+            item
+            for item in nomad["mappings"]
+            if item["source_kind"] == "performance_observation"
+        )
+        cell = nomad["archives"][mapping["archive_index"]]["data"]
+        if name == "equivalent_units":
+            assert cell["pce"] == 20
+        if name == "raw_parsed_conflict":
+            assert cell["pce"] is None
+            assert cell["ff"] == 80
+            value = json.loads(cell["additional_notes"])["reported_metrics"][0]
+            assert (value["raw_value"], value["value_number"], value["unit"]) == (
+                "20%",
+                2,
+                "%",
+            )
+            assert value["interpretation"]["status"] == "contradiction"
     comparison = json.loads((output / "comparison.json").read_text())
     assert comparison["quality_status"] == "ready"
     assert comparison["issues"] == []
@@ -68,10 +94,59 @@ def test_example_rejects_wrong_expectations_and_retains_reports(tmp_path, monkey
     changed = tmp_path / "expected.json"
     changed.write_text(json.dumps(expected))
     monkeypatch.setattr(run, "EXPECTED", changed)
-    with pytest.raises(ValueError, match="Scoring differs from expected counts"):
+    with pytest.raises(
+        ValueError, match="Scientific checks differ from expected results"
+    ):
         build_example(tmp_path / "example")
     summary = json.loads((tmp_path / "example" / "summary.json").read_text())
     assert not summary["passed"]
+
+
+def test_example_rejects_an_incorrect_export_expectation(tmp_path, monkeypatch):
+    """An apparently correct score cannot hide an incorrect exported quantity."""
+    from examples.scoring import run
+
+    expected = json.loads(run.EXPECTED.read_text())
+    expected["checks"]["raw_parsed_conflict"]["nomad_pce"] = 20
+    changed = tmp_path / "expected.json"
+    changed.write_text(json.dumps(expected))
+    monkeypatch.setattr(run, "EXPECTED", changed)
+    with pytest.raises(
+        ValueError, match="Scientific checks differ from expected results"
+    ):
+        build_example(tmp_path / "example")
+    summary = json.loads((tmp_path / "example" / "summary.json").read_text())
+    assert summary["checks"]["raw_parsed_conflict"]["nomad_pce"] is None
+    assert not summary["passed"]
+
+
+def test_example_needs_no_provider_or_pdf_sdks(tmp_path):
+    """Keep the documented lightweight environment sufficient for the full example."""
+    script = """
+import importlib.abc
+import sys
+from pathlib import Path
+
+class NoOptionalSDKs(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path, target=None):
+        blocked = {
+            'litellm', 'openai', 'docling', 'fitz', 'pymupdf', 'langfuse',
+            'nomad', 'perovskite_solar_cell_database',
+        }
+        if fullname.split('.')[0] in blocked:
+            raise ImportError('The offline example imported an optional SDK: ' + fullname)
+
+sys.meta_path.insert(0, NoOptionalSDKs())
+from examples.scoring.run import build_example
+summary = build_example(Path(sys.argv[1]))
+assert summary['passed'] and summary['case_count'] == 5
+"""
+    subprocess.run(
+        [sys.executable, "-c", script, str(tmp_path / "example")],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_cli_rejects_reference_sources_that_do_not_match_the_sealed_run(

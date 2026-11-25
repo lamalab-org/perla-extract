@@ -40,21 +40,41 @@ pip install -e '.[dev]'
 node --version  # Node.js 20+ is required for behavioral reviewer tests
 ruff check src tests review_workbench examples
 python -m mypy src/perla_extract/study_extraction
-python -m pytest -q
+python -m pytest -q -ra
 ```
 
-The slower Docling contract test is deliberately outside the fast suite:
+### Choose the check that answers your question
+
+| Change | Required check | What it establishes |
+| --- | --- | --- |
+| Quantity meaning, scoring or export | `python -m pytest -q -ra tests/study_extraction/test_quantities.py tests/study_extraction/test_scoring_example.py tests/study_extraction/test_nomad_export.py` | Independently expected conversions, credit and export behavior, including preserved contradictions |
+| Evidence selection or correction | `python -m pytest -q -ra tests/study_extraction/test_source.py tests/study_extraction/test_claims.py tests/study_extraction/test_spans.py tests/study_extraction/test_identity_retention.py` | Connected evidence transport and retained scientific distinctions |
+| Reference loading or scoring policy | `PERLA_RUN_REFERENCE_RELEASE_TESTS=1 python -m pytest -q -ra tests/study_extraction/test_reference_release.py` | Frozen release integrity and explicit reference controls |
+
+The scientific tests block network connections. Missing mocks fail before a
+provider can be contacted, and parser weights must be prepared separately. The
+worked example below needs neither provider SDKs nor PDF models. Passing these
+checks establishes software behavior on declared cases, not extraction accuracy.
+
+For parser changes, also run the real Docling content and OCR integrations after
+installing dependencies and preparing their local model weights:
 
 ```bash
 pip install -e '.[dev]'
-PERLA_RUN_DOCLING_TESTS=1 pytest -q tests/study_extraction/test_docling_integration.py
+PERLA_RUN_DOCLING_TESTS=1 PERLA_RUN_DOCLING_OCR_TESTS=1 python -m pytest -q -ra tests/study_extraction/test_docling_integration.py
 ```
 
-The heavy NOMAD contract is pinned and runs in its manual CI job:
+The native and rasterized authored fixtures check known table cells, blank and
+merged cells, caption/note links and citation decoding. A smoke test with OCR
+disabled does not establish OCR quality. A required integration that is skipped
+remains untested and blocks acceptance of a change relying on it.
+
+For export compatibility, run the pinned NOMAD contract, which also has a regular
+CI job:
 
 ```bash
 pip install -e '.[dev,nomad]'
-PERLA_RUN_NOMAD_TESTS=1 pytest -q tests/study_extraction/test_nomad_integration.py
+PERLA_RUN_NOMAD_TESTS=1 python -m pytest -q -ra tests/study_extraction/test_nomad_integration.py
 ```
 
 Build the documentation with strict link and reference checks:
@@ -75,6 +95,8 @@ PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-exam
 
 Do not regenerate its expected counts from scorer output. Derive them from the
 documented scientific cases and review any changes to the scoring contract.
+For a failed case, compare `actual`/`expected` and `checks`/`expected_checks` in
+`summary.json`, then follow its prediction's evaluation and NOMAD export.
 Check rendered diagrams, equations and tables as well as the strict build.
 
 Docstrings are expected at public APIs, scientific model boundaries, persistence
@@ -106,6 +128,11 @@ interpretation/export, and `run_reporting.py` report assembly. `source.py`, `cla
 `refinement.py` and `repair.py` own their evidence transformations. The workflow
 [guide](docs/workflows/extraction.md) explains the same stages without requiring a
 reader to know these module names.
+
+`quantities.py` interprets complete raw claims for validation, scoring and export;
+`quantity_specs.py` contains their checked definitions, and `units.py` performs
+numeric unit conversion. Preserve raw text and evidence, keep unsupported claims
+visible, and keep statistical/ownership context outside quantity conversion.
 
 `client.py` coordinates each logical model call; `accounting.py` owns typed call and
 attempt records. Budget checks and report totals derive from those records. Account for paid
