@@ -13,3 +13,6 @@ configuration; it has not been calibrated. Development references are not yet ge
 Use the existing extraction schema and scorer. Keep model provenance explicit;
 model-generated references must not be marked human-reviewed. See the
 [study protocol](../STUDY.md) for scoring and budget rules.
+
+Teacher-reference loading and enforced dev/test overlap checks remain to implement;
+see the [readiness review](../../docs/development/readiness.md).

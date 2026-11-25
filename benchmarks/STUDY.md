@@ -5,9 +5,8 @@
 | Development | Strongest feasible model extractions on separate papers | Tune prompts, models, refinement, parsing and scoring |
 | Test | Existing human-corrected records for 30 papers / 27 SIs | Evaluate frozen pipelines |
 
-The previous plan incorrectly used human test references for development and
-excluded model outputs as development labels. This protocol replaces that plan.
-**Paid execution still waits for PR review.**
+Optimize on model-generated references; reserve human references for the final
+evaluation. **Paid execution starts after PR review.**
 
 ## 1. Build model-labeled development data
 

@@ -1,5 +1,7 @@
 # Maintain the codebase
 
+See the [readiness review](readiness.md) for the remaining study blockers.
+
 Start with the [offline scoring example](../workflows/scoring-example.md): change
 one reported value and follow its lost credit. Then try the request-planning exercise
 below. Both use invented data and need no provider key. Run commands from the

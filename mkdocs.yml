@@ -44,6 +44,7 @@ nav:
       - Experiment records: reference/experiment-artifacts.md
       - Python API: reference/python-api.md
   - Development:
+      - Current readiness: development/readiness.md
       - Maintain the pipeline: development/maintaining.md
       - Explain and maintain scoring: development/scoring.md
       - Context calibration results: development/context-calibration-results.md
