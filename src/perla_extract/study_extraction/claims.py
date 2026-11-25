@@ -32,6 +32,7 @@ from .spans import (
     EvidenceSpan,
     build_evidence_spans,
     evidence_payload,
+    linked_context_closure,
     linked_context_ids,
 )
 
@@ -328,11 +329,11 @@ def grounded_ledger(
 def assembly_blocks(
     blocks: Sequence[EvidenceBlock], ledger: ClaimLedger
 ) -> list[EvidenceBlock]:
-    """Select cited blocks and paper metadata, or all blocks when no notes exist.
+    """Select cited blocks, their explicit context, and the paper's opening page.
 
     Reading notes compress the source available to assembly. Blocks not cited by a
-    retained note are omitted, apart from the opening page used for title and DOI.
-    This saves input space but may hide source statements the reader missed.
+    retained note are omitted unless reached by an explicit parser context link.
+    This saves input space but may hide unlinked statements the reader missed.
     """
 
     if not ledger.objects and not ledger.claims:
@@ -341,12 +342,16 @@ def assembly_blocks(
     cited = {citation.block_id for item in entries for citation in item.evidence}
     main_pages = [block.page for block in blocks if block.source == "main"]
     first_main_page = min(main_pages) if main_pages else None
-    selected = [
-        block
-        for block in blocks
-        if block.block_id in cited
-        or (block.source == "main" and block.page == first_main_page)
-    ]
+    retained = linked_context_closure(
+        blocks,
+        {
+            block.block_id
+            for block in blocks
+            if block.block_id in cited
+            or (block.source == "main" and block.page == first_main_page)
+        },
+    )
+    selected = [block for block in blocks if block.block_id in retained]
     return selected or list(blocks)
 
 
@@ -397,22 +402,21 @@ def assembly_spans(
     # when the reader cited only a distant result row. Retain the table once;
     # do not reconstruct context from a guessed number of neighboring spans.
     cited_blocks = {identifier for identifier, _ in cited}
+    required = linked_context_closure(block_list, cited_blocks | header_block_ids)
     table_ids = {
-        b.block_id
-        for b in block_list
-        if b.kind == "table" and b.block_id in cited_blocks
+        b.block_id for b in block_list if b.kind == "table" and b.block_id in required
     }
-    table_context = {
-        identifier
+    context_targets = {
+        target
         for block in block_list
-        if block.block_id in table_ids
-        for identifier in linked_context_ids(block)
+        if block.block_id in required
+        for target in linked_context_ids(block)
     }
     selected = [
         span
         for index, span in enumerate(spans)
         if index in neighborhood_positions
-        or span.block_id in header_block_ids | table_ids | table_context
+        or span.block_id in header_block_ids | table_ids | context_targets
     ]
     return selected or spans
 

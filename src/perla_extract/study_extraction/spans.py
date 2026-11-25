@@ -141,6 +141,31 @@ def linked_context_ids(block: EvidenceBlock) -> list[str]:
     )
 
 
+def linked_context_closure(
+    blocks: Iterable[EvidenceBlock], identifiers: Iterable[str]
+) -> set[str]:
+    """Keep explicit linked context transitively without guessing from proximity.
+
+    The visited set handles repeated links and cycles. Missing targets remain in
+    the result so selection never turns an unresolved link into a valid one;
+    serialization reports those unavailable targets separately.
+    """
+
+    by_id = {block.block_id: block for block in blocks}
+    retained = set(identifiers)
+    pending = list(retained)
+    while pending:
+        identifier = pending.pop()
+        block = by_id.get(identifier)
+        if block is None:
+            continue
+        for target in linked_context_ids(block):
+            if target not in retained:
+                retained.add(target)
+                pending.append(target)
+    return retained
+
+
 def evidence_payload(
     blocks: Iterable[EvidenceBlock], spans: Iterable[EvidenceSpan] | None = None
 ) -> list[dict[str, object]]:
@@ -168,13 +193,21 @@ def evidence_payload(
         }
         for block in block_list
     ]
-    present = {block.block_id for block in block_list}
+    # Primary/context displays can be serialized separately against one combined
+    # catalog. A target in that catalog remains available to the model even when
+    # it is absent from this display's block subset.
+    present = set(spans_by_block)
     for block, entry in zip(block_list, payload):
         if block.kind == "table":
             entry["table_layout"] = block.metadata.get("table_layout", [])
+        context = linked_context_ids(block)
+        if block.kind == "table" or context:
             entry["context_block_ids"] = [
-                identifier
-                for identifier in linked_context_ids(block)
-                if identifier in present
+                identifier for identifier in context if identifier in present
             ]
+            missing = [
+                identifier for identifier in context if identifier not in present
+            ]
+            if missing:
+                entry["unresolved_context_block_ids"] = missing
     return payload

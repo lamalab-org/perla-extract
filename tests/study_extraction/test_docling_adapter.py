@@ -7,11 +7,13 @@ import pytest
 from perla_extract.study_extraction.claims import (
     ClaimLedger,
     ExperimentalObject,
+    assembly_blocks,
     assembly_evidence_payload,
     assembly_spans,
 )
 from perla_extract.study_extraction.models import EvidenceBlock, EvidenceCitation
 from perla_extract.study_extraction.source import (
+    _attach_explicit_table_notes,
     _docling_bbox,
     _docling_table,
     _parse_docling,
@@ -139,6 +141,36 @@ def test_adapter_links_actual_caption_and_footnote_and_keeps_geometry_missing(
     assert payload[1]["table_layout"] == blocks[1].metadata["table_layout"]
     assert payload[1]["context_block_ids"] == [blocks[0].block_id, blocks[2].block_id]
 
+    # Exercise the actual converter-adapter → selection → span transport chain.
+    # A span-only test would not detect context discarded by block selection.
+    from perla_extract.study_extraction.transport import expand_span_citations
+
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="control",
+                label="Control",
+                role="individual_device",
+                scope="target",
+                evidence=[
+                    EvidenceCitation(
+                        block_id=blocks[1].block_id, quote="Control | 1.044 | 19.70"
+                    )
+                ],
+            )
+        ],
+        claims=[],
+    )
+    selected = assembly_blocks(blocks, ledger)
+    spans = assembly_spans(selected, ledger)
+    assembled = assembly_evidence_payload(selected, ledger)
+    assert [b.block_id for b in selected] == [b.block_id for b in blocks]
+    assert assembled[1]["context_block_ids"] == [blocks[0].block_id, blocks[2].block_id]
+    note_span = next(s for s in spans if s.text == note.text)
+    assert expand_span_citations({"evidence": [note_span.span_id]}, spans) == {
+        "evidence": [{"block_id": blocks[2].block_id, "quote": note.text}]
+    }
+
 
 def test_reader_row_keeps_distant_headers_and_linked_notes_without_unrelated_prose():
     table_block = EvidenceBlock(
@@ -183,6 +215,107 @@ def test_reader_row_keeps_distant_headers_and_linked_notes_without_unrelated_pro
     assert {key for entry in payload for key in entry["spans"]} == {
         s.span_id for s in spans
     }
+
+
+@pytest.mark.parametrize("ambiguous", [False, True])
+def test_explicit_table_notes_require_a_unique_source_caption_target(ambiguous):
+    caption = EvidenceBlock(
+        block_id="caption",
+        source="main",
+        page=2,
+        kind="text",
+        text="Table S1. Reverse scans.",
+    )
+    table_block = EvidenceBlock(
+        block_id="table",
+        source="main",
+        page=2,
+        kind="table",
+        text="A | 20",
+        metadata={"context_block_ids": ["caption"]},
+    )
+    note = EvidenceBlock(
+        block_id="note",
+        source="main",
+        page=3,
+        kind="text",
+        text="Note to Table S1: Irradiance was 100 mW/cm2.",
+    )
+    generic = EvidenceBlock(
+        block_id="generic",
+        source="main",
+        page=2,
+        kind="text",
+        text="Note: All values use 50 mW/cm2.",
+    )
+    discussion = EvidenceBlock(
+        block_id="discussion",
+        source="main",
+        page=4,
+        kind="text",
+        text="The results in Table S1 show an improvement.",
+    )
+    other_source = EvidenceBlock(
+        block_id="other-source",
+        source="supplement",
+        page=1,
+        kind="text",
+        text="Table S1 note: A different experiment used 80 mW/cm2.",
+    )
+    other_table = EvidenceBlock(
+        block_id="other-table-note",
+        source="main",
+        page=3,
+        kind="text",
+        text="Note to Table S2: A different experiment used 60 mW/cm2.",
+    )
+    blocks = [
+        caption,
+        table_block,
+        note,
+        generic,
+        discussion,
+        other_source,
+        other_table,
+    ]
+    if ambiguous:
+        blocks.append(
+            table_block.model_copy(deep=True, update={"block_id": "second-table"})
+        )
+
+    _attach_explicit_table_notes(blocks)
+
+    assert table_block.metadata["context_block_ids"] == (
+        ["caption"] if ambiguous else ["caption", "note"]
+    )
+    assert table_block.metadata.get("explicit_table_note_ids", []) == (
+        [] if ambiguous else ["note"]
+    )
+    # All source statements remain available. Unqualified notes and discussion
+    # references do not acquire an inferred table owner.
+    assert generic in blocks and discussion in blocks and other_source in blocks
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="A",
+                label="A",
+                role="individual_device",
+                scope="target",
+                evidence=[EvidenceCitation(block_id="table", quote="A | 20")],
+            )
+        ],
+        claims=[],
+    )
+    # Use an SI copy to avoid the deliberate main opening-page metadata fallback.
+    supplement = [
+        b.model_copy(update={"source": "supplement"})
+        for b in blocks
+        if b != other_source
+    ]
+    selected = assembly_blocks(supplement, ledger)
+    assert "generic" not in {b.block_id for b in selected}
+    assert "discussion" not in {b.block_id for b in selected}
+    assert "other-table-note" not in {b.block_id for b in selected}
 
 
 @pytest.mark.parametrize("bad_metadata", [None, 7, {"note": True}, [None, {}]])
