@@ -10,11 +10,10 @@ from typing import Any
 import click
 
 from .configuration import DEFAULT_EXTRACTION_MODEL, default, resolve_config
+from .deployment import REASONING_LEVELS
 from .logging import configure_logging, logger
 from .source import available_parsers
 from .workflow import run_extraction
-
-REASONING_LEVELS = ("omit", "none", "minimal", "low", "medium", "high", "xhigh")
 
 
 def _load_env(path: Path | None) -> None:

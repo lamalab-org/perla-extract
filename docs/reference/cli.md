@@ -64,7 +64,7 @@ layer. See the [mixed-provider example](../workflows/open-models.md#configure-a-
 | `--model TEXT` | `openai/gpt-5.2` | Select `stages.default.model`; resets its connection and model-specific settings |
 | `--base-url URL` | omitted | Default endpoint; specify its model alongside it |
 | `--api-key-env NAME` | provider convention | Environment variable containing the default endpoint key |
-| `--reasoning-effort [omit|none|minimal|low|medium|high|xhigh]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
+| `--reasoning-effort [omit|none|minimal|low|medium|high|xhigh|max]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
 | `--max-output-tokens INTEGER` | per-stage defaults | Set the default deployment output allowance; stage tables can override it |
 | `--max-model-calls INTEGER` | `1` | Maximum provider requests, including retries and validation repair |
 | `--max-cost-usd FLOAT` | omitted | Stop before the next call after adapter-reported cost reaches this limit |

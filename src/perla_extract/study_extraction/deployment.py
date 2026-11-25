@@ -17,7 +17,7 @@ from typing import Any, TypedDict
 
 from pydantic import BaseModel
 
-REASONING_LEVELS = {"omit", "none", "minimal", "low", "medium", "high", "xhigh"}
+REASONING_LEVELS = ("omit", "none", "minimal", "low", "medium", "high", "xhigh", "max")
 
 
 class RequestEstimate(TypedDict):
@@ -91,7 +91,7 @@ class DeploymentSettings:
             and self.reasoning_effort not in REASONING_LEVELS
         ):
             raise ValueError(
-                "reasoning_effort must be omit, none, minimal, low, medium, high, or xhigh"
+                "reasoning_effort must be one of: " + ", ".join(REASONING_LEVELS)
             )
         if self.service_tier is not None and self.service_tier not in {
             "auto",
