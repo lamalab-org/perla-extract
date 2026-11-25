@@ -85,7 +85,7 @@ f1.processing_steps = [
   step('step-3', 'f1-pvk', 'wet_deposition', 'spin coating', [['first spin speed','1000','rpm'],['first spin duration','10','s'],
     ['second spin speed','5000','rpm'],['second spin duration','30','s'],['antisolvent volume','150','µL']], ['DMF','DMSO','chlorobenzene']),
   anneal('step-4', 'f1-pvk', '100', '10'),
-  step('step-5', 'f1-peai', 'surface_treatment', 'spin coating', [['concentration','2','mg mL-1'],['spin speed','5000','rpm']], ['PEAI']),
+  step('step-5', 'f1-peai', 'wet_deposition', 'spin coating', [['concentration','2','mg mL-1'],['spin speed','5000','rpm']], ['PEAI']),
   step('step-6', 'f1-sp', 'wet_deposition', 'spin coating', [['spin speed','4000','rpm'],['spin duration','30','s']], ['Spiro-OMeTAD']),
 ].map((item, index) => ({...item, sequence:index + 1}));
 P.applySolution(f1.processing_steps[2], {solvents:{names:['DMF','DMSO'], kind:'volume', ratio:'4:1'}, solutes:{rows:[{name:'PbI2', concentration:'', unit:'M'}, {name:'FAI', concentration:'', unit:'M'}], ratio:'1.1:1'}});
@@ -291,7 +291,15 @@ assert.deepEqual(names('inkjet printing'), ['drop spacing', 'printing resolution
 assert.deepEqual(names('custom coating'), ['substrate temperature', 'atmosphere']);
 assert.deepEqual(names('spin-coat HTL'), ['volume', 'spin speed', 'spin duration', 'substrate temperature', 'atmosphere']);
 assert.ok(!names('blade coating').some(name => name.startsWith('spin')), 'spin parameters only for spin coating');
-assert.deepEqual(names('blade coating', 'surface_treatment').slice(-1), ['atmosphere']);
+assert.deepEqual(names('O2 plasma treatment', 'surface_treatment'), ['plasma power', 'pressure', 'treatment duration']);
+assert.deepEqual(names('UV-ozone treatment', 'surface_treatment'), ['treatment duration']);
+for (const wording of ['UV-O3 treatment', 'ultraviolet-ozone (UVO) treatment', 'clean and UV-treat FTO glasses', 'substrate cleaning and UV-Ozone treatment'])
+  assert.equal(T.categoryOf(wording).id, 'surface_treatment', wording);
+assert.equal(T.categoryOf('treated with plasma').id, 'surface_treatment');
+assert.equal(T.categoryOf('ultrasonic cleaning').id, 'substrate_preparation');
+assert.equal(T.categoryOf('dipping').id, 'wet_deposition');
+assert.equal(T.STEP_PRESETS.find(preset => preset.category === 'surface_treatment').operation, 'plasma treatment');
+assert.ok(!T.categoryById('surface_treatment').methods.some(method => /coat|print|cast/.test(method)), 'no coating methods');
 assert.equal(T.parametersFor('wet_deposition', true, 'blade coating').some(item => item.name.startsWith('first')), false);
 assert.equal(T.categoryOf('slot-die coating').id, 'wet_deposition');
 assert.ok(T.STEP_PRESETS.some(preset => preset.operation === 'inkjet printing'));

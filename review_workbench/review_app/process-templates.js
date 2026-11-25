@@ -48,7 +48,7 @@ export const METHOD_PARAMETERS = {
   "dip coating": [parameter("withdrawal speed", "mm min-1", "10"), parameter("dipping time", "s", "30")],
   "dipping": [parameter("dipping time", "s", "30")],
   "immersion": [parameter("immersion time", "min", "10")],
-  "gas exposure": [parameter("exposure time", "min", "10")],
+  "plasma treatment": [parameter("plasma power", "W", "100"), parameter("pressure", "mbar", "0.4")],
   "vacuum drying": [parameter("vacuum pressure", "Pa", "10")],
   "gas flow drying": [parameter("gas flow rate", "L min-1")],
 };
@@ -69,7 +69,7 @@ const METHOD_PATTERNS = [
   ["atomic layer deposition", /atomic layer|\bald\b/],
   ["chemical vapor deposition", /chemical vapou?r|\bcvd\b/],
   ["e-beam evaporation", /e-?beam|electron beam/],
-  ["UV-ozone treatment", /uv[\s-]*ozone|\buvo\b/],
+  ["UV-ozone treatment", /uv[\s-]*(ozone|o3|treat|clean)|\buvo\b|ultraviolet[\s-]*(ozone|o3)/],
   ["plasma treatment", /plasma/],
   ["ultrasonic cleaning", /clean|sonicat|ultrason|wash|rins/],
   ["dipping", /^dip|dipped|dipping/],
@@ -185,7 +185,7 @@ export const PROCESS_CATEGORIES = [
     ],
   },
   {
-    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: WET_METHODS,
+    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: [...WET_METHODS, "dipping", "immersion"],
     quenching: true, solution: true, annealing: true,
     parameters: [],
     after: [parameter("substrate temperature", "°C"), parameter("atmosphere", "", "N2 glovebox")],
@@ -199,16 +199,18 @@ export const PROCESS_CATEGORIES = [
     ],
   },
   {
-    id: "surface_treatment", label: "Surface treatment / doping", role: "treats",
-    quenching: true, solution: true, annealing: true,
-    methods: [...WET_METHODS, "dipping", "immersion", "gas exposure", "doping/aging"],
+    // Plasma, UV-ozone or gas treatment of a surface; the plasma gas goes into materials.
+    // A layer applied from solution to modify a surface (e.g. PEAI) is a wet deposition
+    // whose target layer says what it modifies.
+    id: "surface_treatment", label: "Surface treatment (plasma, UV-ozone)", role: "treats",
+    methods: ["plasma treatment", "UV-ozone treatment", "gas exposure"],
     parameters: [],
-    after: [parameter("atmosphere")],
+    after: [parameter("treatment duration", "min", "15")],
   },
   {
-    id: "substrate_preparation", label: "Substrate preparation", role: "treats",
-    methods: ["ultrasonic cleaning", "UV-ozone treatment", "plasma treatment", "rinsing"],
-    parameters: [parameter("duration", "min", "15"), parameter("power", "W")],
+    id: "substrate_preparation", label: "Substrate cleaning", role: "treats",
+    methods: ["ultrasonic cleaning", "rinsing"],
+    parameters: [parameter("duration", "min", "15")],
   },
   {
     // Drying as a step of its own, e.g. "dried at 70 °C for 10 min" or "dried in vacuum".
@@ -235,7 +237,7 @@ export const STEP_PRESETS = [
   { label: "+ Spray coating", category: "wet_deposition", operation: "spray coating" },
   { label: "+ Inkjet printing", category: "wet_deposition", operation: "inkjet printing" },
   { label: "+ Evaporation", category: "dry_deposition", operation: "thermal evaporation" },
-  { label: "+ Surface treatment", category: "surface_treatment", operation: "spin coating" },
+  { label: "+ Surface treatment", category: "surface_treatment", operation: "plasma treatment" },
   { label: "+ Substrate cleaning", category: "substrate_preparation", operation: "ultrasonic cleaning" },
   { label: "+ Solution preparation", category: "solution_preparation", operation: "solution preparation" },
   { label: "+ Drying", category: "drying", operation: "drying" },

@@ -57,19 +57,29 @@ export const CONSTITUENTS = [
   group("other layer material", "glass", "C60", "BCP"),
 ];
 
-export const PROCESS_MATERIALS = [
+const SOLVENTS = [
   group("solvent",
     ["DMF", "N,N-dimethylformamide"], ["DMSO", "dimethyl sulfoxide", "dimethylsulfoxide"], ["GBL", "γ-butyrolactone"], "NMP",
     ["2-ME", "2-methoxyethanol"], ["acetonitrile", "ACN"], "methanol", ["ethanol", "EtOH"],
     ["IPA", "isopropanol", "2-propanol", "isopropyl alcohol"], "1-butanol", "chloroform"),
   group("solvent / antisolvent",
     ["chlorobenzene", "CB"], "toluene", "diethyl ether", "ethyl acetate", "methyl acetate", "anisole", ["dichlorobenzene", "DCB"], "trifluorotoluene"),
+];
+const OXIDE_PRECURSORS = group("oxide precursor",
+  "titanium diisopropoxide bis(acetylacetonate)", ["titanium isopropoxide", "TTIP"], "TiCl4", "TiO2 paste",
+  "SnO2 colloid", "SnO2 nanoparticles", "SnCl2·2H2O", "nickel acetate", "ethanolamine", "acetylacetone", "HCl");
+
+/** Solvents of a solution (the solution widget), also used to tell solvent ratios from solute ratios. */
+export const SOLVENT_SUGGESTIONS = SOLVENTS;
+/** Dissolved materials: precursors, salts, dopants, transport materials and oxide precursors. */
+export const SOLUTE_SUGGESTIONS = [];
+
+export const PROCESS_MATERIALS = [
+  ...SOLVENTS,
   group("cleaning", ["deionized water", "DI water"], "ultrapure water", "water", "acetone", "detergent", ["Hellmanex", "Hellmanex III"], "soapy water"),
-  group("gas", ["nitrogen", "N2"], "air", "oxygen"),
+  group("gas", ["nitrogen", "N2"], "air", ["oxygen", "O2"], ["argon", "Ar"]),
   LEAD_TIN, ORGANIC_CATIONS, INORGANIC_CATIONS, PASSIVATION, DOPANTS,
-  group("oxide precursor",
-    "titanium diisopropoxide bis(acetylacetonate)", ["titanium isopropoxide", "TTIP"], "TiCl4", "TiO2 paste",
-    "SnO2 colloid", "SnO2 nanoparticles", "SnCl2·2H2O", "nickel acetate", "ethanolamine", "acetylacetone", "HCl"),
+  OXIDE_PRECURSORS,
   FULLERENES, HTL_ORGANIC, SAMS,
   group("evaporated metal / oxide", ["Au", "gold"], ["Ag", "silver"], ["Cu", "copper"], "Al", ["MoO3", "MoOx"]),
 ];
@@ -90,12 +100,17 @@ export const AMOUNT_NAMES = [
   group("recipe", "concentration", "mass", "molar ratio", "volume"),
 ];
 
+SOLUTE_SUGGESTIONS.push(LEAD_TIN, ORGANIC_CATIONS, INORGANIC_CATIONS, PASSIVATION, DOPANTS, FULLERENES, HTL_ORGANIC, SAMS, OXIDE_PRECURSORS);
+export const SOLVENT_NAMES = new Set(SOLVENTS.flatMap(({ materials }) => materials.flat()).map(name => name.normalize("NFKC").trim().toLowerCase()));
+
 export const SUGGESTION_LISTS = {
   layer: { id: "layer-material-suggestions", groups: LAYER_MATERIALS },
   constituent: { id: "constituent-suggestions", groups: CONSTITUENTS },
   process: { id: "process-material-suggestions", groups: PROCESS_MATERIALS },
   role: { id: "constituent-role-suggestions", groups: CONSTITUENT_ROLES },
   amount: { id: "amount-name-suggestions", groups: AMOUNT_NAMES },
+  solvent: { id: "solvent-suggestions", groups: SOLVENT_SUGGESTIONS },
+  solute: { id: "solute-suggestions", groups: SOLUTE_SUGGESTIONS },
 };
 
 /** One plain option per exact spelling, without labels or alias hints. */
