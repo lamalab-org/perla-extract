@@ -5,9 +5,13 @@
  * written to `conditions`, so the card never holds values the record does not.
  */
 import {
-  PROCESS_CATEGORIES, categoryById, categoryOf, findCondition, isTwoStageSpin,
+  PROCESS_CATEGORIES, QUENCHING_TYPES, categoryById, categoryOf, findCondition, isTwoStageSpin, quenchingTypesUsed,
   materialInOperation, parametersFor, setCondition, setConditionUnit, setTwoStageSpin, usesSpinProgram,
 } from "./process-templates.js";
+
+// Drying/quenching types a reviewer opened but has not filled yet, per card; a re-render
+// must not close them. Filled types are always shown because their values are in the record.
+const openQuenching = new Map();
 
 const slug = text => String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -80,8 +84,9 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
   // Template parameters: one value and unit per parameter; empty values are not saved.
   const twoStage = isTwoStageSpin(step.conditions);
   const template = category ? parametersFor(category.id, twoStage, step.operation) : [];
-  const templateKeys = new Set(template.map(item => item.name.toLowerCase()));
-  const parameterRows = template.map((item) => {
+  const quenchingNames = category?.quenching ? QUENCHING_TYPES.flatMap(type => type.parameters.map(item => item.name)) : [];
+  const templateKeys = new Set([...template.map(item => item.name), ...quenchingNames].map(name => name.toLowerCase()));
+  const parameterRow = (item) => {
     const existing = findCondition(step, item.name);
     const id = `${idPrefix}-param-${slug(item.name)}`;
     const value = element("input", { properties: { value: existing?.raw_value ?? "", placeholder: item.placeholder || "" }, attributes: { "aria-label": item.name } });
@@ -91,7 +96,40 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
     value.addEventListener("input", () => { setCondition(step, item.name, value.value, unit.value); changed(false); });
     unit.addEventListener("input", () => { setConditionUnit(step, item.name, unit.value); changed(false); });
     return element("label", { className: "process-parameter" }, [element("span", { text: item.name }), value, unit]);
-  });
+  };
+  const parameterRows = template.map(parameterRow);
+
+  // Drying / quenching box: one section per type in use; the medium itself is a material.
+  let quenchingBox = null;
+  if (category?.quenching) {
+    const shown = new Set([...quenchingTypesUsed(step.conditions), ...(openQuenching.get(idPrefix) || [])]);
+    openQuenching.set(idPrefix, shown);
+    const sections = QUENCHING_TYPES.filter(type => shown.has(type.id)).map(type => element("div", { className: "process-quenching-type" }, [
+      element("div", { className: "process-quenching-heading" }, [
+        element("strong", { text: type.label }),
+        element("button", {
+          text: "Remove", className: "danger-link", properties: { type: "button" }, attributes: { "aria-label": `Remove ${type.label}` },
+          events: { click: () => {
+            const names = new Set(type.parameters.map(item => item.name.toLowerCase()));
+            step.conditions = step.conditions.filter(condition => !names.has(String(condition.name || "").toLowerCase()));
+            shown.delete(type.id);
+            changed(true);
+          } },
+        }),
+      ]),
+      ...type.parameters.map(parameterRow),
+    ]));
+    const adders = QUENCHING_TYPES.filter(type => !shown.has(type.id)).map(type => element("button", {
+      text: `+ ${type.label}`, properties: { type: "button" },
+      events: { click: () => { shown.add(type.id); changed(true); } },
+    }));
+    quenchingBox = element("details", { className: "process-quenching", properties: { open: shown.size > 0 } }, [
+      element("summary", { text: `Drying / quenching${shown.size ? ` (${[...shown].length})` : ""}` }),
+      element("span", { className: "muted", text: "Put the antisolvent or gas itself under Materials." }),
+      ...sections,
+      adders.length ? element("div", { className: "process-presets" }, adders) : null,
+    ].filter(Boolean));
+  }
   const spinToggle = category && usesSpinProgram(step.operation) ? element("button", {
     text: twoStage ? "Single spin stage" : "+ Second spin stage", properties: { type: "button" },
     events: { click: () => { setTwoStageSpin(step, !twoStage); changed(true); } },
@@ -144,6 +182,7 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
       ...parameterRows,
       ...(spinToggle ? [spinToggle] : []),
     ]) : null,
+    quenchingBox,
     otherSection,
   ].filter(Boolean));
 }

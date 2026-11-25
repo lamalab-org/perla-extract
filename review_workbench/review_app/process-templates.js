@@ -17,22 +17,17 @@ const WET_METHODS = [
 const SPIN = [parameter("spin speed", "rpm", "4000"), parameter("spin duration", "s", "30")];
 
 /** Parameters typical of each coating method. The category adds the shared ones
- * (concentration before, substrate temperature/atmosphere after). Gas quenching by an
- * N2 or air knife is one name, "gas knife pressure", so annotations stay comparable.
+ * (concentration before, substrate temperature/atmosphere after); drying and quenching
+ * (antisolvent, gas knife, vacuum) have their own box, see QUENCHING_TYPES.
  */
 export const METHOD_PARAMETERS = {
-  "spin coating": [
-    parameter("volume", "µL", "50"), ...SPIN,
-    parameter("antisolvent volume", "µL", "150"), parameter("antisolvent drip time", "s", "10"),
-  ],
+  "spin coating": [parameter("volume", "µL", "50"), ...SPIN],
   "blade coating": [
-    parameter("volume", "µL", "20"), parameter("coating speed", "mm s-1", "20"),
-    parameter("blade gap", "µm", "200"), parameter("gas knife pressure", "psi", "20"),
+    parameter("volume", "µL", "20"), parameter("coating speed", "mm s-1", "20"), parameter("blade gap", "µm", "200"),
   ],
   "slot-die coating": [
     parameter("coating speed", "mm s-1", "10"), parameter("flow rate", "µL min-1", "50"),
     parameter("coating gap", "µm", "100"), parameter("shim thickness", "µm", "100"),
-    parameter("gas knife pressure", "psi", "20"),
   ],
   "spray coating": [
     parameter("nozzle-to-substrate distance", "cm", "10"), parameter("flow rate", "mL min-1", "1"),
@@ -47,6 +42,48 @@ export const METHOD_PARAMETERS = {
   "dip coating": [parameter("withdrawal speed", "mm min-1", "10"), parameter("dipping time", "s", "30")],
 };
 
+/** Drying and quenching during a wet deposition, after Plains' QuenchingModal (Gas,
+ * Antisolvent, Vacuum) plus plain drying. They stay conditions of the deposition step; the
+ * antisolvent or gas itself is a step material (convention C6), so it has no field here.
+ */
+export const QUENCHING_TYPES = [
+  {
+    id: "antisolvent", label: "Antisolvent",
+    parameters: [
+      parameter("antisolvent volume", "µL", "150"), parameter("antisolvent drip time", "s", "10"),
+      parameter("antisolvent dispensing method", "", "dripping"), parameter("antisolvent flow rate", "µL s-1"),
+      parameter("antisolvent dispensing height", "mm", "10"),
+    ],
+  },
+  {
+    id: "gas", label: "Gas quenching",
+    parameters: [
+      parameter("gas pressure", "psi", "20"), parameter("gas flow rate", "L min-1"),
+      parameter("nozzle height", "mm", "5"), parameter("nozzle width", "mm"), parameter("nozzle form", "", "slit"),
+      parameter("gas quenching start time", "s", "5"),
+    ],
+  },
+  {
+    id: "vacuum", label: "Vacuum quenching",
+    parameters: [
+      parameter("vacuum pressure", "Pa", "20"), parameter("evacuation time", "s", "10"),
+      parameter("vacuum chamber height", "mm"), parameter("vacuum chamber base area", "cm2"),
+      parameter("dead volume", "L"), parameter("pump model", "", "Edwards RV3"),
+      parameter("vacuum quenching start time", "s", "5"),
+    ],
+  },
+  {
+    id: "drying", label: "Drying",
+    parameters: [parameter("drying temperature", "°C", "25"), parameter("drying time", "min", "10")],
+  },
+];
+
+/** The drying/quenching types that already have a value on the step. */
+export function quenchingTypesUsed(conditions = []) {
+  const names = new Set(conditions.map(condition => key(condition.name)));
+  return QUENCHING_TYPES.filter(type => type.parameters.some(item => names.has(key(item.name)))).map(type => type.id);
+}
+
 /** `role`: "forms" creates a layer, "treats" acts on an existing one, "prepares" makes its solution. */
 export const PROCESS_CATEGORIES = [
   {
@@ -59,7 +96,7 @@ export const PROCESS_CATEGORIES = [
     ],
   },
   {
-    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: WET_METHODS,
+    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: WET_METHODS, quenching: true,
     parameters: [parameter("concentration", "mg mL-1")],
     after: [parameter("substrate temperature", "°C"), parameter("atmosphere", "", "N2 glovebox")],
   },
@@ -72,7 +109,7 @@ export const PROCESS_CATEGORIES = [
     ],
   },
   {
-    id: "surface_treatment", label: "Surface treatment / doping", role: "treats",
+    id: "surface_treatment", label: "Surface treatment / doping", role: "treats", quenching: true,
     methods: [...WET_METHODS, "dipping", "immersion", "gas exposure", "doping/aging"],
     parameters: [parameter("concentration", "mg mL-1")],
     after: [parameter("temperature", "°C"), parameter("duration", "min"), parameter("atmosphere")],

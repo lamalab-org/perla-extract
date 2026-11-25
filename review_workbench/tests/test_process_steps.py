@@ -219,10 +219,13 @@ def test_conventions_score_fully_and_free_text_operations_do_not():
 def test_coating_methods_have_their_own_parameters():
     run_javascript("""
 const names = (operation, category = 'wet_deposition') => T.parametersFor(category, false, operation).map(item => item.name);
-assert.deepEqual(names('blade coating'), ['concentration', 'volume', 'coating speed', 'blade gap', 'gas knife pressure',
+assert.deepEqual(names('blade coating'), ['concentration', 'volume', 'coating speed', 'blade gap',
   'substrate temperature', 'atmosphere']);
 assert.deepEqual(names('slot-die coating'), ['concentration', 'coating speed', 'flow rate', 'coating gap', 'shim thickness',
-  'gas knife pressure', 'substrate temperature', 'atmosphere']);
+  'substrate temperature', 'atmosphere']);
+assert.ok(!names('spin coating').some(name => name.startsWith('antisolvent')), 'antisolvent fields live in the quenching box');
+assert.deepEqual(T.QUENCHING_TYPES.map(type => type.id), ['antisolvent', 'gas', 'vacuum', 'drying']);
+assert.deepEqual(T.quenchingTypesUsed([{name:'Gas pressure'}, {name:'spin speed'}, {name:'drying time'}]), ['gas', 'drying']);
 assert.deepEqual(names('Spray-coating'), ['concentration', 'nozzle-to-substrate distance', 'flow rate', 'carrier gas pressure',
   'number of passes', 'substrate temperature', 'atmosphere']);
 assert.deepEqual(names('inkjet printing'), ['concentration', 'drop spacing', 'printing resolution', 'jetting voltage',
@@ -380,6 +383,30 @@ assert.equal(list('record-field-layers-1-constituents-0-name'), 'constituent-sug
 assert.equal(list('record-field-layers-1-constituents-0-role'), 'constituent-role-suggestions');
 assert.equal(list('record-field-layers-1-constituents-0-amount-name'), 'amount-name-suggestions');
 assert.equal(list('record-field-layers-1-constituents-0-amount-raw_value'), undefined);
+"""
+    )
+
+
+def test_drying_and_quenching_box_writes_conditions_of_the_deposition_step():
+    run_javascript(
+        EDITOR
+        + """
+family.processing_steps[0].conditions = [{name:'antisolvent volume', raw_value:'150', value_number:150, unit:'µL', evidence:[c]}];
+editor.open('device_families', 0);
+const box = () => all().find(node => node.className === 'process-quenching');
+assert.equal(box().open, true, 'a step with quenching values shows the box open');
+assert.ok(document.getElementById('record-step-0-param-antisolvent-volume'));
+assert.ok(!all().some(node => node.textContent === 'Other parameters (1)'), 'not duplicated under other parameters');
+click('+ Gas quenching');
+assert.ok(all().some(node => node.id === 'record-step-0-param-gas-pressure'), 'an added type stays open before it has values');
+field('record-step-0-param-gas-pressure', '20');
+assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => [item.name, item.raw_value, item.unit]),
+  [['antisolvent volume','150','µL'], ['gas pressure','20','psi']]);
+all().find(node => node.attributes?.['aria-label'] === 'Remove Antisolvent').fire('click');
+assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['gas pressure']);
+click('+ Annealing after this step');
+assert.ok(!all().some(node => node.id === 'record-step-1-param-gas-pressure'));
+assert.equal(all().filter(node => node.className === 'process-quenching').length, 1, 'no box for annealing');
 """
     )
 
