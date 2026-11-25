@@ -11,16 +11,20 @@ from perla_extract.study_extraction.candidate_selection import (
 from perla_extract.study_extraction.evaluation import evaluate_study
 from perla_extract.study_extraction.identity_text import identity_text
 from perla_extract.study_extraction.models import (
+    DeviceFamily,
     EvidenceBlock,
     EvidenceCitation,
     IndividualDevice,
+    Layer,
     PaperMetadata,
     PerformanceObservation,
+    PopulationStatistic,
     ReportedValue,
     StabilityCheckpoint,
     StabilityTest,
     StudyExtraction,
 )
+from perla_extract.study_extraction.scoring_facts import scientific_descriptor
 from perla_extract.study_extraction.scoring_identity import sample_code
 
 TEXT = (
@@ -131,6 +135,92 @@ def test_outcome_text_cannot_resolve_otherwise_ambiguous_device_ownership(
     assert all(
         match.ambiguous for match in score.matches if match.kind == "individual_devices"
     )
+
+
+@pytest.mark.parametrize("field", ["label", "variant"])
+def test_family_outcome_text_cannot_disambiguate_identical_designs(field):
+    fixture = study(
+        [observation("a", "control", number=15), observation("b", "treated")]
+    )
+    for index, (device, number) in enumerate(zip(fixture.individual_devices, (15, 20))):
+        device.label = "Measured cell"
+        device.family_id = f"family-{index}"
+        family = DeviceFamily(
+            family_id=device.family_id,
+            label="Design",
+            variant=None,
+            architecture=None,
+            full_stack_raw=None,
+            polarity="not_reported",
+            absorbers=[],
+            processing_steps=[],
+            layers=[
+                Layer(
+                    layer_id="electrode",
+                    sequence=1,
+                    material="ITO",
+                    role="transparent_electrode",
+                    reported_properties=[],
+                    evidence=[CITATION],
+                )
+            ],
+            evidence=[CITATION],
+        )
+        setattr(family, field, f"PCE {number}%")
+        fixture.device_families.append(family)
+    score = evaluate_study(fixture, fixture.model_copy(deep=True))
+    assert score.core_facts.recovery.fields["measurement:pce"].matched == 2
+    assert score.core_facts.fields["measurement:pce"].matched == 0
+    assert all(
+        match.ambiguous for match in score.matches if match.kind == "device_families"
+    )
+
+
+def test_population_outcome_labels_cannot_establish_cohort_identity():
+    fixture = study([])
+    fixture.population_statistics = [
+        PopulationStatistic(
+            population_id=f"cohort-{index}",
+            family_id=None,
+            label=f"cell{number}% PCE",
+            statistic_type="mean",
+            sample_size=5,
+            metrics=[metric(number)],
+            evidence=[CITATION],
+        )
+        for index, number in enumerate((15, 20))
+    ]
+    score = evaluate_study(fixture, fixture.model_copy(deep=True))
+    assert score.core_facts.recovery.fields["measurement:pce"].matched == 2
+    assert score.core_facts.fields["measurement:pce"].matched == 0
+    assert all(
+        match.ambiguous
+        for match in score.matches
+        if match.kind == "population_statistics"
+    )
+
+
+def test_unlinked_stability_specimen_descriptor_uses_the_same_outcome_projection():
+    first = StabilityTest(
+        test_id="aging",
+        family_id=None,
+        device_id=None,
+        specimen_label="cell20% PCE",
+        link_status="stability_specimen_only",
+        conditions=[],
+        checkpoints=[
+            StabilityCheckpoint(
+                checkpoint_id="start",
+                time=None,
+                conditions=[],
+                outcomes=[metric()],
+                evidence=[CITATION],
+            )
+        ],
+        evidence=[CITATION],
+    )
+    second = first.model_copy(update={"specimen_label": "cell25% PCE"})
+    assert scientific_descriptor(first) == scientific_descriptor(second) == "cell"
 
 
 def test_distinct_equal_valued_scans_cannot_be_deleted_as_a_duplicate():
