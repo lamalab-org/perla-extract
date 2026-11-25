@@ -251,15 +251,19 @@ for (const name of ['DMF', 'DMSO', 'chlorobenzene', 'CB', 'IPA', 'acetone', 'die
 for (const name of ['FA', 'Pb', 'I', 'PbI2', 'CH3NH3I', 'Li-TFSI', '4-tert-butylpyridine']) assert.ok(constituent.includes(name), name);
 for (const name of ['FA', 'Pb', 'Li-TFSI']) assert.ok(!layer.includes(name), name);
 for (const name of ['ITO', 'spiro-OMeTAD', 'Spiro-MeOTAD', 'c-TiO2', 'bathocuproine', 'MAPbI3']) assert.ok(layer.includes(name), name);
-// Each spelling is offered as written; the hint names the other spellings of the same material only.
+// Only exact spellings are completed: no labels or alias hints.
 const options = S.suggestionOptions(S.PROCESS_MATERIALS);
-assert.equal(options.find(option => option.value === 'CB').label, 'solvent / antisolvent · also written chlorobenzene');
-assert.equal(options.find(option => option.value === 'DMF').label, 'solvent · also written N,N-dimethylformamide');
-assert.equal(options.find(option => option.value === 'methanol').label, 'solvent');
+assert.ok(options.every(option => Object.keys(option).join() === 'value'));
+for (const name of ['CB', 'chlorobenzene', 'MAI', 'CH3NH3I', 'methylammonium iodide']) assert.ok(process.includes(name), name);
+// Roles and amount names follow what the scorer and NOMAD export read.
+assert.deepEqual(values(S.CONSTITUENT_ROLES).slice(0, 2), ['precursor', 'precursor additive']);
+assert.ok(values(S.AMOUNT_NAMES).includes('stoichiometric coefficient'));
+assert.ok(!values(S.AMOUNT_NAMES).some(name => /^(FA|Cs|I|Br) /.test(name)), 'no element prefix');
 const {document, element} = editorDocument();
 S.fillMaterialDatalists(document, element);
 assert.deepEqual(document.getElementById('process-material-suggestions').children.map(option => option.value), process);
 assert.deepEqual(document.getElementById('constituent-suggestions').children.map(option => option.value), constituent);
+assert.deepEqual(document.getElementById('constituent-role-suggestions').children.map(option => option.value), values(S.CONSTITUENT_ROLES));
 """)
 
 
@@ -328,6 +332,24 @@ assert.equal(editor.value().processing_steps[3].sequence, 4);
 click('+ Second spin stage');
 assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['first spin speed']);
 assert.ok(document.getElementById('record-step-0-param-second-spin-speed'));
+"""
+    )
+
+
+def test_constituent_fields_get_their_own_suggestions():
+    run_javascript(
+        EDITOR
+        + """
+const amount = {anyOf:[{type:'object', properties:{name:text, raw_value:text, unit:{anyOf:[text,{type:'null'}]}}}, {type:'null'}]};
+schema.properties.device_families.items.properties.layers.items.properties.constituents = {type:'array', items:{properties:{
+  name:text, role:{anyOf:[text,{type:'null'}]}, amount, evidence:{type:'array'}}}};
+family.layers[1].constituents = [{name:'MAI', role:null, amount:{name:'stoichiometric coefficient', raw_value:'0.5', unit:null}, evidence:[c]}];
+editor.open('device_families', 0);
+const list = id => document.getElementById(id).attributes.list;
+assert.equal(list('record-field-layers-1-constituents-0-name'), 'constituent-suggestions');
+assert.equal(list('record-field-layers-1-constituents-0-role'), 'constituent-role-suggestions');
+assert.equal(list('record-field-layers-1-constituents-0-amount-name'), 'amount-name-suggestions');
+assert.equal(list('record-field-layers-1-constituents-0-amount-raw_value'), undefined);
 """
     )
 

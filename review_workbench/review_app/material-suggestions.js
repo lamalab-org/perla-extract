@@ -1,7 +1,9 @@
 /** Material names as papers spell them, as three separate suggestion lists.
  *
- * The annotation keeps the paper's wording, so every common spelling is its own option;
- * the browser shows the other spellings of the same material next to it. Lists follow
+ * The scorer compares names almost exactly, and models copy the paper, so the annotation
+ * must use the paper's spelling. Suggestions therefore only complete exact strings: every
+ * common spelling is its own plain option, with no alias hints that invite another
+ * spelling. Groups and synonym arrays only organize this file. Lists follow
  * the field: layer materials (stack), constituents (precursors, ions, dopants) and step
  * materials (adds solvents, antisolvents and cleaning agents, which never form a layer).
  * Chosen from the spellings in the reference annotations plus common usage. These are
@@ -72,30 +74,37 @@ export const PROCESS_MATERIALS = [
   group("evaporated metal / oxide", ["Au", "gold"], ["Ag", "silver"], ["Cu", "copper"], "Al", ["MoO3", "MoOx"]),
 ];
 
+/** Constituent roles. The scorer recognizes "precursor" and "precursor additive" (recipe
+ * scope) and layer functions such as "absorber"; other roles are compared as written.
+ * The site and additive roles follow the reference annotations.
+ */
+export const CONSTITUENT_ROLES = [
+  group("recipe", "precursor", "precursor additive"),
+  group("formula site", "A-site constituent", "B-site constituent", "halide constituent"),
+  group("finished layer", "host absorber", "additive", "dopant"),
+];
+
+/** Names of a constituent's amount; the constituent is already named, so no element prefix. */
+export const AMOUNT_NAMES = [
+  group("formula", "stoichiometric coefficient", "fraction"),
+  group("recipe", "concentration", "mass", "molar ratio", "volume"),
+];
+
 export const SUGGESTION_LISTS = {
   layer: { id: "layer-material-suggestions", groups: LAYER_MATERIALS },
   constituent: { id: "constituent-suggestions", groups: CONSTITUENTS },
   process: { id: "process-material-suggestions", groups: PROCESS_MATERIALS },
+  role: { id: "constituent-role-suggestions", groups: CONSTITUENT_ROLES },
+  amount: { id: "amount-name-suggestions", groups: AMOUNT_NAMES },
 };
 
-/** One option per spelling; the first group naming a spelling decides its hint. */
+/** One plain option per exact spelling, without labels or alias hints. */
 export function suggestionOptions(groups) {
-  const seen = new Set();
-  const options = [];
-  for (const { type, materials } of groups) {
-    for (const spellings of materials) {
-      for (const name of spellings) {
-        if (seen.has(name)) continue;
-        seen.add(name);
-        const others = spellings.filter(other => other !== name);
-        options.push({ value: name, label: others.length ? `${type} · also written ${others.join(", ")}` : type });
-      }
-    }
-  }
-  return options;
+  const values = groups.flatMap(({ materials }) => materials.flat());
+  return [...new Set(values)].map(value => ({ value }));
 }
 
-/** Fill the page's three datalists once. */
+/** Fill the page's datalists once. */
 export function fillMaterialDatalists(document, element) {
   for (const { id, groups } of Object.values(SUGGESTION_LISTS)) {
     const list = document.getElementById(id);

@@ -514,9 +514,12 @@ export function createRecordEditor({
     }
     const inputId = `record-field-${path.map(fieldIdPart).join("-")}`;
     input.id = inputId;
-    // A constituent name gets precursor, ion and dopant suggestions; the typed text is saved as is.
+    // Constituent name, role and amount name get suggestions; the typed text is saved as is.
     const textInput = !layerLink && !relationship && !fieldSchema.enum && typeof value !== "boolean";
-    if (textInput && path.at(-1) === "name" && path.at(-3) === "constituents") input.setAttribute("list", SUGGESTION_LISTS.constituent.id);
+    const constituentField = path.at(-3) === "constituents" ? path.at(-1)
+      : path.at(-4) === "constituents" && path.at(-2) === "amount" ? `amount.${path.at(-1)}` : null;
+    const list = { name: "constituent", role: "role", "amount.name": "amount" }[constituentField];
+    if (textInput && list) input.setAttribute("list", SUGGESTION_LISTS[list].id);
     input.addEventListener("input", () => updateEditValue(path, input.value, editOriginal));
     return element("div", { className: "editor-field" }, [
       element("div", { className: "editor-field-heading" }, [
