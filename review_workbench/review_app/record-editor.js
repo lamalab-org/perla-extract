@@ -1,6 +1,6 @@
 import { relationshipChoices } from "./review-state.js";
-import { createStepCard } from "./process-step-card.js";
-import { STEP_PRESETS, annealingStepFor, categoryOf, copySteps, splitPerTarget } from "./process-templates.js";
+import { createStepCard, resetStepCardState } from "./process-step-card.js";
+import { STEP_PRESETS, copySteps, splitPerTarget } from "./process-templates.js";
 import { SUGGESTION_LISTS } from "./material-suggestions.js";
 
 /** One record draft shared by the field controls and the raw JSON editing mode.
@@ -215,6 +215,7 @@ export function createRecordEditor({
     edit = { kind, index, get value() { return draft.value; }, intent, references, baseRevision: context().bundle.revision };
     groups = new Map();
     focusPath = null;
+    resetStepCardState();
     $("record-kind").textContent = COLLECTIONS[kind];
     $("record-title").textContent = index == null
       ? `Add missing ${singularCollection(kind).toLowerCase()}`
@@ -692,14 +693,12 @@ export function createRecordEditor({
       .map(id => layers.find(layer => layer.layer_id === id)?.material || id).join(", ");
     const action = (text, click) => element("button", { text, properties: { type: "button" }, events: { click } });
     const actions = [
-      categoryOf(step.operation)?.id !== "annealing"
-        ? action("+ Annealing after this step", () => insertStep(index + 1, annealingStepFor(step))) : null,
       (step.target_layer_ids || []).length > 1 ? action("Split per target layer", () => splitStep(index)) : null,
     ].filter(Boolean);
     return rememberedDetails(path, false, "editor-group process-step", [
       element("summary", { text: `${step.operation || "New step"}${targets ? ` → ${targets}` : ""}` }),
       element("div", { className: "editor-fields" }, [
-        createStepCard({ element, step, idPrefix: `record-step-${index}`, onChange: sync, materialList: SUGGESTION_LISTS.process.id, layers }),
+        createStepCard({ element, step, idPrefix: `record-step-${index}`, onChange: sync, materialList: SUGGESTION_LISTS.process.id }),
         layerTargets([...path, "target_layer_ids"], step.target_layer_ids || []),
         actions.length ? element("div", { className: "process-step-actions" }, actions) : null,
         technicalFields([["step_id", step.step_id], ["sequence", step.sequence]], path),

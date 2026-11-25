@@ -1,12 +1,18 @@
-/** Processing-step templates: the step category decides which methods and parameters appear.
+/** Processing-step templates: the method decides which parameter fields appear.
  *
  * Pure data and functions, no DOM. Only the existing ProcessingStep shape is filled:
- * the category is never stored, it is recognized again from `operation`. Method and
- * parameter spellings follow what the scorer normalizes (`scoring_process.py`) and what
- * the reference annotations use most; annealing is always its own step whose
- * conditions are named `temperature` and `duration` (read by the NOMAD export).
+ * the method and category are never stored. `operation` may use the paper's wording
+ * ("spin-coat HTL", "spin-casting PbI2 solution and annealing"); the method is recognized
+ * from it. Parameter names follow what the reference annotations use most, so that an
+ * annotation and a model extraction name the same quantity alike:
+ *   - concentrations per material: "<solute> concentration" (solution box);
+ *   - annealing: "annealing temperature" / "annealing duration" ("first …"/"second …" for
+ *     two stages), inside the deposition step or in a separate annealing step (the scorer
+ *     treats them like "temperature"/"duration" under an annealing operation);
+ *   - antisolvent values named by the chemical: "chlorobenzene volume", "… drip time".
  */
 import { reportedNumber, valuesMissingFromQuote } from "./jv-table.js";
+import { SOLVENT_NAMES } from "./material-suggestions.js";
 
 const parameter = (name, unit = "", placeholder = "") => ({ name, unit, placeholder });
 
@@ -15,10 +21,10 @@ const WET_METHODS = [
   "spray coating", "inkjet printing",
 ];
 const SPIN = [parameter("spin speed", "rpm", "4000"), parameter("spin duration", "s", "30")];
+const ANNEALING = [parameter("annealing temperature", "°C", "100"), parameter("annealing duration", "min", "10")];
 
-/** Parameters typical of each coating method. The category adds the shared ones
- * (concentration before, substrate temperature/atmosphere after); drying and quenching
- * (antisolvent, gas knife, vacuum) have their own box, see QUENCHING_TYPES.
+/** Parameters typical of each method. The category adds its shared ones (substrate
+ * temperature/atmosphere); solution, annealing and drying/quenching have their own sections.
  */
 export const METHOD_PARAMETERS = {
   "spin coating": [parameter("volume", "µL", "50"), ...SPIN],
@@ -40,19 +46,54 @@ export const METHOD_PARAMETERS = {
   ],
   "drop casting": [parameter("volume", "µL", "20")],
   "dip coating": [parameter("withdrawal speed", "mm min-1", "10"), parameter("dipping time", "s", "30")],
+  "dipping": [parameter("dipping time", "s", "30")],
+  "immersion": [parameter("immersion time", "min", "10")],
+  "gas exposure": [parameter("exposure time", "min", "10")],
 };
 
+/** Recognize the method in the paper's wording; deposition before annealing, so
+ * "spin-casting PbI2 solution and annealing" is spin coating with in-step annealing.
+ */
+const METHOD_PATTERNS = [
+  ["spin coating", /spin[\s-]*(coat|cast)|spincoat/],
+  ["blade coating", /blade|doctor/],
+  ["slot-die coating", /slot[\s-]*die/],
+  ["spray coating", /spray/],
+  ["inkjet printing", /ink[\s-]*jet/],
+  ["drop casting", /drop[\s-]*cast/],
+  ["dip coating", /dip[\s-]*coat/],
+  ["thermal evaporation", /evapor|vacuum deposition/],
+  ["sputtering", /sputter/],
+  ["atomic layer deposition", /atomic layer|\bald\b/],
+  ["chemical vapor deposition", /chemical vapou?r|\bcvd\b/],
+  ["e-beam evaporation", /e-?beam|electron beam/],
+  ["UV-ozone treatment", /uv[\s-]*ozone|\buvo\b/],
+  ["plasma treatment", /plasma/],
+  ["ultrasonic cleaning", /clean|sonicat|ultrason|wash|rins/],
+  ["dipping", /^dip|dipped|dipping/],
+  ["immersion", /immers/],
+  ["gas exposure", /exposure|exposed/],
+  ["solution preparation", /prepar|dissolv|stirr/],
+  ["annealing", /anneal|heat|sinter|bak/],
+];
+
+export function methodOf(operation) {
+  const text = String(operation ?? "").normalize("NFKC").toLowerCase();
+  return METHOD_PATTERNS.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
+}
+
 /** Drying and quenching during a wet deposition, after Plains' QuenchingModal (Gas,
- * Antisolvent, Vacuum) plus plain drying. They stay conditions of the deposition step; the
- * antisolvent or gas itself is a step material (convention C6), so it has no field here.
+ * Antisolvent, Vacuum) plus plain drying. They stay conditions of the deposition step.
+ * Antisolvent values are named by the antisolvent ("chlorobenzene volume"), or
+ * "antisolvent …" when it has no name yet; its parameters are suffixes.
  */
 export const QUENCHING_TYPES = [
   {
-    id: "antisolvent", label: "Antisolvent",
+    id: "antisolvent", label: "Antisolvent", prefixed: true,
     parameters: [
-      parameter("antisolvent volume", "µL", "150"), parameter("antisolvent drip time", "s", "10"),
-      parameter("antisolvent dispensing method", "", "dripping"), parameter("antisolvent flow rate", "µL s-1"),
-      parameter("antisolvent dispensing height", "mm", "10"),
+      parameter("volume", "µL", "150"), parameter("drip time", "s", "10"),
+      parameter("dispensing method", "", "dripping"), parameter("flow rate", "µL s-1"),
+      parameter("dispensing height", "mm", "10"),
     ],
   },
   {
@@ -78,26 +119,70 @@ export const QUENCHING_TYPES = [
   },
 ];
 
-/** The drying/quenching types that already have a value on the step. */
-export function quenchingTypesUsed(conditions = []) {
-  const names = new Set(conditions.map(condition => key(condition.name)));
-  return QUENCHING_TYPES.filter(type => type.parameters.some(item => names.has(key(item.name)))).map(type => type.id);
+const ANTISOLVENT = QUENCHING_TYPES[0];
+
+/** The name used for this step's antisolvent values: a recorded prefix, else "antisolvent". */
+export function antisolventOf(step) {
+  const materials = new Set((step.materials || []).map(name => name.trim().toLowerCase()));
+  for (const condition of step.conditions || []) {
+    for (const item of ANTISOLVENT.parameters) {
+      const name = String(condition.name || "");
+      if (!name.toLowerCase().endsWith(` ${item.name}`)) continue;
+      const prefix = name.slice(0, -item.name.length - 1).trim();
+      const folded = prefix.toLowerCase();
+      if (folded === "antisolvent" || SOLVENT_NAMES.has(folded) || materials.has(folded)) return prefix;
+    }
+  }
+  return "antisolvent";
 }
+
+/** Full condition names of a drying/quenching type on this step. */
+export function quenchingParameters(type, step) {
+  if (!type.prefixed) return type.parameters;
+  const prefix = antisolventOf(step);
+  return type.parameters.map(item => ({ ...item, name: `${prefix} ${item.name}` }));
+}
+
+/** The drying/quenching types that already have a value on the step. */
+export function quenchingTypesUsed(step) {
+  const names = new Set((step.conditions || []).map(condition => key(condition.name)));
+  return QUENCHING_TYPES.filter(type => quenchingParameters(type, step).some(item => names.has(key(item.name)))).map(type => type.id);
+}
+
+/** Give the antisolvent values a new prefix (its name as written). */
+export function renameAntisolvent(step, name) {
+  const before = antisolventOf(step);
+  const after = String(name ?? "").trim() || "antisolvent";
+  for (const condition of step.conditions || []) {
+    for (const item of ANTISOLVENT.parameters) {
+      if (key(condition.name) === key(`${before} ${item.name}`)) condition.name = `${after} ${item.name}`;
+    }
+  }
+}
+
+/** Annealing inside a deposition step; two stages use "first"/"second" names. */
+export function annealingParameters(twoStage = false) {
+  const items = [...ANNEALING];
+  const staged = twoStage ? ["first", "second"].flatMap(stage => ANNEALING.map(item => ({ ...item, name: `${stage} ${item.name}` }))) : items;
+  return [...staged, parameter("annealing atmosphere", "", "N2")];
+}
+
+export const isTwoStageAnnealing = (conditions = []) => conditions.some(condition => /^(first|second) annealing /i.test(condition.name || ""));
 
 /** `role`: "forms" creates a layer, "treats" acts on an existing one, "prepares" makes its solution. */
 export const PROCESS_CATEGORIES = [
   {
-    id: "solution_preparation", label: "Solution preparation", role: "prepares",
+    id: "solution_preparation", label: "Solution preparation", role: "prepares", solution: true,
     methods: ["solution preparation"],
     parameters: [
-      parameter("concentration", "mg mL-1", "1.2 M or 10 mg mL-1"), parameter("volume ratio", "", "4:1"),
-      parameter("molar ratio", "", "1:1"), parameter("stirring temperature", "°C", "60"),
-      parameter("stirring duration", "h", "2"), parameter("filter pore size", "µm", "0.22"),
+      parameter("stirring temperature", "°C", "60"), parameter("stirring duration", "h", "2"),
+      parameter("filter pore size", "µm", "0.22"),
     ],
   },
   {
-    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: WET_METHODS, quenching: true,
-    parameters: [parameter("concentration", "mg mL-1")],
+    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: WET_METHODS,
+    quenching: true, solution: true, annealing: true,
+    parameters: [],
     after: [parameter("substrate temperature", "°C"), parameter("atmosphere", "", "N2 glovebox")],
   },
   {
@@ -109,10 +194,11 @@ export const PROCESS_CATEGORIES = [
     ],
   },
   {
-    id: "surface_treatment", label: "Surface treatment / doping", role: "treats", quenching: true,
+    id: "surface_treatment", label: "Surface treatment / doping", role: "treats",
+    quenching: true, solution: true, annealing: true,
     methods: [...WET_METHODS, "dipping", "immersion", "gas exposure", "doping/aging"],
-    parameters: [parameter("concentration", "mg mL-1")],
-    after: [parameter("temperature", "°C"), parameter("duration", "min"), parameter("atmosphere")],
+    parameters: [],
+    after: [parameter("atmosphere")],
   },
   {
     id: "substrate_preparation", label: "Substrate preparation", role: "treats",
@@ -121,7 +207,10 @@ export const PROCESS_CATEGORIES = [
   },
   {
     id: "annealing", label: "Annealing", role: "treats", methods: ["annealing"],
-    parameters: [parameter("temperature", "°C", "100"), parameter("duration", "min", "10"), parameter("atmosphere", "", "air")],
+    parameters: [
+      parameter("annealing temperature", "°C", "100"), parameter("annealing duration", "min", "10"),
+      parameter("annealing atmosphere", "", "air"),
+    ],
   },
 ];
 
@@ -143,14 +232,13 @@ const key = text => String(text ?? "").normalize("NFKC").toLowerCase().replace(/
 
 export const categoryById = id => PROCESS_CATEGORIES.find(category => category.id === id) || null;
 
-/** The category of a saved step, from its operation; null for operations outside the templates.
- * A method shared by several categories (spin coating) resolves to the first, wet deposition.
+/** The category of a step, recognized from its operation (paper wording allowed); null when no
+ * method is recognized. A method in several categories (spin coating) resolves to the first.
  */
 export function categoryOf(operation) {
-  const wanted = key(operation);
-  if (!wanted) return null;
-  if (wanted === "annealed" || wanted === "thermalannealing") return categoryById("annealing");
-  return PROCESS_CATEGORIES.find(category => category.methods.some(method => key(method) === wanted)) || null;
+  const method = methodOf(operation);
+  if (!method) return null;
+  return PROCESS_CATEGORIES.find(category => category.methods.includes(method)) || null;
 }
 
 /** Whether the conditions describe a two-stage spin program (first/second spin …). */
@@ -159,15 +247,15 @@ export function isTwoStageSpin(conditions = []) {
 }
 
 /** Whether the method is spin coating, which may run as a two-stage spin program. */
-export const usesSpinProgram = operation => key(operation) === key("spin coating");
+export const usesSpinProgram = operation => methodOf(operation) === "spin coating";
 
-/** The template parameters of a step: the category's shared ones around those of its method.
+/** The template parameters of a step: its method's parameters, then the category's shared ones.
  * A two-stage spin program replaces spin speed/duration by first/second stage parameters.
  */
 export function parametersFor(categoryId, twoStage = false, operation = "") {
   const category = categoryById(categoryId);
   if (!category) return [];
-  const method = Object.entries(METHOD_PARAMETERS).find(([name]) => key(name) === key(operation))?.[1] || [];
+  const method = METHOD_PARAMETERS[methodOf(operation)] || [];
   const all = [...category.parameters, ...(category.after ? method : []), ...(category.after || [])];
   if (!twoStage || !usesSpinProgram(operation)) return all;
   return all.flatMap((item) => {
@@ -211,17 +299,20 @@ export function setTwoStageSpin(step, twoStage) {
   }
 }
 
+/** Switch in-step annealing between one stage and first/second stage names. */
+export function setTwoStageAnnealing(step, twoStage) {
+  for (const condition of step.conditions || []) {
+    if (twoStage && /^annealing (temperature|duration)$/i.test(condition.name)) condition.name = `first ${condition.name}`;
+    if (!twoStage && /^first annealing (temperature|duration)$/i.test(condition.name)) condition.name = condition.name.replace(/^first /i, "");
+  }
+}
+
 /** A new step of a category; identifiers, sequence and targets belong to the caller. */
 export function newStep(category, operation = categoryById(category)?.methods[0] || "") {
   return { step_id: "", sequence: null, operation, target_layer_ids: [], materials: [], conditions: [], evidence: [] };
 }
 
-/** The separate annealing step that follows a step on the same target layers. */
-export function annealingStepFor(step) {
-  return { ...newStep("annealing"), target_layer_ids: [...(step.target_layer_ids || [])] };
-}
-
-/** One step per target layer (convention C2); the first copy keeps the original identifier. */
+/** One step per target layer; the first copy keeps the original identifier. */
 export function splitPerTarget(step, freshId) {
   const targets = step.target_layer_ids || [];
   if (targets.length < 2) return [step];
@@ -230,12 +321,6 @@ export function splitPerTarget(step, freshId) {
     step_id: index === 0 ? step.step_id : freshId(),
     target_layer_ids: [target],
   }));
-}
-
-/** A layer material written into the operation (e.g. "spin-coat PTAA"), which belongs in the targets. */
-export function materialInOperation(operation, layers = []) {
-  const text = String(operation || "").toLowerCase();
-  return layers.map(layer => layer.material).find(material => material && material.length > 1 && text.includes(material.toLowerCase())) || null;
 }
 
 /** The target family's layer for a source layer: same material, else same function at the same rank. */

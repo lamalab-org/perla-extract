@@ -25,6 +25,7 @@ def run_javascript(script):
     imports = "import assert from 'node:assert/strict';\n"
     for module in (
         "process-templates.js",
+        "process-solution.js",
         "material-suggestions.js",
         "record-editor.js",
     ):
@@ -34,7 +35,7 @@ def run_javascript(script):
         f"import {{editorDocument, descendants}} from {json.dumps(dom.as_uri())};\n"
     )
     imports += (
-        "const T = process_templates, S = material_suggestions;\n"
+        "const T = process_templates, S = material_suggestions, P = process_solution;\n"
         "const {createRecordEditor} = record_editor;\n"
     )
     result = subprocess.run(
@@ -48,7 +49,7 @@ def run_javascript(script):
 
 QUOTE = (
     "SnO2 was spin-coated at 3000 rpm for 30 s and annealed at 150 °C for 30 min. "
-    "The perovskite in DMF:DMSO was spin-coated at 1000 rpm for 10 s and 5000 rpm for 30 s "
+    "The perovskite (PbI2:FAI 1.1:1) in DMF:DMSO (4:1, v/v) was spin-coated at 1000 rpm for 10 s and 5000 rpm for 30 s "
     "with 150 µL chlorobenzene and annealed at 100 °C for 10 min. "
     "PEAI (2 mg mL-1) was spin-coated at 5000 rpm. "
     "Spiro-OMeTAD was spin-coated at 4000 rpm for 30 s."
@@ -76,7 +77,7 @@ const step = (id, target, category, operation, values, materials = []) => {
   for (const [name, raw, unit] of values) T.setCondition(item, name, raw, unit);
   return cite({...item, step_id:id, target_layer_ids:[target], materials});
 };
-const anneal = (id, target, t, d) => step(id, target, 'annealing', 'annealing', [['temperature',t,'°C'],['duration',d,'min']]);
+const anneal = (id, target, t, d) => step(id, target, 'annealing', 'annealing', [['annealing temperature',t,'°C'],['annealing duration',d,'min']]);
 f1.processing_steps = [
   step('step-1', 'f1-sn', 'wet_deposition', 'spin coating', [['spin speed','3000','rpm'],['spin duration','30','s']], ['SnO2']),
   anneal('step-2', 'f1-sn', '150', '30'),
@@ -86,6 +87,8 @@ f1.processing_steps = [
   step('step-5', 'f1-peai', 'surface_treatment', 'spin coating', [['concentration','2','mg mL-1'],['spin speed','5000','rpm']], ['PEAI']),
   step('step-6', 'f1-sp', 'wet_deposition', 'spin coating', [['spin speed','4000','rpm'],['spin duration','30','s']], ['Spiro-OMeTAD']),
 ].map((item, index) => ({...item, sequence:index + 1}));
+P.applySolution(f1.processing_steps[2], {solvents:{names:['DMF','DMSO'], kind:'volume', ratio:'4:1'}, solutes:{rows:[{name:'PbI2', concentration:'', unit:'M'}, {name:'FAI', concentration:'', unit:'M'}], ratio:'1.1:1'}});
+cite(f1.processing_steps[2]);
 let next = 6;
 const copied = T.copySteps(f1, f2, () => `step-${++next}`);
 f2.processing_steps = copied.steps.map((item, index) => ({...item, sequence:index + 1}));
@@ -137,19 +140,35 @@ T.setCondition(step, 'spin speed', '', 'rpm');
 assert.deepEqual(step.conditions.map(item => item.name), ['spin duration']);
 assert.equal(T.categoryOf('Spin-coating').id, 'wet_deposition');
 assert.equal(T.categoryOf('annealed').id, 'annealing');
-assert.equal(T.categoryOf('spin-coat PTAA'), null);
-assert.deepEqual(T.parametersFor('wet_deposition', true, 'spin coating').map(item => item.name).slice(2, 6),
+// The paper's wording is allowed; the method is recognized from it.
+assert.equal(T.categoryOf('spin-coat PTAA').id, 'wet_deposition');
+assert.equal(T.methodOf('spin-casting PbI2 solution and annealing'), 'spin coating');
+assert.equal(T.methodOf('Successively thermally evaporate C60, BCP and Ag'), 'thermal evaporation');
+assert.equal(T.methodOf('heat perovskite film'), 'annealing');
+assert.equal(T.methodOf('deposited'), null);
+assert.deepEqual(T.parametersFor('wet_deposition', true, 'spin coating').map(item => item.name).slice(1, 5),
   ['first spin speed', 'first spin duration', 'second spin speed', 'second spin duration']);
 T.setCondition(step, 'spin speed', '4000', 'rpm');
 T.setTwoStageSpin(step, true);
 assert.deepEqual(step.conditions.map(item => item.name).sort(), ['first spin duration', 'first spin speed']);
 assert.equal(T.isTwoStageSpin(step.conditions), true);
-const annealing = T.annealingStepFor({...step, target_layer_ids:['x']});
-assert.equal(annealing.operation, 'annealing');
-assert.deepEqual(annealing.target_layer_ids, ['x']);
+assert.deepEqual(T.annealingParameters(false).map(item => item.name), ['annealing temperature', 'annealing duration', 'annealing atmosphere']);
+assert.deepEqual(T.annealingParameters(true).map(item => item.name).slice(0, 4),
+  ['first annealing temperature', 'first annealing duration', 'second annealing temperature', 'second annealing duration']);
+const staged = {conditions:[{name:'annealing temperature'}, {name:'annealing duration'}]};
+T.setTwoStageAnnealing(staged, true);
+assert.deepEqual(staged.conditions.map(item => item.name), ['first annealing temperature', 'first annealing duration']);
+assert.equal(T.isTwoStageAnnealing(staged.conditions), true);
+// Antisolvent values carry the antisolvent's name, as in most references.
+const quench = {materials:['chlorobenzene'], conditions:[{name:'chlorobenzene volume'}, {name:'chlorobenzene drip time'}]};
+assert.equal(T.antisolventOf(quench), 'chlorobenzene');
+assert.deepEqual(T.quenchingParameters(T.QUENCHING_TYPES[0], quench).map(item => item.name).slice(0, 2), ['chlorobenzene volume', 'chlorobenzene drip time']);
+T.renameAntisolvent(quench, 'toluene');
+assert.deepEqual(quench.conditions.map(item => item.name), ['toluene volume', 'toluene drip time']);
+assert.equal(T.antisolventOf({conditions:[{name:'antisolvent volume'}]}), 'antisolvent');
+assert.equal(T.antisolventOf({conditions:[{name:'spin volume'}]}), 'antisolvent', 'only antisolvent or solvent names count');
 const split = T.splitPerTarget({...step, step_id:'s1', target_layer_ids:['a','b','c']}, (() => { let n = 1; return () => `s${++n}`; })());
 assert.deepEqual(split.map(item => [item.step_id, item.target_layer_ids]), [['s1',['a']],['s2',['b']],['s3',['c']]]);
-assert.equal(T.materialInOperation('spin-coat PTAA', [{material:'PTAA'}]), 'PTAA');
 assert.deepEqual(T.conditionsMissingFromQuote([{sequence:3, conditions:[{name:'spin speed', raw_value:'4000', evidence:[]}]}], 'at 3000 rpm'),
   ['step 3 spin speed "4000"']);
 assert.match(T.stepProblems({operation:' ', materials:[''], conditions:[{name:'', raw_value:'1'}]}).join(' '), /method.*no name.*empty material/);
@@ -166,7 +185,11 @@ def test_editor_output_passes_the_schema_grounding_and_nomad_export():
         for step in extraction.device_families[0].processing_steps
         if step.operation == "annealing"
     )
-    assert [c.name for c in annealing.conditions] == ["temperature", "duration"]
+    # Named as most references and models name them; see the NOMAD note below.
+    assert [c.name for c in annealing.conditions] == [
+        "annealing temperature",
+        "annealing duration",
+    ]
 
     export = to_nomad_with_report(extraction, evidence_blocks=BLOCKS).model_dump(
         mode="json"
@@ -185,10 +208,11 @@ def test_editor_output_passes_the_schema_grounding_and_nomad_export():
 
     walk(export)
     assert projected, "annealing steps reach the NOMAD export"
-    assert {(step["temperature"], step["duration"]) for step in projected} == {
-        (150.0, 1800.0),
-        (100.0, 600.0),
-    }
+    # Trade-off: the NOMAD projection fills temperature/duration only from conditions named
+    # exactly so; annealing names stay readable in additional_parameters.
+    for step in projected:
+        names = [c["name"] for c in step["additional_parameters"]["conditions"]]
+        assert names == ["annealing temperature", "annealing duration"]
 
 
 def test_a_value_outside_its_quote_is_rejected_by_grounding():
@@ -219,23 +243,57 @@ def test_conventions_score_fully_and_free_text_operations_do_not():
 def test_coating_methods_have_their_own_parameters():
     run_javascript("""
 const names = (operation, category = 'wet_deposition') => T.parametersFor(category, false, operation).map(item => item.name);
-assert.deepEqual(names('blade coating'), ['concentration', 'volume', 'coating speed', 'blade gap',
+assert.deepEqual(names('blade coating'), ['volume', 'coating speed', 'blade gap',
   'substrate temperature', 'atmosphere']);
-assert.deepEqual(names('slot-die coating'), ['concentration', 'coating speed', 'flow rate', 'coating gap', 'shim thickness',
+assert.deepEqual(names('slot-die coating'), ['coating speed', 'flow rate', 'coating gap', 'shim thickness',
   'substrate temperature', 'atmosphere']);
 assert.ok(!names('spin coating').some(name => name.startsWith('antisolvent')), 'antisolvent fields live in the quenching box');
 assert.deepEqual(T.QUENCHING_TYPES.map(type => type.id), ['antisolvent', 'gas', 'vacuum', 'drying']);
-assert.deepEqual(T.quenchingTypesUsed([{name:'Gas pressure'}, {name:'spin speed'}, {name:'drying time'}]), ['gas', 'drying']);
-assert.deepEqual(names('Spray-coating'), ['concentration', 'nozzle-to-substrate distance', 'flow rate', 'carrier gas pressure',
+assert.deepEqual(T.quenchingTypesUsed({conditions:[{name:'Gas pressure'}, {name:'spin speed'}, {name:'drying time'}]}), ['gas', 'drying']);
+assert.deepEqual(T.quenchingTypesUsed({conditions:[{name:'diethyl ether volume'}]}), ['antisolvent']);
+assert.deepEqual(names('Spray-coating'), ['nozzle-to-substrate distance', 'flow rate', 'carrier gas pressure',
   'number of passes', 'substrate temperature', 'atmosphere']);
-assert.deepEqual(names('inkjet printing'), ['concentration', 'drop spacing', 'printing resolution', 'jetting voltage',
+assert.deepEqual(names('inkjet printing'), ['drop spacing', 'printing resolution', 'jetting voltage',
   'jetting frequency', 'nozzle temperature', 'number of printed layers', 'substrate temperature', 'atmosphere']);
-assert.deepEqual(names('custom coating'), ['concentration', 'substrate temperature', 'atmosphere']);
+assert.deepEqual(names('custom coating'), ['substrate temperature', 'atmosphere']);
+assert.deepEqual(names('spin-coat HTL'), ['volume', 'spin speed', 'spin duration', 'substrate temperature', 'atmosphere']);
 assert.ok(!names('blade coating').some(name => name.startsWith('spin')), 'spin parameters only for spin coating');
-assert.deepEqual(names('blade coating', 'surface_treatment').slice(-3), ['temperature', 'duration', 'atmosphere']);
+assert.deepEqual(names('blade coating', 'surface_treatment').slice(-1), ['atmosphere']);
 assert.equal(T.parametersFor('wet_deposition', true, 'blade coating').some(item => item.name.startsWith('first')), false);
 assert.equal(T.categoryOf('slot-die coating').id, 'wet_deposition');
 assert.ok(T.STEP_PRESETS.some(preset => preset.operation === 'inkjet printing'));
+""")
+
+
+def test_solution_ratios_are_saved_as_printed_and_read_back():
+    run_javascript("""
+const step = {materials:['chlorobenzene'], conditions:[]};
+const row = (name, concentration = '') => ({name, concentration, unit:'M'});
+const solution = {solvents:{names:['DMF','DMSO'], kind:'volume', ratio:'4:1 (v/v)'},
+  solutes:{rows:[row('PbI2', '1.5'), row('FAI'), row('MABr')], ratio:'1.1:1:0.2'}};
+P.applySolution(step, solution, P.emptySolution());
+assert.deepEqual(step.materials, ['chlorobenzene','DMF','DMSO','PbI2','FAI','MABr']);
+assert.deepEqual(step.conditions.map(item => [item.name, item.raw_value, item.unit]),
+  [['DMF:DMSO volume ratio','4:1 (v/v)',null], ['PbI2:FAI:MABr molar ratio','1.1:1:0.2',null], ['PbI2 concentration','1.5','M']]);
+const back = P.solutionOf(step);
+assert.deepEqual([back.solvents.names, back.solvents.kind, back.solvents.ratio], [['DMF','DMSO'],'volume','4:1 (v/v)']);
+assert.deepEqual([back.solutes.rows.map(item => [item.name, item.concentration]), back.solutes.ratio],
+  [[['PbI2','1.5'],['FAI',''],['MABr','']],'1.1:1:0.2']);
+// A single solute with a concentration and no ratio, e.g. "PTAA (1.5 mg/mL)".
+const single = {materials:['PTAA','toluene'], conditions:[{name:'PTAA concentration', raw_value:'1.5', unit:'mg/mL'}]};
+assert.deepEqual(P.solutionOf(single).solutes.rows, [{name:'PTAA', concentration:'1.5', unit:'mg/mL'}]);
+// Changing components renames the ratio; an unchanged ratio keeps its citation.
+step.conditions[1].evidence = [{block_id:'b', quote:'q'}];
+const previous = structuredClone(back);
+back.solvents.names = ['DMF','NMP'];
+P.applySolution(step, back, previous);
+assert.deepEqual(step.conditions.map(item => item.name), ['DMF:NMP volume ratio','PbI2:FAI:MABr molar ratio','PbI2 concentration']);
+assert.equal(step.conditions[1].evidence.length, 1);
+assert.equal(step.conditions[0].evidence.length, 0);
+assert.equal(P.ratioParts('v / v , 9/1'), 2);
+assert.equal(P.parseRatio({name:'spin speed', raw_value:'4000'}), null);
+P.renameMaterial(step, 'NMP', 'GBL');
+assert.ok(step.materials.includes('GBL') && !step.materials.includes('NMP'));
 """)
 
 
@@ -334,20 +392,26 @@ field('record-step-0-material-0', 'dmso');
 assert.deepEqual(editor.value().processing_steps[0].materials, ['dmso']);
 assert.equal(document.getElementById('record-step-0-material-0').attributes.list, 'process-material-suggestions');
 assert.equal(all().filter(node => node.attributes?.list === 'layer-material-suggestions').length, 2, 'stack materials use the layer list');
-// A layer in the operation is flagged.
-field('record-step-0-operation', 'spin-coat SnO2');
-assert.match(all().find(node => node.className === 'process-step-warning').textContent, /SnO2/);
-field('record-step-0-operation', 'spin coating');
-// One step per target layer, then annealing as its own step on the same layer.
+// The paper's wording keeps the spin-coating fields.
+field('record-step-0-operation', 'spin-coat SnO2').fire('change');
+assert.ok(all().some(node => node.id === 'record-step-0-param-spin-speed'));
+assert.equal(editor.value().processing_steps[0].operation, 'spin-coat SnO2');
+// Annealing inside the step, named as in most papers.
+field('record-step-0-param-annealing-temperature', '100');
+assert.deepEqual(editor.value().processing_steps[0].conditions[1], {name:'annealing temperature', raw_value:'100', value_number:100, unit:'°C', evidence:[]});
+click('+ Second annealing stage');
+assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['spin speed', 'first annealing temperature']);
+click('Single annealing stage');
+// One step per target layer.
 click('Split per target layer');
 assert.deepEqual(editor.value().processing_steps.map(item => [item.step_id, item.sequence, item.target_layer_ids]),
   [['step-1',1,['a']],['step-2',2,['b']]]);
 assert.deepEqual(editor.value().processing_steps[1].conditions[0].raw_value, '4000');
-all().filter(node => node.textContent === '+ Annealing after this step')[0].fire('click');
-assert.deepEqual(editor.value().processing_steps.map(item => [item.step_id, item.operation, item.target_layer_ids]),
-  [['step-1','spin coating',['a']],['step-3','annealing',['a']],['step-2','spin coating',['b']]]);
-field('record-step-1-param-temperature', '100');
-assert.deepEqual(editor.value().processing_steps[1].conditions[0], {name:'temperature', raw_value:'100', value_number:100, unit:'°C', evidence:[]});
+assert.ok(!all().some(node => node.textContent === '+ Annealing after this step'));
+click('+ Annealing');
+assert.equal(editor.value().processing_steps[2].operation, 'annealing');
+field('record-step-2-param-annealing-temperature', '100');
+assert.deepEqual(editor.value().processing_steps[2].conditions[0], {name:'annealing temperature', raw_value:'100', value_number:100, unit:'°C', evidence:[]});
 click('+ Blade coating');
 assert.equal(editor.value().processing_steps[3].operation, 'blade coating');
 assert.ok(document.getElementById('record-step-3-param-blade-gap'));
@@ -363,7 +427,7 @@ assert.equal(editor.value().processing_steps[4].operation, 'thermal evaporation'
 assert.equal(editor.value().processing_steps[4].sequence, 5);
 // A two-stage spin program renames the stage parameters.
 click('+ Second spin stage');
-assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['first spin speed']);
+assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['first spin speed', 'annealing temperature']);
 assert.ok(document.getElementById('record-step-0-param-second-spin-speed'));
 """
     )
@@ -391,22 +455,68 @@ def test_drying_and_quenching_box_writes_conditions_of_the_deposition_step():
     run_javascript(
         EDITOR
         + """
-family.processing_steps[0].conditions = [{name:'antisolvent volume', raw_value:'150', value_number:150, unit:'µL', evidence:[c]}];
+family.processing_steps[0].materials = ['chlorobenzene'];
+family.processing_steps[0].conditions = [{name:'chlorobenzene volume', raw_value:'150', value_number:150, unit:'µL', evidence:[c]}];
 editor.open('device_families', 0);
 const box = () => all().find(node => node.className === 'process-quenching');
 assert.equal(box().open, true, 'a step with quenching values shows the box open');
-assert.ok(document.getElementById('record-step-0-param-antisolvent-volume'));
+assert.ok(all().some(node => node.id === 'record-step-0-param-chlorobenzene-volume'));
+assert.equal(document.getElementById('record-step-0-antisolvent').value, 'chlorobenzene');
 assert.ok(!all().some(node => node.textContent === 'Other parameters (1)'), 'not duplicated under other parameters');
 click('+ Gas quenching');
 assert.ok(all().some(node => node.id === 'record-step-0-param-gas-pressure'), 'an added type stays open before it has values');
 field('record-step-0-param-gas-pressure', '20');
 assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => [item.name, item.raw_value, item.unit]),
-  [['antisolvent volume','150','µL'], ['gas pressure','20','psi']]);
+  [['chlorobenzene volume','150','µL'], ['gas pressure','20','psi']]);
+// Renaming the antisolvent renames its values and the material.
+field('record-step-0-antisolvent', 'toluene').fire('change');
+assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['toluene volume', 'gas pressure']);
+assert.deepEqual(editor.value().processing_steps[0].materials, ['toluene']);
 all().find(node => node.attributes?.['aria-label'] === 'Remove Antisolvent').fire('click');
 assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['gas pressure']);
-click('+ Annealing after this step');
+click('+ Annealing');
 assert.ok(!all().some(node => node.id === 'record-step-1-param-gas-pressure'));
 assert.equal(all().filter(node => node.className === 'process-quenching').length, 1, 'no box for annealing');
+"""
+    )
+
+
+def test_solution_box_writes_materials_and_ratios_of_the_step():
+    run_javascript(
+        EDITOR
+        + """
+editor.open('device_families', 0);
+const add = label => all().find(node => node.textContent === label).fire('click');
+add('+ Solvent');
+field('record-step-0-solvents-0', 'DMF').fire('change');
+add('+ Solvent');
+field('record-step-0-solvents-1', 'DMSO').fire('change');
+assert.equal(document.getElementById('record-step-0-solvents-0').attributes.list, 'solvent-suggestions');
+field('record-step-0-solvents-ratio', '4:1');
+add('+ Solute');
+field('record-step-0-solutes-0', 'PbI2').fire('change');
+assert.equal(document.getElementById('record-step-0-solutes-0').attributes.list, 'solute-suggestions');
+field('record-step-0-solutes-0-concentration', '1.5');
+let step = editor.value().processing_steps[0];
+assert.deepEqual(step.materials, ['DMF','DMSO','PbI2']);
+assert.deepEqual(step.conditions.map(item => [item.name, item.raw_value, item.unit]),
+  [['DMF:DMSO volume ratio','4:1',null], ['PbI2 concentration','1.5','M']]);
+assert.ok(!all().some(node => node.textContent === 'Other parameters (1)'), 'the ratio is not repeated under other parameters');
+field('record-step-0-solvents-ratio', '4:1:2');
+assert.match(all().find(node => node.textContent?.startsWith('The ratio has')).textContent, /3 numbers for 2 components/);
+document.getElementById('record-step-0-solvents-kind').value = 'molar';
+document.getElementById('record-step-0-solvents-kind').fire('change');
+assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['DMF:DMSO molar ratio', 'PbI2 concentration']);
+all().find(node => node.attributes?.['aria-label'] === 'Remove solvent 2').fire('click');
+step = editor.value().processing_steps[0];
+assert.deepEqual(step.materials, ['DMF','PbI2']);
+assert.deepEqual(step.conditions.map(item => item.name), ['PbI2 concentration'], 'one solvent has no ratio');
+// Reopening rebuilds the box from the saved fields.
+bundle.ground_truth.device_families[0] = {...family, processing_steps:[{...family.processing_steps[0], materials:['GBL','DMSO'],
+  conditions:[{name:'GBL:DMSO volume ratio', raw_value:'7 : 3 v/v', value_number:null, unit:null, evidence:[c]}]}]};
+editor.open('device_families', 0);
+assert.equal(document.getElementById('record-step-0-solvents-ratio').value, '7 : 3 v/v');
+assert.equal(document.getElementById('record-step-0-solvents-1').value, 'DMSO');
 """
     )
 
