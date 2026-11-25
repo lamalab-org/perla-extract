@@ -33,6 +33,15 @@ def _dry_run_report(
         if not config.use_claim_ledger
         else []
     )
+    if not config.use_claim_ledger and config.max_total_tokens is not None:
+        reserved_tokens = (
+            approximate_tokens + config.stage_policy("assemble").max_output_tokens
+        )
+        if reserved_tokens > config.max_total_tokens:
+            known_issues.append(
+                f"first live request needs {reserved_tokens} estimated input/output tokens; "
+                f"exceeds max_total_tokens={config.max_total_tokens}"
+            )
     feasibility = {
         "assembly": "conditional_on_reader_output"
         if config.use_claim_ledger
@@ -72,6 +81,7 @@ def _dry_run_report(
         "budget": {
             "max_model_calls": config.max_model_calls,
             "max_cost_usd": config.max_cost_usd,
+            "max_total_tokens": config.max_total_tokens,
             "provider_requests": 0,
             "cost_tracking_complete": True,
             "planned_calls_fit": (

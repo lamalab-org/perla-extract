@@ -807,3 +807,34 @@ def test_reader_dry_run_does_not_claim_unknown_assembly_input_fits(
     )
     assert report["status"] == "dry_run"
     assert report["request_feasibility"]["assembly"] == "conditional_on_reader_output"
+
+
+def test_dry_run_rejects_known_first_request_token_budget(tmp_path, monkeypatch):
+    from perla_extract.study_extraction import workflow
+
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device was measured.",
+    )
+    monkeypatch.setattr(workflow, "parse_documents", lambda *a, **kw: ([block], []))
+    monkeypatch.setattr(
+        workflow,
+        "ModelClient",
+        lambda *a, **kw: pytest.fail("dry run must not construct a model client"),
+    )
+    report = run_extraction(
+        ExtractionConfig(
+            pdf=FIXTURE,
+            output_dir=tmp_path / "output",
+            dry_run=True,
+            max_total_tokens=1,
+        )
+    )
+    assert report["status"] == "failed"
+    assert report["request_feasibility"]["assembly"] == "infeasible"
+    assert "max_total_tokens=1" in " ".join(report["errors"])
+    assert report["budget"]["provider_requests"] == 0
+    assert report["budget"]["max_total_tokens"] == 1

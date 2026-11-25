@@ -267,8 +267,9 @@ def test_method_tokenizer_is_relative_to_its_own_file(setup):
     assert config["deployments"]["default"].tokenizer == str(methods / "tokenizer.json")
 
 
+@pytest.mark.parametrize("output_name", ["results", "résultats-α"])
 def test_production_parser_extractor_scorer_and_repeatability_report(
-    setup, monkeypatch
+    setup, monkeypatch, output_name
 ):
     """Only the provider response is simulated; all local pipeline stages run."""
     import pymupdf
@@ -302,7 +303,10 @@ def test_production_parser_extractor_scorer_and_repeatability_report(
         "[treatment]\nclaim_recall_passes = 2",
         '[arms.terra.stages.default]\nmodel = "openai/synthetic-terra"',
     )
-    path.write_text('baseline = "astra"\n' + text)
+    text = text.replace(
+        'output = "results"', f"output = {json.dumps(output_name, ensure_ascii=False)}"
+    )
+    path.write_text('baseline = "astra"\n' + text, encoding="utf-8")
     calls = []
 
     def live(self, body, failure):
@@ -363,6 +367,9 @@ def test_production_parser_extractor_scorer_and_repeatability_report(
     assert len(result["runs"]) == 4
     assert result["spending"]["known_run_cost_usd"] == 0.04
     assert all(r["reference_agreement_available"] for r in result["runs"])
+    resumed = experiment.execute(replace(plan, resume=True))
+    assert len(calls) == 4
+    assert resumed["spending"] == result["spending"]
 
 
 def test_optional_stage_ablation_compares_enabled_settings_only(setup):

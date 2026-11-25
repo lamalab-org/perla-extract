@@ -145,7 +145,7 @@ def _preflight(experiment: Experiment) -> dict:
             shutil.rmtree(directory)
         if directory.exists():
             verify_run_manifest(directory)
-            report = json.loads((directory / "report.json").read_text())
+            report = json.loads((directory / "report.json").read_text(encoding="utf-8"))
         else:
             report = run_extraction(config)
         if report["status"] != "dry_run" or not report["budget"]["planned_calls_fit"]:
@@ -174,11 +174,15 @@ def _preflight(experiment: Experiment) -> dict:
 def _score(attempt: Attempt, frozen: dict) -> None:
     verify_run_manifest(attempt.config.output_dir)
     configuration = json.loads(
-        (attempt.config.output_dir / "run_configuration.json").read_text()
+        (attempt.config.output_dir / "run_configuration.json").read_text(
+            encoding="utf-8"
+        )
     )
     if configuration["scientific_settings"] != attempt.config.scientific_settings():
         raise ValueError(f"Saved method differs from plan: {attempt.key}")
-    report = json.loads((attempt.config.output_dir / "report.json").read_text())
+    report = json.loads(
+        (attempt.config.output_dir / "report.json").read_text(encoding="utf-8")
+    )
     if report["status"] not in COMPLETE_OUTPUT_STATUSES:
         raise ValueError(
             describe_failed_run(report, attempt.config.output_dir / "report.json")
@@ -329,7 +333,7 @@ def execute(experiment: Experiment) -> dict:
         plan = _identity(experiment)
         plan_path = output / "plan.json"
         if plan_path.exists():
-            if json.loads(plan_path.read_text()) != plan:
+            if json.loads(plan_path.read_text(encoding="utf-8")) != plan:
                 raise ValueError(
                     "Frozen plan differs from inputs, method, implementation or runtime; start a new experiment"
                 )
@@ -339,7 +343,7 @@ def execute(experiment: Experiment) -> dict:
             _roster(output / "runs.csv", experiment.attempts)
         frozen_path = output / "inputs.json"
         frozen = (
-            json.loads(frozen_path.read_text())
+            json.loads(frozen_path.read_text(encoding="utf-8"))
             if frozen_path.exists()
             else _preflight(experiment)
         )
