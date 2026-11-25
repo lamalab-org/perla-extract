@@ -11,7 +11,7 @@
  *     treats them like "temperature"/"duration" under an annealing operation);
  *   - antisolvent values named by the chemical: "chlorobenzene volume", "… drip time".
  */
-import { reportedNumber, valuesMissingFromQuote } from "./jv-table.js";
+import { reportedNumber, standardUnit, valuesMissingFromQuote } from "./jv-table.js";
 import { SOLVENT_NAMES } from "./material-suggestions.js";
 
 const parameter = (name, unit = "", placeholder = "") => ({ name, unit, placeholder });
@@ -292,7 +292,7 @@ export function setCondition(step, name, raw, unit) {
     if (index >= 0) step.conditions.splice(index, 1);
     return;
   }
-  const value = { raw_value: text, value_number: reportedNumber(text), unit: String(unit ?? "").trim() || null };
+  const value = { raw_value: text, value_number: reportedNumber(text), unit: standardUnit(unit) || null };
   if (index < 0) return void step.conditions.push({ name, ...value, evidence: [] });
   const condition = step.conditions[index];
   // A changed value needs a quote that contains it: the save citation replaces the old one.
@@ -302,7 +302,7 @@ export function setCondition(step, name, raw, unit) {
 
 export function setConditionUnit(step, name, unit) {
   const condition = findCondition(step, name);
-  if (condition) condition.unit = String(unit ?? "").trim() || null;
+  if (condition) condition.unit = standardUnit(unit) || null;
 }
 
 /** Switch spin speed/duration between one stage and first/second stage names. */

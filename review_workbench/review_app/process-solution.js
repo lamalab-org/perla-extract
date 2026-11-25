@@ -8,7 +8,7 @@
  *   - a solute's concentration is "<solute> concentration" = "1.5" with unit "M".
  * Total volume is not recorded. Reopening a step rebuilds the widget from those names.
  */
-import { reportedNumber } from "./jv-table.js";
+import { reportedNumber, standardUnit } from "./jv-table.js";
 import { SOLVENT_NAMES } from "./material-suggestions.js";
 
 export const SOLVENT_RATIO_KINDS = ["volume", "molar"];
@@ -94,7 +94,7 @@ export function applySolution(step, solution, previous = solutionOf(step)) {
   const keep = (name, raw, unit) => {
     const old = before.get(name);
     step.conditions.push({
-      name, raw_value: raw, value_number: reportedNumber(raw), unit: unit || null,
+      name, raw_value: raw, value_number: reportedNumber(raw), unit: standardUnit(unit) || null,
       evidence: old && old.raw_value === raw ? old.evidence : [],
     });
   };

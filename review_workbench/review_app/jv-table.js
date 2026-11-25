@@ -26,11 +26,28 @@ export const ROW_PRESETS = [
 const MEASUREMENT_TYPES = ["jv_scan", "stabilized_power_output", "certified_measurement", "eqe_integrated_current", "other", "not_reported"];
 const SCAN_DIRECTIONS = ["reverse", "forward", "not_applicable", "not_reported"];
 
-/** The number in a plain numeric cell ("23.5", "−0.8", "1,12"); anything else stays raw only. */
+/** The number in a plain numeric cell ("23.5", "−0.8", "1,12", "4,000"); anything else stays
+ * raw only. Groups of three digits after a comma are thousands ("4,000" rpm is 4000), unless the
+ * number starts with 0 ("0,800" is 0.8); a shorter group is a decimal comma ("1,12" is 1.12).
+ */
 export function reportedNumber(raw) {
-  const text = String(raw ?? "").trim().replace("−", "-");
+  const text = String(raw ?? "").trim().replace(/[−–]/g, "-");
+  if (/^[+-]?[1-9]\d{0,2}(,\d{3})+(\.\d+)?$/.test(text)) return Number(text.replace(/,/g, ""));
   if (!/^[+-]?\d+(?:[.,]\d+)?$/.test(text)) return null;
   return Number(text.replace(",", "."));
+}
+
+// Unit spellings the scorer's unit library does not know, mapped to ones it does. The unit
+// field is not checked against the quote (the number is), so a standard spelling is safe.
+const UNIT_SPELLINGS = new Map([
+  ["r.p.m.", "rpm"], ["r.p.m", "rpm"], ["rpm", "rpm"], ["rev/min", "rpm"], ["rev min-1", "rpm"], ["rev min−1", "rpm"],
+  ["oc", "°C"], ["ºc", "°C"], ["°c", "°C"], ["torr", "torr"], ["mtorr", "mtorr"],
+]);
+
+/** A unit in a spelling the scorer understands; other units are returned as typed. */
+export function standardUnit(unit) {
+  const text = String(unit ?? "").trim();
+  return UNIT_SPELLINGS.get(text.toLowerCase()) ?? text;
 }
 
 function freshIdentifier(prefix, used) {
@@ -49,7 +66,7 @@ export function observationsFromRows({ rows, deviceId, units, usedIds }) {
         .filter((metric) => String(row.values[metric.name] ?? "").trim())
         .map((metric) => {
           const raw = String(row.values[metric.name]).trim();
-          const unit = String(units[metric.name] ?? "").trim();
+          const unit = standardUnit(units[metric.name]);
           return { name: metric.name, raw_value: raw, value_number: reportedNumber(raw), unit: unit || null, evidence: [] };
         });
       return { row, metrics };

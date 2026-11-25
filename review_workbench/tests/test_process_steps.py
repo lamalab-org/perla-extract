@@ -27,6 +27,7 @@ def run_javascript(script):
         "process-templates.js",
         "process-solution.js",
         "material-suggestions.js",
+        "jv-table.js",
         "record-editor.js",
     ):
         imports += f"import * as {module.split('.')[0].replace('-', '_')} from {json.dumps((APP / module).as_uri())};\n"
@@ -35,7 +36,7 @@ def run_javascript(script):
         f"import {{editorDocument, descendants}} from {json.dumps(dom.as_uri())};\n"
     )
     imports += (
-        "const T = process_templates, S = material_suggestions, P = process_solution;\n"
+        "const T = process_templates, S = material_suggestions, P = process_solution, J = jv_table;\n"
         "const {createRecordEditor} = record_editor;\n"
     )
     result = subprocess.run(
@@ -133,7 +134,7 @@ assert.deepEqual(step.conditions, [
 step.conditions[0].evidence = [{block_id:'b', quote:'4000'}];
 T.setCondition(step, 'spin speed', '4000', 'r.p.m.');
 assert.equal(step.conditions[0].evidence.length, 1, 'an unchanged value keeps its citation');
-assert.equal(step.conditions[0].unit, 'r.p.m.');
+assert.equal(step.conditions[0].unit, 'rpm', 'r.p.m. is saved in a spelling the scorer understands');
 T.setCondition(step, 'spin speed', '5000', 'rpm');
 assert.deepEqual(step.conditions[0].evidence, [], 'a changed value is cited by the new quote');
 T.setCondition(step, 'spin speed', '', 'rpm');
@@ -173,6 +174,38 @@ assert.deepEqual(T.conditionsMissingFromQuote([{sequence:3, conditions:[{name:'s
   ['step 3 spin speed "4000"']);
 assert.match(T.stepProblems({operation:' ', materials:[''], conditions:[{name:'', raw_value:'1'}]}).join(' '), /method.*no name.*empty material/);
 """)
+
+
+def test_numbers_and_units_are_saved_so_that_scoring_understands_them():
+    run_javascript("""
+assert.deepEqual(['4,000', '12,500', '1,234.5', '1,12', '0,800', '4000', '−0.8', '30 ± 2'].map(J.reportedNumber),
+  [4000, 12500, 1234.5, 1.12, 0.8, 4000, -0.8, null]);
+assert.deepEqual(['r.p.m.', 'RPM', 'rev/min', 'oC', 'ºC', 'Torr', 'mTorr', 'mg mL-1', 'wt%', ''].map(J.standardUnit),
+  ['rpm', 'rpm', 'rpm', '°C', '°C', 'torr', 'mtorr', 'mg mL-1', 'wt%', '']);
+const step = {conditions:[]};
+T.setCondition(step, 'spin speed', '4,000', 'r.p.m.');
+assert.deepEqual([step.conditions[0].raw_value, step.conditions[0].value_number, step.conditions[0].unit], ['4,000', 4000, 'rpm']);
+""")
+
+
+def test_every_default_and_standardized_unit_is_understood_by_the_scorer():
+    from perla_extract.study_extraction.units import canonical_quantity
+
+    output = run_javascript("""
+const units = new Set(['M']);
+const add = items => items.forEach(item => units.add(item.unit));
+T.PROCESS_CATEGORIES.forEach(category => add([...category.parameters, ...(category.after || [])]));
+Object.values(T.METHOD_PARAMETERS).forEach(add);
+T.QUENCHING_TYPES.forEach(type => add(type.parameters));
+add(T.annealingParameters(true));
+J.JV_METRICS.forEach(metric => units.add(metric.unit));
+['r.p.m.', 'RPM', 'rev/min', 'oC', 'ºC', 'Torr', 'mTorr'].forEach(unit => units.add(J.standardUnit(unit)));
+console.log(JSON.stringify([...units].filter(Boolean)));
+""")
+    unknown = [
+        unit for unit in json.loads(output) if canonical_quantity(1.0, unit) is None
+    ]
+    assert unknown == []
 
 
 def test_editor_output_passes_the_schema_grounding_and_nomad_export():
@@ -408,7 +441,7 @@ field('record-step-0-param-spin-speed', '4000');
 assert.deepEqual(editor.value().processing_steps[0].conditions,
   [{name:'spin speed', raw_value:'4000', value_number:4000, unit:'rpm', evidence:[]}]);
 field('record-step-0-unit-spin-speed', 'r.p.m.');
-assert.equal(editor.value().processing_steps[0].conditions[0].unit, 'r.p.m.');
+assert.equal(editor.value().processing_steps[0].conditions[0].unit, 'rpm');
 assert.equal(JSON.parse(document.getElementById('record-json').value).processing_steps[0].conditions[0].raw_value, '4000');
 assert.equal(family.processing_steps[0].conditions.length, 0, 'the saved record is unchanged until saved');
 // Materials keep the paper's wording; the suggestion only adds a hint.

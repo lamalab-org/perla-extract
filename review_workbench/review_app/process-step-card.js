@@ -10,6 +10,7 @@ import {
   findCondition, isTwoStageAnnealing, isTwoStageSpin, parametersFor, quenchingParameters, quenchingTypesUsed,
   renameAntisolvent, setCondition, setConditionUnit, setTwoStageAnnealing, setTwoStageSpin, usesSpinProgram,
 } from "./process-templates.js";
+import { reportedNumber, standardUnit } from "./jv-table.js";
 import {
   SOLVENT_RATIO_KINDS, applySolution, ratioParts, renameMaterial, solutionConditionNames, solutionOf,
 } from "./process-solution.js";
@@ -67,7 +68,7 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
     const existing = findCondition(step, item.name);
     const value = element("input", { properties: { value: existing?.raw_value ?? "", placeholder: item.placeholder || "" }, attributes: { "aria-label": item.name } });
     value.id = `${idPrefix}-param-${slug(item.name)}`;
-    const unit = element("input", { className: "process-unit", properties: { value: existing ? existing.unit ?? "" : item.unit, placeholder: "unit" }, attributes: { "aria-label": `${item.name} unit (as printed)`, title: "Unit as printed in the paper" } });
+    const unit = element("input", { className: "process-unit", properties: { value: existing ? existing.unit ?? "" : item.unit, placeholder: "unit" }, attributes: { "aria-label": `${item.name} unit`, title: "Unit of the printed number; r.p.m. and oC are saved as rpm and °C so that scoring understands them" } });
     unit.id = `${idPrefix}-unit-${slug(item.name)}`;
     value.addEventListener("input", () => { setCondition(step, item.name, value.value, unit.value); changed(false); });
     unit.addEventListener("input", () => { setConditionUnit(step, item.name, unit.value); changed(false); });
@@ -274,9 +275,8 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
         if (key === "raw_value") {
           condition.raw_value = input.value;
           condition.evidence = []; // the new value is cited by the save quote
-          const number = input.value.trim().replace("−", "-");
-          condition.value_number = /^[+-]?\d+(?:[.,]\d+)?$/.test(number) ? Number(number.replace(",", ".")) : null;
-        } else condition[key] = key === "unit" ? (input.value.trim() || null) : input.value;
+          condition.value_number = reportedNumber(input.value);
+        } else condition[key] = key === "unit" ? (standardUnit(input.value) || null) : input.value;
         changed(false);
       });
       return input;
