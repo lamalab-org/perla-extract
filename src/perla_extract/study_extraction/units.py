@@ -42,13 +42,14 @@ def _unit_registry():
 def _pint_unit(unit: str) -> str:
     """Translate OCR typography, not scientific meaning, before unit parsing.
 
-    PDF text occasionally contains C0 control characters where a mathematical glyph
-    failed to decode. They carry no safely recoverable unit meaning, so replacing them
-    with spaces lets Pint reject the unit without allowing malformed OCR to crash the
-    extraction run.
+    Ordinary layout whitespace is harmless. Undecodable control characters are
+    rejected: erasing one may turn a lost minus into a positive exponent. A space
+    after the explicit micro-prefix glyph is typography, not multiplication.
     """
 
     superscript = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+")
+    if any(ord(character) < 32 and not character.isspace() for character in unit):
+        raise ValueError("Undecodable control character in unit")
     printable_unit = "".join(
         " " if ord(character) < 32 else character for character in unit
     )
@@ -60,6 +61,7 @@ def _pint_unit(unit: str) -> str:
         .replace("·", " * ")
         .translate(_UNIT_MINUS_SIGNS)
     )
+    value = re.sub(r"([µμ])\s+(?=[A-Za-z])", r"\1", value)
     value = re.sub(
         r"[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+",
         lambda match: "**" + match.group(0).translate(superscript),

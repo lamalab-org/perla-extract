@@ -175,12 +175,28 @@ def test_consistency_compares_complete_explicit_physical_quantities():
     assert project_scalar(converted, "s") == pytest.approx(0.02)
 
 
-def test_missing_convenience_number_does_not_erase_a_complete_raw_quantity():
-    value = reported("duration", "20 ms", None, "s")
-    assert interpret_quantity(value).status == "normalized"
-    assert project_scalar(value, "s") == pytest.approx(0.02)
+@pytest.mark.parametrize("raw", ["20 ms", "1–2 ms", "20 ± 1 ms"])
+def test_a_redundant_unit_with_different_scale_and_no_parsed_number_is_unresolved(raw):
+    value = reported("duration", raw, None, "s")
+    assert interpret_quantity(value).status == "literal"
+    assert interpret_quantity(value).reason == "ambiguous_unit_scale"
+    assert project_scalar(value, "s", allow_qualified=True) is None
     incompatible = value.model_copy(update={"unit": "V"})
     assert interpret_quantity(incompatible).status == "contradiction"
+
+
+@pytest.mark.parametrize(
+    "raw", ["20 unknownunit", "0.4:0.9:0.95:0.05", "3:1", "15 s before the end"]
+)
+def test_uninterpreted_numeric_prefix_without_parsed_metadata_is_not_a_contradiction(
+    raw,
+):
+    value = reported("PCE", raw)
+    result = interpret_quantity(value)
+    assert result.status == "literal"
+    assert result.reason == "unsupported_unit"
+    assert equal_claims(result.claim, result.claim, 0.01, 0)
+    assert project_scalar(value, "%", allow_qualified=True) is None
 
 
 @pytest.mark.parametrize(
@@ -284,3 +300,32 @@ def test_cache_includes_quantity_kind_and_does_not_mutate_raw_inputs():
 def test_scientific_typography_preserves_case_charge_and_subscript_distinctions():
     assert scientific_value_text("Co") != scientific_value_text("CO")
     assert scientific_value_text("Fe³⁺") != scientific_value_text("Fe₃⁺")
+
+
+@pytest.mark.parametrize(
+    "raw,unit", [("20 mA cm 2", "mA/cm2"), ("20 mM TiCl4", "mM"), ("20 u C", "°C")]
+)
+def test_implicit_product_or_qualifier_is_unresolved_when_unit_metadata_disagrees(
+    raw, unit
+):
+    value = reported("property", raw, 20, unit)
+    result = interpret_quantity(value)
+    assert result.status == "literal"
+    assert result.reason == "ambiguous_unit_notation"
+    assert project_scalar(value, unit) is None
+
+
+def test_explicit_unit_product_and_actual_numeric_disagreements_remain_contradictions():
+    explicit_dimension = reported("property", "20 mA cm²", 20, "mA/cm2")
+    same_units = reported("property", "20 kg m", 2, "kg m")
+    assert interpret_quantity(explicit_dimension).status == "contradiction"
+    assert interpret_quantity(same_units).status == "contradiction"
+
+
+@pytest.mark.parametrize("micro", ["µ", "μ"])
+def test_split_micro_prefix_is_typography_not_a_product(micro):
+    value = reported("volume", f"50 {micro} L", 50, f"{micro}L")
+    result = interpret_quantity(value)
+    assert result.status == "normalized"
+    assert result.claim.canonical.magnitude == pytest.approx(5e-8)
+    assert result.claim.canonical.unit == "meter ** 3"

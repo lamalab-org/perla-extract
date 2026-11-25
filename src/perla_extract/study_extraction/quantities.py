@@ -180,27 +180,41 @@ def _canonical(number: float, unit: str, kind: str | None) -> tuple[float, str] 
     return canonical_quantity(number, unit)
 
 
-def _consistent_number(
+def _consistency_issue(
     raw_number: float,
     raw_unit: str | None,
     parsed: float | None,
     parsed_unit: str | None,
-) -> bool:
+) -> Literal["raw_parsed_conflict", "ambiguous_unit_scale"] | None:
     if parsed is None:
-        # Without a parsed magnitude the complete raw quantity remains primary.
-        # A redundant unit may use another scale, but must have the same dimension.
-        return (
+        if (
             not raw_unit
             or not parsed_unit
-            or convert_quantity(1, raw_unit, parsed_unit) is not None
+            or equivalent_unit_spelling(raw_unit, parsed_unit)
+        ):
+            return None
+        # A different scale may describe an intended converted convenience field,
+        # but no parsed magnitude establishes that conversion. Preserve ambiguity.
+        return (
+            "ambiguous_unit_scale"
+            if convert_quantity(1, raw_unit, parsed_unit) is not None
+            else "raw_parsed_conflict"
         )
     if raw_unit and parsed_unit:
         converted = convert_quantity(parsed, parsed_unit, raw_unit)
         if converted is not None:
-            return math.isclose(raw_number, converted, rel_tol=1e-9, abs_tol=0)
+            return (
+                None
+                if math.isclose(raw_number, converted, rel_tol=1e-9, abs_tol=0)
+                else "raw_parsed_conflict"
+            )
         if scientific_text(raw_unit) != scientific_text(parsed_unit):
-            return False
-    return math.isclose(raw_number, parsed, rel_tol=1e-9, abs_tol=0)
+            return "raw_parsed_conflict"
+    return (
+        None
+        if math.isclose(raw_number, parsed, rel_tol=1e-9, abs_tol=0)
+        else "raw_parsed_conflict"
+    )
 
 
 def interpret_quantity(
@@ -308,16 +322,12 @@ def _interpret_fields(
     # An unfamiliar suffix may be prose or unsupported unit notation. It does
     # not prove a physical contradiction with a supplied unit. Keep the complete
     # literal unless both unit expressions can actually be interpreted.
-    if (
-        raw_unit
-        and parsed_unit
-        and scientific_text(raw_unit) != scientific_text(parsed_unit)
+    if any(
+        canonical_quantity(first, candidate) is None
+        for candidate in (raw_unit, parsed_unit)
+        if candidate is not None
     ):
-        if (
-            canonical_quantity(first, raw_unit) is None
-            or canonical_quantity(first, parsed_unit) is None
-        ):
-            return fallback("unsupported_unit")
+        return fallback("unsupported_unit")
 
     if form == "range":
         if second is None or first > second:
@@ -327,10 +337,25 @@ def _interpret_fields(
     elif form == "uncertainty" and (second is None or second < 0):
         return fallback("invalid_uncertainty")
 
-    if not _consistent_number(
-        first, raw_unit or effective_unit, number, parsed_unit or effective_unit
-    ):
-        return fallback("raw_parsed_conflict", contradiction=True)
+    consistency_issue = _consistency_issue(
+        first, raw_unit or effective_unit, number, parsed_unit
+    )
+    if consistency_issue is not None:
+        if (
+            consistency_issue == "raw_parsed_conflict"
+            and raw_unit
+            and parsed_unit
+            and not equivalent_unit_spelling(raw_unit, parsed_unit)
+            and re.search(r"\s", raw_unit)
+            and not re.search(r"[/^*·°⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻+−-]", raw_unit)
+        ):
+            # Juxtaposed tokens can be a split prefix, qualifier, or an OCR-lost
+            # exponent. A generic unit parser accepting them as a product does
+            # not establish that this is the source's intended physical meaning.
+            return fallback("ambiguous_unit_notation")
+        return fallback(
+            consistency_issue, contradiction=consistency_issue == "raw_parsed_conflict"
+        )
 
     if effective_unit is not None:
         generic = canonical_quantity(first, effective_unit)

@@ -35,6 +35,12 @@ def test_control_character_in_unit_is_unparseable_instead_of_fatal() -> None:
     assert not is_concentration_unit(malformed_unit)
 
 
+def test_lost_unit_exponent_sign_is_not_erased_into_a_valid_positive_power():
+    corrupted = "mA cm\x00 2"
+    assert canonical_quantity(20, corrupted) is None
+    assert convert_reported_value(_reported_value(corrupted), "mA/cm2") is None
+
+
 @pytest.mark.parametrize("unit", ["#", "#count", "mW # comment", "wt%#comment"])
 def test_unit_labels_cannot_be_interpreted_as_parser_comments(unit):
     """Unknown labels remain literal; a comment cannot erase part of a unit."""
