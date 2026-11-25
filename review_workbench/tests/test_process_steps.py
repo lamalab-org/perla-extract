@@ -297,6 +297,31 @@ assert.ok(step.materials.includes('GBL') && !step.materials.includes('NMP'));
 """)
 
 
+def test_drying_is_also_a_step_of_its_own():
+    run_javascript(
+        EDITOR
+        + """
+assert.equal(T.methodOf('dried at 70 °C for 10 min'), 'drying');
+assert.equal(T.methodOf('dried in a vacuum chamber'), 'vacuum drying');
+assert.equal(T.methodOf('blow-dried with nitrogen'), 'gas flow drying');
+assert.equal(T.methodOf('spin-coated and dried'), 'spin coating', 'drying during a deposition stays with it');
+assert.equal(T.methodOf('dry deposition'), null);
+const names = operation => T.parametersFor('drying', false, operation).map(item => item.name);
+assert.deepEqual(names('drying'), ['drying temperature', 'drying time', 'atmosphere']);
+assert.deepEqual(names('vacuum drying'), ['vacuum pressure', 'drying temperature', 'drying time', 'atmosphere']);
+editor.open('device_families', 0);
+click('+ Drying');
+const step = editor.value().processing_steps[1];
+assert.equal(step.operation, 'drying');
+assert.equal(document.getElementById('record-step-1-category').value, 'drying');
+field('record-step-1-param-drying-temperature', '70');
+assert.deepEqual(editor.value().processing_steps[1].conditions, [{name:'drying temperature', raw_value:'70', value_number:70, unit:'°C', evidence:[]}]);
+assert.ok(!all().some(node => node.id === 'record-step-1-param-annealing-temperature'), 'no annealing section in a drying step');
+assert.equal(all().filter(node => node.className === 'process-quenching').length, 1, 'only the deposition step has the quenching box');
+"""
+    )
+
+
 def test_copied_steps_follow_the_matching_layers_and_skip_missing_ones():
     run_javascript(
         FAMILY_SETUP

@@ -49,6 +49,8 @@ export const METHOD_PARAMETERS = {
   "dipping": [parameter("dipping time", "s", "30")],
   "immersion": [parameter("immersion time", "min", "10")],
   "gas exposure": [parameter("exposure time", "min", "10")],
+  "vacuum drying": [parameter("vacuum pressure", "Pa", "10")],
+  "gas flow drying": [parameter("gas flow rate", "L min-1")],
 };
 
 /** Recognize the method in the paper's wording; deposition before annealing, so
@@ -74,6 +76,9 @@ const METHOD_PATTERNS = [
   ["immersion", /immers/],
   ["gas exposure", /exposure|exposed/],
   ["solution preparation", /prepar|dissolv|stirr/],
+  ["vacuum drying", /vacuum[\s-]*dr(y|ied)|\bdr(y|ied|ying)\b.*vacuum/],
+  ["gas flow drying", /(n2|nitrogen|gas|air)[\s-]*(flow|stream|blow)|blow[\s-]*dr/],
+  ["drying", /\bdr(y|ied|ying)\b(?![\s-]*deposit)/],
   ["annealing", /anneal|heat|sinter|bak/],
 ];
 
@@ -114,7 +119,7 @@ export const QUENCHING_TYPES = [
     ],
   },
   {
-    id: "drying", label: "Drying",
+    id: "drying", label: "Drying in this step",
     parameters: [parameter("drying temperature", "°C", "25"), parameter("drying time", "min", "10")],
   },
 ];
@@ -202,8 +207,16 @@ export const PROCESS_CATEGORIES = [
   },
   {
     id: "substrate_preparation", label: "Substrate preparation", role: "treats",
-    methods: ["ultrasonic cleaning", "UV-ozone treatment", "plasma treatment", "rinsing", "blow drying"],
+    methods: ["ultrasonic cleaning", "UV-ozone treatment", "plasma treatment", "rinsing"],
     parameters: [parameter("duration", "min", "15"), parameter("power", "W")],
+  },
+  {
+    // Drying as a step of its own, e.g. "dried at 70 °C for 10 min" or "dried in vacuum".
+    // Drying during a wet deposition stays in that step's Drying / quenching box.
+    id: "drying", label: "Drying", role: "treats",
+    methods: ["drying", "vacuum drying", "gas flow drying"],
+    parameters: [],
+    after: [parameter("drying temperature", "°C", "70"), parameter("drying time", "min", "10"), parameter("atmosphere", "", "N2")],
   },
   {
     id: "annealing", label: "Annealing", role: "treats", methods: ["annealing"],
@@ -225,6 +238,7 @@ export const STEP_PRESETS = [
   { label: "+ Surface treatment", category: "surface_treatment", operation: "spin coating" },
   { label: "+ Substrate cleaning", category: "substrate_preparation", operation: "ultrasonic cleaning" },
   { label: "+ Solution preparation", category: "solution_preparation", operation: "solution preparation" },
+  { label: "+ Drying", category: "drying", operation: "drying" },
   { label: "+ Annealing", category: "annealing", operation: "annealing" },
 ];
 
