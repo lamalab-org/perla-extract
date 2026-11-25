@@ -90,7 +90,10 @@ def study(observations):
         ("efficiency 20%", ""),
         ("η20%", ""),
         ("cell 20% PCE", "cell"),
+        ("cell20% PCE", "cell"),
+        ("cell25% PCE", "cell"),
         ("Device A20, PCE 20%", "Device A20"),
+        ("Device A20 PCE", "Device A20"),
         ("0.2 mg/mL maximum-PCE device", "0.2 mg/mL device"),
         ("c-NiOx specimen, Voc=1.2 V", "c-NiOx specimen"),
         ("Device A20, Jsc22 mA/cm2", "Device A20"),
@@ -112,13 +115,16 @@ def test_sample_code_is_read_after_outcome_projection(label, expected):
 
 
 @pytest.mark.parametrize("field", ["label", "variant"])
-def test_outcome_text_cannot_resolve_otherwise_ambiguous_device_ownership(field):
+@pytest.mark.parametrize("template", ["PCE {number}%", "cell{number}% PCE"])
+def test_outcome_text_cannot_resolve_otherwise_ambiguous_device_ownership(
+    field, template
+):
     fixture = study(
         [observation("a", "control", number=15), observation("b", "treated")]
     )
     for device, number in zip(fixture.individual_devices, (15, 20)):
         device.label = "Measured cell"
-        setattr(device, field, f"PCE {number}%")
+        setattr(device, field, template.format(number=number))
     score = evaluate_study(fixture, fixture.model_copy(deep=True))
     assert score.core_facts.recovery.fields["measurement:pce"].matched == 2
     assert score.core_facts.fields["measurement:pce"].matched == 0

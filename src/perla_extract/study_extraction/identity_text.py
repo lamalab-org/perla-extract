@@ -47,6 +47,10 @@ _QUANTITY = rf"{_VALUE}\s*(?:{_UNIT})?"
 _QUALIFIER = r"(?:(?:maximum|highest|best|mean|average|median|certified)[\s-]+)*"
 _CONNECTOR = r"\s*(?:(?:of|is|was|at|=|:)\s*)?"
 _OUTCOME = re.compile(
+    # A unit-marked outcome can touch its subject after PDF whitespace loss:
+    # cell20% PCE still contains the outcome 20%, not a specimen code cell20.
+    # Require the unit on this branch so Device A20 PCE retains its A20 code.
+    rf"(?<![\d.]){_VALUE}\s*{_UNIT}{_CONNECTOR}{_QUALIFIER}{_METRIC}(?!\w)|"
     rf"(?<!\w)(?:{_QUANTITY}{_CONNECTOR}{_QUALIFIER}{_METRIC}(?!\w)|"
     rf"{_QUALIFIER}{_METRIC}(?!\w)(?:{_CONNECTOR}{_QUANTITY})?)",
     re.IGNORECASE,
