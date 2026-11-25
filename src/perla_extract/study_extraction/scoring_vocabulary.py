@@ -9,13 +9,15 @@ from __future__ import annotations
 
 import re
 
-from .scoring_claims import scientific_text, scientific_value_text
+from .quantities import scientific_text, scientific_value_text
+from .quantity_specs import QUANTITY_ALIASES
 
 METRIC_ALIASES = {
-    "powerconversionefficiency": "pce",
-    "opencircuitvoltage": "voc",
-    "shortcircuitcurrentdensity": "jsc",
-    "fillfactor": "ff",
+    **{
+        name: kind
+        for name, kind in QUANTITY_ALIASES.items()
+        if kind in {"pce", "voc", "jsc", "ff"}
+    },
     "referenceefficiencyretained": "efficiencyretention",
     "pceretention": "efficiencyretention",
     "referencecell'sefficiencyretained": "efficiencyretention",

@@ -12,8 +12,6 @@ import re
 from functools import lru_cache
 from tokenize import TokenError
 
-from .models import ReportedValue
-
 _UNIT_MINUS_SIGNS = str.maketrans(
     {
         "\u2212": "-",  # Mathematical minus.
@@ -93,43 +91,6 @@ def _pint_unit(unit: str) -> str:
     return value
 
 
-def convert_reported_value(value: ReportedValue, target_unit: str) -> float | None:
-    """Convert only an explicit number carrying an explicit compatible unit."""
-
-    from pint.errors import PintError
-
-    if value.value_number is None or value.unit is None:
-        return None
-    unit = value.unit.strip()
-    if not unit or not target_unit.strip():
-        return None
-    try:
-        source, target = _pint_unit(unit), _pint_unit(target_unit)
-        if target_unit == "percent":
-            return (
-                value.value_number
-                if _unit_key(unit) in {"percent", "percentage"} or unit == "%"
-                else None
-            )
-        quantity = _unit_registry().Quantity(value.value_number, source)
-        return float(quantity.to(target).magnitude)
-    except (PintError, TokenError, AssertionError, TypeError, ValueError):
-        return None
-
-
-def canonical_reported_quantity(value: ReportedValue) -> tuple[float, str] | None:
-    """Put explicit quantities in base units for representation-independent scoring.
-
-    Unlike export conversion this has no destination-field conventions: percentages
-    become fractions and absolute temperatures become Kelvin. The caller must first
-    check that the raw claim is a plain number, not a range or qualified value.
-    """
-
-    if value.value_number is None or value.unit is None:
-        return None
-    return canonical_quantity(value.value_number, value.unit)
-
-
 def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
     """Convert an explicit magnitude; callers retain bounds and other qualifiers."""
 
@@ -142,6 +103,28 @@ def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
         quantity = _unit_registry().Quantity(number, _pint_unit(unit)).to_base_units()
         magnitude = float(quantity.magnitude)
         return (magnitude, str(quantity.units)) if math.isfinite(magnitude) else None
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        OverflowError,
+    ):
+        return None
+
+
+def convert_quantity(number: float, unit: str, target_unit: str) -> float | None:
+    """Convert an explicit physical quantity, preserving scale and temperature offsets."""
+
+    from pint.errors import PintError
+
+    if not unit.strip() or not target_unit.strip() or not math.isfinite(number):
+        return None
+    try:
+        quantity = _unit_registry().Quantity(number, _pint_unit(unit))
+        converted = float(quantity.to(_pint_unit(target_unit)).magnitude)
+        return converted if math.isfinite(converted) else None
     except (
         PintError,
         TokenError,

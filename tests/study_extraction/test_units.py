@@ -3,23 +3,23 @@
 import pytest
 
 from perla_extract.study_extraction.models import EvidenceCitation, ReportedValue
+from perla_extract.study_extraction.quantities import convert_reported_value
 from perla_extract.study_extraction.units import (
     canonical_quantity,
-    convert_reported_value,
     equivalent_unit_spelling,
     is_concentration_unit,
 )
 
 
 def _reported_value(unit: str) -> ReportedValue:
-    """Build the smallest source-backed value needed to exercise conversion."""
+    """Build a scalar for unit tests; workflow tests check source grounding."""
 
     return ReportedValue(
         name="illumination intensity",
         raw_value=f"70 {unit}",
         value_number=70.0,
         unit=unit,
-        evidence=[EvidenceCitation(block_id="main-p1-b1", quote="70 mW cm-2")],
+        evidence=[EvidenceCitation(block_id="main-p1-b1", quote=f"70 {unit}")],
     )
 
 
