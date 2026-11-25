@@ -6,7 +6,7 @@
  */
 import {
   PROCESS_CATEGORIES, categoryById, categoryOf, findCondition, isTwoStageSpin,
-  materialInOperation, parametersFor, setCondition, setConditionUnit, setTwoStageSpin,
+  materialInOperation, parametersFor, setCondition, setConditionUnit, setTwoStageSpin, usesSpinProgram,
 } from "./process-templates.js";
 
 const slug = text => String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -45,8 +45,11 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
   };
   operation.addEventListener("input", () => { step.operation = operation.value; warn(); changed(false); });
   operation.addEventListener("change", () => {
-    // A method from another category changes the parameter list.
-    if ((categoryOf(step.operation)?.id || null) !== (category?.id || null) && categoryOf(step.operation)) changed(true);
+    // Another category or method changes the parameter list.
+    const next = categoryOf(step.operation);
+    const nextTemplate = next ? parametersFor(next.id, isTwoStageSpin(step.conditions), step.operation) : [];
+    const names = items => items.map(item => item.name).join("|");
+    if (next && (next.id !== category?.id || names(nextTemplate) !== names(template))) changed(true);
   });
   warn();
 
@@ -76,7 +79,7 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
 
   // Template parameters: one value and unit per parameter; empty values are not saved.
   const twoStage = isTwoStageSpin(step.conditions);
-  const template = category ? parametersFor(category.id, twoStage) : [];
+  const template = category ? parametersFor(category.id, twoStage, step.operation) : [];
   const templateKeys = new Set(template.map(item => item.name.toLowerCase()));
   const parameterRows = template.map((item) => {
     const existing = findCondition(step, item.name);
@@ -89,7 +92,7 @@ export function createStepCard({ element, step, idPrefix, onChange, materialList
     unit.addEventListener("input", () => { setConditionUnit(step, item.name, unit.value); changed(false); });
     return element("label", { className: "process-parameter" }, [element("span", { text: item.name }), value, unit]);
   });
-  const spinToggle = category?.spin ? element("button", {
+  const spinToggle = category && usesSpinProgram(step.operation) ? element("button", {
     text: twoStage ? "Single spin stage" : "+ Second spin stage", properties: { type: "button" },
     events: { click: () => { setTwoStageSpin(step, !twoStage); changed(true); } },
   }) : null;

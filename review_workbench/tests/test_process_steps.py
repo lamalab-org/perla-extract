@@ -138,7 +138,7 @@ assert.deepEqual(step.conditions.map(item => item.name), ['spin duration']);
 assert.equal(T.categoryOf('Spin-coating').id, 'wet_deposition');
 assert.equal(T.categoryOf('annealed').id, 'annealing');
 assert.equal(T.categoryOf('spin-coat PTAA'), null);
-assert.deepEqual(T.parametersFor('wet_deposition', true).map(item => item.name).slice(2, 6),
+assert.deepEqual(T.parametersFor('wet_deposition', true, 'spin coating').map(item => item.name).slice(2, 6),
   ['first spin speed', 'first spin duration', 'second spin speed', 'second spin duration']);
 T.setCondition(step, 'spin speed', '4000', 'rpm');
 T.setTwoStageSpin(step, true);
@@ -214,6 +214,26 @@ def test_conventions_score_fully_and_free_text_operations_do_not():
     free_text.device_families[0].processing_steps[0].operation = "spin-coat SnO2"
     score = evaluate_study(truth, free_text).core_facts.groups["processing"].f1
     assert score < 1
+
+
+def test_coating_methods_have_their_own_parameters():
+    run_javascript("""
+const names = (operation, category = 'wet_deposition') => T.parametersFor(category, false, operation).map(item => item.name);
+assert.deepEqual(names('blade coating'), ['concentration', 'volume', 'coating speed', 'blade gap', 'gas knife pressure',
+  'substrate temperature', 'atmosphere']);
+assert.deepEqual(names('slot-die coating'), ['concentration', 'coating speed', 'flow rate', 'coating gap', 'shim thickness',
+  'gas knife pressure', 'substrate temperature', 'atmosphere']);
+assert.deepEqual(names('Spray-coating'), ['concentration', 'nozzle-to-substrate distance', 'flow rate', 'carrier gas pressure',
+  'number of passes', 'substrate temperature', 'atmosphere']);
+assert.deepEqual(names('inkjet printing'), ['concentration', 'drop spacing', 'printing resolution', 'jetting voltage',
+  'jetting frequency', 'nozzle temperature', 'number of printed layers', 'substrate temperature', 'atmosphere']);
+assert.deepEqual(names('custom coating'), ['concentration', 'substrate temperature', 'atmosphere']);
+assert.ok(!names('blade coating').some(name => name.startsWith('spin')), 'spin parameters only for spin coating');
+assert.deepEqual(names('blade coating', 'surface_treatment').slice(-3), ['temperature', 'duration', 'atmosphere']);
+assert.equal(T.parametersFor('wet_deposition', true, 'blade coating').some(item => item.name.startsWith('first')), false);
+assert.equal(T.categoryOf('slot-die coating').id, 'wet_deposition');
+assert.ok(T.STEP_PRESETS.some(preset => preset.operation === 'inkjet printing'));
+""")
 
 
 def test_copied_steps_follow_the_matching_layers_and_skip_missing_ones():
@@ -325,9 +345,19 @@ assert.deepEqual(editor.value().processing_steps.map(item => [item.step_id, item
   [['step-1','spin coating',['a']],['step-3','annealing',['a']],['step-2','spin coating',['b']]]);
 field('record-step-1-param-temperature', '100');
 assert.deepEqual(editor.value().processing_steps[1].conditions[0], {name:'temperature', raw_value:'100', value_number:100, unit:'°C', evidence:[]});
+click('+ Blade coating');
+assert.equal(editor.value().processing_steps[3].operation, 'blade coating');
+assert.ok(document.getElementById('record-step-3-param-blade-gap'));
+assert.ok(!all().some(node => node.id === 'record-step-3-param-spin-speed'), 'no spin parameters for blade coating');
+field('record-step-3-param-blade-gap', '150');
+// Switching the method changes the parameter list; values already entered stay in the record.
+field('record-step-3-operation', 'slot-die coating').fire('change');
+assert.ok(all().some(node => node.id === 'record-step-3-param-shim-thickness'));
+assert.deepEqual(editor.value().processing_steps[3].conditions.map(item => item.name), ['blade gap']);
 click('+ Evaporation');
-assert.equal(editor.value().processing_steps[3].operation, 'thermal evaporation');
-assert.equal(editor.value().processing_steps[3].sequence, 4);
+
+assert.equal(editor.value().processing_steps[4].operation, 'thermal evaporation');
+assert.equal(editor.value().processing_steps[4].sequence, 5);
 // A two-stage spin program renames the stage parameters.
 click('+ Second spin stage');
 assert.deepEqual(editor.value().processing_steps[0].conditions.map(item => item.name), ['first spin speed']);

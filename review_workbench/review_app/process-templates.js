@@ -16,6 +16,37 @@ const WET_METHODS = [
 ];
 const SPIN = [parameter("spin speed", "rpm", "4000"), parameter("spin duration", "s", "30")];
 
+/** Parameters typical of each coating method. The category adds the shared ones
+ * (concentration before, substrate temperature/atmosphere after). Gas quenching by an
+ * N2 or air knife is one name, "gas knife pressure", so annotations stay comparable.
+ */
+export const METHOD_PARAMETERS = {
+  "spin coating": [
+    parameter("volume", "µL", "50"), ...SPIN,
+    parameter("antisolvent volume", "µL", "150"), parameter("antisolvent drip time", "s", "10"),
+  ],
+  "blade coating": [
+    parameter("volume", "µL", "20"), parameter("coating speed", "mm s-1", "20"),
+    parameter("blade gap", "µm", "200"), parameter("gas knife pressure", "psi", "20"),
+  ],
+  "slot-die coating": [
+    parameter("coating speed", "mm s-1", "10"), parameter("flow rate", "µL min-1", "50"),
+    parameter("coating gap", "µm", "100"), parameter("shim thickness", "µm", "100"),
+    parameter("gas knife pressure", "psi", "20"),
+  ],
+  "spray coating": [
+    parameter("nozzle-to-substrate distance", "cm", "10"), parameter("flow rate", "mL min-1", "1"),
+    parameter("carrier gas pressure", "psi", "20"), parameter("number of passes", "", "5"),
+  ],
+  "inkjet printing": [
+    parameter("drop spacing", "µm", "20"), parameter("printing resolution", "dpi", "1000"),
+    parameter("jetting voltage", "V", "20"), parameter("jetting frequency", "kHz", "1"),
+    parameter("nozzle temperature", "°C", "40"), parameter("number of printed layers", "", "2"),
+  ],
+  "drop casting": [parameter("volume", "µL", "20")],
+  "dip coating": [parameter("withdrawal speed", "mm min-1", "10"), parameter("dipping time", "s", "30")],
+};
+
 /** `role`: "forms" creates a layer, "treats" acts on an existing one, "prepares" makes its solution. */
 export const PROCESS_CATEGORIES = [
   {
@@ -28,12 +59,9 @@ export const PROCESS_CATEGORIES = [
     ],
   },
   {
-    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: WET_METHODS, spin: true,
-    parameters: [
-      parameter("concentration", "mg mL-1"), parameter("volume", "µL", "50"), ...SPIN,
-      parameter("antisolvent volume", "µL", "150"), parameter("antisolvent drip time", "s", "10"),
-      parameter("substrate temperature", "°C"), parameter("atmosphere", "", "N2 glovebox"),
-    ],
+    id: "wet_deposition", label: "Wet deposition", role: "forms", methods: WET_METHODS,
+    parameters: [parameter("concentration", "mg mL-1")],
+    after: [parameter("substrate temperature", "°C"), parameter("atmosphere", "", "N2 glovebox")],
   },
   {
     id: "dry_deposition", label: "Dry deposition", role: "forms",
@@ -44,12 +72,10 @@ export const PROCESS_CATEGORIES = [
     ],
   },
   {
-    id: "surface_treatment", label: "Surface treatment / doping", role: "treats", spin: true,
+    id: "surface_treatment", label: "Surface treatment / doping", role: "treats",
     methods: [...WET_METHODS, "dipping", "immersion", "gas exposure", "doping/aging"],
-    parameters: [
-      parameter("concentration", "mg mL-1"), ...SPIN, parameter("temperature", "°C"),
-      parameter("duration", "min"), parameter("atmosphere"),
-    ],
+    parameters: [parameter("concentration", "mg mL-1")],
+    after: [parameter("temperature", "°C"), parameter("duration", "min"), parameter("atmosphere")],
   },
   {
     id: "substrate_preparation", label: "Substrate preparation", role: "treats",
@@ -65,6 +91,10 @@ export const PROCESS_CATEGORIES = [
 /** Buttons that add a typed step. */
 export const STEP_PRESETS = [
   { label: "+ Spin coating", category: "wet_deposition", operation: "spin coating" },
+  { label: "+ Blade coating", category: "wet_deposition", operation: "blade coating" },
+  { label: "+ Slot-die coating", category: "wet_deposition", operation: "slot-die coating" },
+  { label: "+ Spray coating", category: "wet_deposition", operation: "spray coating" },
+  { label: "+ Inkjet printing", category: "wet_deposition", operation: "inkjet printing" },
   { label: "+ Evaporation", category: "dry_deposition", operation: "thermal evaporation" },
   { label: "+ Surface treatment", category: "surface_treatment", operation: "spin coating" },
   { label: "+ Substrate cleaning", category: "substrate_preparation", operation: "ultrasonic cleaning" },
@@ -91,14 +121,20 @@ export function isTwoStageSpin(conditions = []) {
   return conditions.some(condition => /^(first|second) spin /i.test(condition.name || ""));
 }
 
-/** The template parameters of a category; a two-stage spin program replaces spin speed/duration. */
-export function parametersFor(categoryId, twoStage = false) {
+/** Whether the method is spin coating, which may run as a two-stage spin program. */
+export const usesSpinProgram = operation => key(operation) === key("spin coating");
+
+/** The template parameters of a step: the category's shared ones around those of its method.
+ * A two-stage spin program replaces spin speed/duration by first/second stage parameters.
+ */
+export function parametersFor(categoryId, twoStage = false, operation = "") {
   const category = categoryById(categoryId);
   if (!category) return [];
-  if (!twoStage || !category.spin) return category.parameters;
-  const spin = category.parameters.filter(item => item.name.startsWith("spin "));
-  return category.parameters.flatMap((item) => {
-    if (item.name === "spin speed") return ["first", "second"].flatMap(stage => spin.map(each => ({ ...each, name: `${stage} ${each.name}` })));
+  const method = Object.entries(METHOD_PARAMETERS).find(([name]) => key(name) === key(operation))?.[1] || [];
+  const all = [...category.parameters, ...(category.after ? method : []), ...(category.after || [])];
+  if (!twoStage || !usesSpinProgram(operation)) return all;
+  return all.flatMap((item) => {
+    if (item.name === "spin speed") return ["first", "second"].flatMap(stage => SPIN.map(each => ({ ...each, name: `${stage} ${each.name}` })));
     return item.name.startsWith("spin ") ? [] : [item];
   });
 }
