@@ -7,10 +7,10 @@ Only pairs shared by every longest ordered alignment establish a layer link.
 
 from dataclasses import dataclass, field
 
+from .identity_text import identity_text, identity_tokens
 from .models import DeviceFamily, Layer, StudyExtraction
-from .scoring_claims import scientific_text
 from .scoring_process import ordered_alignment, ordered_overlap
-from .scoring_vocabulary import label_tokens, material_name
+from .scoring_vocabulary import material_name
 
 
 def ordered_layers(family: DeviceFamily) -> list[tuple[int, Layer]] | None:
@@ -42,16 +42,13 @@ def stack_similarity(
         [material_name(layer.material) for _, layer in a],
         [material_name(layer.material) for _, layer in b],
     )
-    same_variant = bool(
-        left.variant
-        and right.variant
-        and scientific_text(left.variant) == scientific_text(right.variant)
-    )
+    variants = identity_text(left.variant), identity_text(right.variant)
+    same_variant = bool(variants[0] and variants[0] == variants[1])
     entries = len(a) + len(b)
     names = (
         label_features
         if label_features is not None
-        else (label_tokens(left.label), label_tokens(right.label))
+        else (identity_tokens(left.label), identity_tokens(right.label))
     )
     shared_label = (
         len(names[0] & names[1]) / len(names[0] | names[1]) if any(names) else 0

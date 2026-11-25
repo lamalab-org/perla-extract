@@ -7,8 +7,8 @@ and reader-note coverage; reviewed reference data measures accuracy separately.
 from __future__ import annotations
 
 from .claims import ClaimLedger
+from .correction_checks import candidate_quality, is_monotonic_quality
 from .models import EvidenceBlock, StudyExtraction
-from .repair import candidate_quality, is_monotonic_quality
 
 
 def _select_refinement_candidate(
@@ -49,6 +49,7 @@ def _select_refinement_candidate(
         {
             "selected": selected,
             "reason": reason,
+            "proposal_decision": {"selected": selected, "reason": reason},
             "draft_quality": draft_quality,
             "refinement_quality": refinement_quality,
         },
@@ -76,15 +77,24 @@ def _gate_final_candidate_against_draft(
     )
     accepted = is_monotonic_quality(draft_quality, candidate_quality_summary)
     result = dict(selection)
+    result.setdefault(
+        "proposal_decision",
+        {"selected": selection["selected"], "reason": selection.get("reason")},
+    )
     result["pre_repair_selected"] = selection["selected"]
     result["draft_quality"] = draft_quality
     result["final_candidate_quality"] = candidate_quality_summary
+    integrity_reason = (
+        "final candidate preserves source-supported claims without worsening integrity"
+        if accepted
+        else "final candidate loses source-supported claims or worsens integrity"
+    )
+    result["final_integrity_check"] = {"accepted": accepted, "reason": integrity_reason}
     if accepted:
         result["selected"] = str(selection["selected"])
-        result["reason"] = (
-            "final candidate preserves source-supported values and does not worsen "
-            "validation or reader-note coverage relative to the draft"
-        )
+        # A retained draft passing this check does not make the rejected proposal
+        # acceptable. Preserve that selection explanation at the top level too.
+        result["reason"] = selection.get("reason", integrity_reason)
         return candidate, result
     result["selected"] = "draft"
     result["reason"] = (

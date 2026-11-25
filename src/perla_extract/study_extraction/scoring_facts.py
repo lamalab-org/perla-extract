@@ -11,6 +11,7 @@ import sys
 from dataclasses import dataclass, field, replace
 from typing import Literal
 
+from .identity_text import identity_text
 from .models import (
     DeviceFamily,
     IndividualDevice,
@@ -22,16 +23,16 @@ from .models import (
     StudyExtraction,
     SubjectContext,
 )
-from .scoring_claims import (
+from .quantities import (
     compound_quantity as compound_quantity,
 )
-from .scoring_claims import (
+from .quantities import (
     is_plain_number as is_plain_number,
 )
-from .scoring_claims import (
+from .quantities import (
     scientific_text as scientific_text,
 )
-from .scoring_claims import (
+from .quantities import (
     scientific_value_text as scientific_value_text,
 )
 from .scoring_context import (
@@ -106,9 +107,9 @@ def scientific_descriptor(record: object) -> str | None:
             return "sample:" + code
         if record.subjects and all(has_subject_identity(s) for s in record.subjects):
             return None
-        return scientific_text(record.label)
+        return identity_text(record.label) or None
     if isinstance(record, StabilityTest) and record.device_id is None:
-        return scientific_text(record.specimen_label)
+        return identity_text(record.specimen_label) or None
     return None
 
 
@@ -947,7 +948,7 @@ class _FactProjector:
         context = FactContext.of(
             path,
             family_id=self.reference("device_families", record.family_id),
-            variant=record.variant,
+            variant=identity_text(record.variant) or None,
         )
         for j, value in enumerate(record.reported_properties):
             name = treatment_condition_name(value.name)

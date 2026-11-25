@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 
+from .identity_text import identity_text, identity_tokens
 from .models import (
     DeviceFamily,
     IndividualDevice,
@@ -18,7 +19,6 @@ from .models import (
     StabilityTest,
     StudyExtraction,
 )
-from .scoring_claims import scientific_text
 from .scoring_context import (
     UnorderedContext,
     device_identity,
@@ -30,7 +30,6 @@ from .scoring_context import (
 from .scoring_layers import ordered_layers, stack_similarity
 from .scoring_protocol import canonical_conditions
 from .scoring_vocabulary import (
-    label_tokens,
     material_name,
     material_stage,
     property_name,
@@ -48,7 +47,8 @@ def sample_code(
     """
     codes = set()
     token = r"[A-Za-z0-9]+(?:[-_/][A-Za-z0-9]+)*"
-    for text in (record.label, getattr(record, "variant", None) or ""):
+    for raw in (record.label, getattr(record, "variant", None)):
+        text = identity_text(raw)
         candidates = re.findall(
             rf"\b(?:device|sample|cell|specimen|film)\s+({token})\b",
             text,
@@ -74,7 +74,7 @@ def family_label_features(families: list[DeviceFamily]) -> dict[str, set[str]]:
     otherwise indistinguishable designs. Use each study's own labels only; no
     words are learned from the other study or from measurement outcomes.
     """
-    words = {family.family_id: label_tokens(family.label) for family in families}
+    words = {family.family_id: identity_tokens(family.label) for family in families}
     common = set.intersection(*words.values()) if len(words) > 1 else set()
     return {key: value - common for key, value in words.items()}
 
@@ -255,13 +255,14 @@ def _identity_features(record: object) -> set[str]:
     else:
         raise TypeError(f"No record identity rule for {type(record).__name__}")
     features = {
-        f"{name}:{scientific_text(str(value))}"
+        f"{name}:{identity_text(str(value))}"
         for name in fields
         if (value := getattr(record, name)) not in (None, "", "not_reported")
+        and identity_text(str(value))
     }
     features.add(f"record_type:{type(record).__name__}")
     if isinstance(record, IndividualDevice):
-        features.update(f"label:{token}" for token in label_tokens(record.label))
+        features.update(f"label:{token}" for token in identity_tokens(record.label))
     return features
 
 
@@ -303,8 +304,8 @@ def family_pair_evidence(
     codes = {
         "truth_sample_code": [left_code] if left_code else [],
         "prediction_sample_code": [right_code] if right_code else [],
-        "truth_label_tokens": sorted(label_tokens(left.label)),
-        "prediction_label_tokens": sorted(label_tokens(right.label)),
+        "truth_label_tokens": sorted(identity_tokens(left.label)),
+        "prediction_label_tokens": sorted(identity_tokens(right.label)),
         "truth_distinguishing_label_tokens": sorted(label_features[0])
         if label_features
         else [],
@@ -319,9 +320,11 @@ def family_pair_evidence(
             "prediction_stack": [
                 material_name(layer.material) for _, layer in right_order
             ],
-            "truth_variant": [scientific_text(left.variant)] if left.variant else [],
-            "prediction_variant": [scientific_text(right.variant)]
-            if right.variant
+            "truth_variant": [identity_text(left.variant)]
+            if identity_text(left.variant)
+            else [],
+            "prediction_variant": [identity_text(right.variant)]
+            if identity_text(right.variant)
             else [],
             **codes,
         }
@@ -342,7 +345,7 @@ def _family_features(family: DeviceFamily) -> set[str]:
     source supplies it. These features select candidates, not scientific credit.
     """
 
-    values: list[object] = [family.variant]
+    values: list[object] = [identity_text(family.variant)]
     for layer in family.layers:
         values.append(layer.material)
         values.extend(
@@ -361,8 +364,8 @@ def _family_features(family: DeviceFamily) -> set[str]:
     features.update(
         f"material:{material_name(v)}" for v in values[1:] if isinstance(v, str)
     )
-    if family.variant:
-        features.add(f"variant:{scientific_text(family.variant)}")
+    if variant := identity_text(family.variant):
+        features.add(f"variant:{variant}")
     for layer in family.layers:
         if layer.sequence is not None:
             features.add(

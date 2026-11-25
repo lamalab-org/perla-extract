@@ -10,11 +10,11 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 
+from .identity_text import identity_text
 from .models import IndividualDevice, ReportedValue, SubjectContext
-from .scoring_claims import (
+from .quantities import (
     equal_claims,
     normalize_claim,
-    scientific_text,
     scientific_value_text,
 )
 
@@ -293,12 +293,12 @@ def device_identity(
             *device.reported_properties,
         )
     )
-    variant = scientific_text(device.variant) if device.variant else None
+    variant = identity_text(device.variant) or None
     return FactContext.of(
         path,
         variant=None if explicit_inputs else variant,
         champion_status=device.champion_status,
-        selection_basis=device.selection_basis,
+        selection_basis=identity_text(device.selection_basis),
         subject_context=treatment,
     )
 
