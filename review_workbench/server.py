@@ -35,6 +35,7 @@ from perla_extract.study_extraction.artifacts import (  # noqa: E402
 )
 from perla_extract.study_extraction.enrichment import EnrichmentAudit  # noqa: E402
 from perla_extract.study_extraction.models import StudyExtraction  # noqa: E402
+from review_workbench import simple_comparison  # noqa: E402
 from review_workbench.adjudication import (  # noqa: E402
     AdjudicationQueue,
     ConfirmRecordsRequest,
@@ -93,6 +94,8 @@ def review_app_asset(
         return "index.html"
     if request_path in {"/compare", "/comparison.html"}:
         return "comparison.html"
+    if request_path == "/simple-compare":
+        return "simple-comparison.html"
     if request_path != "/":
         return request_path.lstrip("/")
     hostname = urlparse(f"//{request_host}").hostname or ""
@@ -140,6 +143,9 @@ class ReviewApplication:
         ground_truth_dir: Path,
         review_storage: ReviewStateStorage | None = None,
         comparison_storage: ComparisonStorage | None = None,
+        simple_comparison_storage: (
+            simple_comparison.SimpleComparisonStorage | None
+        ) = None,
     ):
         self.pdf_dir = pdf_dir.resolve()
         self.pdf_dir.mkdir(parents=True, exist_ok=True)
@@ -148,6 +154,10 @@ class ReviewApplication:
         self.uploaded_workbook_dir = self.ground_truth_dir / "uploaded_workbooks"
         self.comparisons = ComparisonService(
             comparison_storage or LocalComparisonStorage(self.ground_truth_dir)
+        )
+        self.simple_comparisons = simple_comparison.SimpleComparisonService(
+            simple_comparison_storage
+            or simple_comparison.LocalSimpleComparisonStorage(self.ground_truth_dir)
         )
         self.static_dir = REPO_ROOT / "review_workbench" / "review_app"
 
@@ -287,6 +297,29 @@ class ReviewApplication:
             "candidate_hashes": sorted(
                 candidate.common_sha256 for candidate in source.candidates.values()
             ),
+        }
+
+    def create_simple_comparison(self, payload: object) -> dict[str, Any]:
+        """Freeze finalized ground truth against an extractor output as prose."""
+
+        paper_id = str(payload.get("paper_id", "")) if isinstance(payload, dict) else ""
+        split = (
+            str(payload.get("split") or "dev") if isinstance(payload, dict) else "dev"
+        )
+        self.store.validate_identity(split, paper_id)
+        source = simple_comparison.create_from_workbench(
+            self.store,
+            payload,
+            source_hashes={
+                name: hashlib.sha256(self.review_pdf(paper_id, name, split)).hexdigest()
+                for name in self.available_sources(paper_id, split)
+            },
+        )
+        self.simple_comparisons.storage.create(source)
+        return {
+            "comparison_id": source.comparison_id,
+            "paper_id": source.paper_id,
+            "assigned_reviewers": len(source.reviewer_ids),
         }
 
     def reviewer_feedback_archive(self) -> bytes:
@@ -1166,6 +1199,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     )
                     return
                 parts = self.route_parts(parsed.path)
+                if parts[:2] in simple_comparison.ROUTES:
+                    routed = simple_comparison.get_route(
+                        application.simple_comparisons, parts, self.current_user()
+                    )
+                    if routed is not None:
+                        self.send_json(routed)
+                        return
                 if parts[:2] == ["api", "adjudication"] and len(parts) == 4:
                     user = self.current_user(require_finalizer=True)
                     view = AdjudicationQueue(application.store).load(
@@ -1359,6 +1399,10 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     "comparison.html",
                     "comparison.js",
                     "comparison.css",
+                    "simple-comparison.html",
+                    "simple-comparison.js",
+                    "simple-comparison.css",
+                    "simple-view.js",
                     "figure-census-proposals.json",
                 }:
                     self.send_error(HTTPStatus.NOT_FOUND)
@@ -1400,6 +1444,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     self.send_json({"token": token, "user": self.current_user()})
                     return
                 user = self.current_user()
+                if parts[:2] in simple_comparison.ROUTES:
+                    routed = simple_comparison.post_route(
+                        application, parts, user, self.read_json
+                    )
+                    if routed is not None:
+                        self.send_json(routed, HTTPStatus.CREATED)
+                        return
                 if parts[:2] == ["api", "adjudication"] and len(parts) == 5:
                     self.current_user(
                         require_admin=parts[4] in {"plan", "adopt-review"},

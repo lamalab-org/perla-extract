@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -35,6 +36,10 @@ from review_workbench.review_storage import (  # noqa: E402
     StaleRevisionError,
 )
 from review_workbench.server import ReviewApplication, make_handler  # noqa: E402
+from review_workbench.simple_comparison import (  # noqa: E402
+    SimpleComparisonSource,
+    SimplePreference,
+)
 
 
 def _write_bytes_atomic(path: Path, content: bytes) -> None:
@@ -414,6 +419,76 @@ class BlobComparisonStorage:
             raise ValueError("pairwise preference is already submitted") from error
 
 
+class BlobSimpleComparisonStorage:
+    """Persist simplified A/B sources and choices as write-once blobs."""
+
+    source_prefix = "workbench/simple-comparison-sources/"
+    preference_prefix = "workbench/simple-comparison-preferences/"
+
+    def __init__(self, blob: BlobStore):
+        self.blob = blob
+
+    def _put_exclusive(self, pathname: str, value: Any) -> None:
+        body = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
+        try:
+            self.blob.put(pathname, body, "application/json", overwrite=False)
+        except Exception as error:
+            if self.blob.find(pathname) is not None:
+                raise FileExistsError(pathname) from error
+            raise
+
+    def _source_path(self, comparison_id: str) -> str:
+        return f"{self.source_prefix}{comparison_id}.json"
+
+    def _preference_path(self, comparison_id: str, reviewer_id: str) -> str:
+        reviewer = hashlib.sha256(
+            json.dumps(reviewer_id, ensure_ascii=False).encode()
+        ).hexdigest()
+        return f"{self.preference_prefix}{comparison_id}/{reviewer}.json"
+
+    def create(self, source: SimpleComparisonSource) -> None:
+        try:
+            self._put_exclusive(
+                self._source_path(source.comparison_id), source.model_dump(mode="json")
+            )
+        except FileExistsError as error:
+            raise ValueError("comparison already exists") from error
+
+    def list_ids(self) -> list[str]:
+        return sorted(
+            Path(str(item["pathname"])).stem
+            for item in self.blob.list(self.source_prefix)
+            if str(item.get("pathname", "")).endswith(".json")
+        )
+
+    def load_source(self, comparison_id: str) -> SimpleComparisonSource:
+        item = self.blob.find(self._source_path(comparison_id))
+        if item is None:
+            raise FileNotFoundError(f"simple comparison {comparison_id} not found")
+        return SimpleComparisonSource.model_validate_json(self.blob.download(item))
+
+    def load_preference(
+        self, comparison_id: str, reviewer_id: str
+    ) -> SimplePreference | None:
+        item = self.blob.find(self._preference_path(comparison_id, reviewer_id))
+        return (
+            SimplePreference.model_validate_json(self.blob.download(item))
+            if item
+            else None
+        )
+
+    def save_preference(self, preference: SimplePreference) -> None:
+        try:
+            self._put_exclusive(
+                self._preference_path(preference.comparison_id, preference.reviewer_id),
+                preference.model_dump(mode="json"),
+            )
+        except FileExistsError as error:
+            raise ValueError(
+                "your choice for this comparison is already submitted"
+            ) from error
+
+
 class VercelReviewApplication(ReviewApplication):
     """Adapt the filesystem-oriented review core to Vercel's ephemeral runtime.
 
@@ -440,6 +515,7 @@ class VercelReviewApplication(ReviewApplication):
             ground_truth,
             BlobReviewStateStorage(blob),
             BlobComparisonStorage(blob),
+            BlobSimpleComparisonStorage(blob),
         )
         self._hydrate()
 

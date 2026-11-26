@@ -30,3 +30,22 @@ def test_demo_owner_correction_persists_and_stale_retry_is_rejected(tmp_path):
     assert application.pdf_path(PAPER_ID, "main", "dev").is_file()
     with pytest.raises(StaleRevisionError):
         application.mutate("dev", PAPER_ID, payload, "local-reviewer")
+
+
+def test_simple_ab_demo_compares_the_original_with_its_corrected_truth(tmp_path):
+    from review_workbench.demo import SIMPLE_AB_ID, create_simple_ab_demo
+
+    application = create_simple_ab_demo(tmp_path)
+    view = application.simple_comparisons.open(SIMPLE_AB_ID, "local-reviewer")
+    texts = {
+        label: " ".join(
+            segment["text"]
+            for section in candidate["prose"]["sections"]
+            for paragraph in section["paragraphs"]
+            for segment in paragraph["segments"]
+        )
+        for label, candidate in view["candidates"].items()
+    }
+    assert sorted("PCE of 20%" in text for text in texts.values()) == [False, True]
+    assert sorted("PCE of 21%" in text for text in texts.values()) == [False, True]
+    assert all(text.startswith("Example et al.") for text in texts.values())

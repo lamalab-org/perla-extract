@@ -128,3 +128,72 @@ supported-claim precision = correct / (correct + incorrect + unsupported)
 `cannot_determine` is reported but excluded from that denominator. Omission counts are
 useful diagnostics, not source-relative recall, unless a separate adjudicated ground
 truth establishes the complete denominator. The export does not perform a paired statistical comparison.
+
+## Simplified A/B: ground truth against an extractor
+
+The **Simplified A/B** page (`/simple-compare`) asks one question instead of claim-level
+judgments: which of two extractions of the same paper is the better one? It is meant
+for quick, larger-scale preference checks, for example between the finalized workbench
+ground truth and a new extractor run. It does not measure atomic precision; use the
+blinded extractor study above when that is the question.
+
+### What reviewers see
+
+The paper is shown on top, rendered from the same PDF and supporting information as
+the ground-truth review. Below it, extractions A and B appear side by side as prose
+written by one deterministic template (`review_workbench/study_prose.py`):
+
+1. **Study**: who published what, and how many device families, devices, populations
+   and stability tests the extraction contains.
+2. **Investigated devices**: each family's fabrication steps with their conditions,
+   its layer stack, layers, absorbers and constituents.
+3. **Results of characterization**: population statistics compared across families
+   (for example a median PCE per family), then champion and further devices.
+4. **Stability**: what each aging test yielded at each checkpoint.
+
+Every value carries numbered citations. Clicking one opens the cited page and
+highlights the quoted lines; each column ends with its reference list. Scrolling one
+column scrolls the other to the same section and relative position, which can be
+switched off. The reviewer chooses **A is better** or **B is better** and must justify
+the choice in at least ten characters. A submitted choice cannot be changed.
+
+### Blinding
+
+- Both candidates pass through the same renderer. Records are ordered by their
+  scientific content, and identifiers, free-text notes and run metadata are never
+  shown, so wording and order do not reveal the origin.
+- Title, authors, journal and year come from the comparison itself and are identical
+  above A and B, even when only one extraction recorded them.
+- The A/B mapping is randomized from a seed; only the seed's SHA-256 is stored.
+- Reviewers receive only the rendered prose and its hash, never the native payloads.
+  Origins are revealed only through the administrator export, and only after every
+  assigned reviewer has submitted.
+
+### Create a comparison
+
+Administrators use **Create comparison** on the page. A comparison needs:
+
+1. a paper whose ground-truth review is **finalized** (the same gate as the
+   ground-truth export: adjudication completed, every record verified, evidence
+   validated);
+2. the extractor side: either the run the paper was imported from (the original
+   extraction), or another run uploaded as its `extraction.json` and `document.json`;
+   each side's citations resolve against its own evidence blocks;
+3. publication metadata, which **Look up the DOI on Crossref** can prefill from the
+   paper ID (this sends only the DOI to Crossref) and which the administrator checks;
+4. reviewer IDs and a randomization seed.
+
+Both candidates are validated against the current study schema, rendered, hashed and
+frozen. `GET /api/simple-comparison-export/<comparison_id>` (or **Download results**)
+returns the origins, the hashes of the native payloads, documents and prose, each
+reviewer's choice, justification and active time, and the number of choices per origin.
+
+### Try it locally
+
+```bash
+python -m review_workbench.demo --simple-ab
+```
+
+This builds a synthetic one-page paper, applies the two corrections from the record
+demo, finalizes the review, and compares the original extraction with the corrected
+ground truth. Open the printed URL, click citations, choose, and justify.

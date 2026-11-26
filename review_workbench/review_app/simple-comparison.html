@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PERLA simplified A/B</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/simple-comparison.css" />
+</head>
+<body>
+  <section id="auth-gate" class="auth-gate" hidden>
+    <div class="auth-card">
+      <span class="eyebrow">PERLA</span>
+      <h1 id="auth-title">Sign in to the simplified A/B study</h1>
+      <p id="auth-help">Use the review account provided by the project team.</p>
+      <form id="internal-sign-in" class="internal-sign-in" hidden>
+        <label>Email<input id="login-email" type="email" autocomplete="username" required /></label>
+        <label>Password<input id="login-password" type="password" autocomplete="current-password" required /></label>
+        <button type="submit" class="primary">Sign in</button>
+      </form>
+      <button id="use-email-sign-in" class="auth-switch" type="button" hidden>Sign in by email</button>
+      <div id="clerk-sign-in" hidden></div>
+      <button id="use-project-password" class="auth-switch" type="button" hidden>Use the project password instead</button>
+      <button id="retry-auth" type="button" hidden>Try again</button>
+      <p id="login-status" role="alert"></p>
+    </div>
+  </section>
+
+  <div id="simple-app" hidden>
+    <header>
+      <div><span class="eyebrow">PERLA</span><h1>Simplified A/B</h1></div>
+      <div class="header-actions">
+        <a class="button-link" href="/review">Ground-truth review</a>
+        <a class="button-link" href="/compare">Blinded extractor study</a>
+        <button id="open-create" type="button" hidden>Create comparison</button>
+        <button id="download-export" type="button" hidden disabled>Download results</button>
+        <span id="reviewer" class="pill">Connecting…</span>
+        <button id="sign-out" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <main class="simple-shell">
+      <aside class="simple-list-panel">
+        <h2>Assigned papers</h2>
+        <p class="muted">Read both extractions against the paper and choose the better one. Their origins stay hidden.</p>
+        <div id="comparison-list" class="paper-list"></div>
+      </aside>
+
+      <section id="simple-empty" class="empty-state">
+        <h2>Choose an assigned paper</h2>
+        <p>Both extractions are written as prose by the same template. Click a citation to see its quote in the paper.</p>
+      </section>
+
+      <section id="simple-workspace" class="simple-workspace" hidden>
+        <section class="simple-paper" id="paper-panel" aria-label="Paper">
+          <div class="panel-toolbar">
+            <select id="pdf-source" aria-label="Source document"></select>
+            <button id="previous-page" type="button" aria-label="Previous page">←</button>
+            <label>Page <input id="page-number" type="number" min="1" value="1" /></label>
+            <span id="page-count"></span>
+            <button id="next-page" type="button" aria-label="Next page">→</button>
+            <p id="citation-status" class="citation-status" role="status"></p>
+          </div>
+          <div id="pdf-stage" class="simple-pdf-stage">
+            <p id="pdf-status" class="pdf-message">Loading source…</p>
+            <div class="pdf-page-frame">
+              <img id="pdf-page" alt="Rendered source page" />
+              <div id="pdf-highlights"></div>
+            </div>
+          </div>
+        </section>
+
+        <div id="splitter" class="simple-splitter" role="separator" aria-orientation="horizontal"
+             aria-label="Resize the paper and the extractions" tabindex="0"></div>
+
+        <section class="simple-candidates" aria-label="Extractions">
+          <div class="candidate-tabs" role="tablist">
+            <button type="button" role="tab" data-show="A" aria-selected="true">Extraction A</button>
+            <button type="button" role="tab" data-show="B" aria-selected="false">Extraction B</button>
+          </div>
+          <div id="candidate-columns" class="candidate-columns" data-show="A">
+            <section class="candidate-column" data-label="A">
+              <h2 class="candidate-title">Extraction A</h2>
+              <div id="prose-A" class="candidate-scroll" tabindex="0"></div>
+            </section>
+            <section class="candidate-column" data-label="B">
+              <h2 class="candidate-title">Extraction B</h2>
+              <div id="prose-B" class="candidate-scroll" tabindex="0"></div>
+            </section>
+          </div>
+        </section>
+
+        <form id="decision" class="simple-decision">
+          <fieldset id="decision-fields">
+            <legend class="visually-hidden">Your decision</legend>
+            <strong id="decision-question" class="decision-question">Which extraction is better?</strong>
+            <div class="decision-choices" role="radiogroup" aria-labelledby="decision-question">
+              <label><input type="radio" name="choice" value="A" required /> A is better</label>
+              <label><input type="radio" name="choice" value="B" /> B is better</label>
+            </div>
+            <label class="decision-justification">Justification
+              <textarea id="justification" rows="2" minlength="10" required
+                        placeholder="Why is this extraction better? For example: missing families, wrong values, unsupported claims…"></textarea>
+            </label>
+            <button id="submit-choice" type="submit" class="primary">Submit choice</button>
+          </fieldset>
+          <label class="link-scrolling"><input id="link-scrolling" type="checkbox" checked /> Scroll A and B together</label>
+          <p id="decision-status" role="status"></p>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="create-dialog" class="simple-dialog">
+    <form id="create-form" method="dialog">
+      <div class="dialog-heading"><h2>Create a simplified A/B comparison</h2><button id="close-create" type="button" aria-label="Close">×</button></div>
+      <p class="muted">The finalized ground truth of the paper is compared with an extractor output. Both are frozen when you create the comparison.</p>
+      <div class="create-grid">
+        <label>Comparison ID<input name="comparison_id" required pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,127}" /></label>
+        <label>Dataset split<select name="split" id="create-split"><option value="calibration">calibration</option><option value="dev" selected>dev</option><option value="test">test</option></select></label>
+        <label class="wide">Paper<select name="paper_id" id="create-paper" required></select></label>
+        <fieldset class="wide">
+          <legend>Extractor side</legend>
+          <label><input type="radio" name="extractor_kind" value="seed" checked /> The run this paper was imported from (original extraction)</label>
+          <label><input type="radio" name="extractor_kind" value="run" /> Another run</label>
+          <div id="run-files" class="create-grid" hidden>
+            <label>extraction.json<input type="file" name="extraction" accept="application/json,.json" /></label>
+            <label>document.json<input type="file" name="document" accept="application/json,.json" /></label>
+          </div>
+        </fieldset>
+        <fieldset class="wide">
+          <legend>Publication (shown identically above A and B)</legend>
+          <button id="lookup-doi" type="button">Look up the DOI on Crossref</button>
+          <span id="lookup-status" class="muted" role="status"></span>
+          <label class="wide">Title<input name="title" /></label>
+          <label class="wide">Authors, one per line<textarea name="authors" rows="3"></textarea></label>
+          <label>Journal<input name="journal" /></label>
+          <label>Year<input name="year" type="number" min="1900" max="2100" /></label>
+          <label class="wide">DOI<input name="doi" /></label>
+        </fieldset>
+        <label class="wide">Reviewer IDs, comma separated<input name="reviewer_ids" required /></label>
+        <label class="wide">Randomization seed (recorded only as a hash)<input name="randomization_seed" required /></label>
+      </div>
+      <p id="create-status" role="status"></p>
+      <div class="dialog-actions"><button id="cancel-create" type="button">Cancel</button><button type="submit" class="primary">Create comparison</button></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/simple-comparison.js"></script>
+</body>
+</html>

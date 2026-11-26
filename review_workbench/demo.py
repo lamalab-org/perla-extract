@@ -29,6 +29,13 @@ from perla_extract.study_extraction.models import (  # noqa: E402
     StudyExtraction,
 )
 from review_workbench.server import ReviewApplication, make_handler  # noqa: E402
+from review_workbench.study_review import (  # noqa: E402
+    RECORD_IDENTIFIERS,
+    InventoryAuditRequest,
+    MutationRequest,
+    RecordDecisionRequest,
+    StageRequest,
+)
 
 PAPER_ID = "10.0000--synthetic-ui-demo"
 SOURCE_TEXT = (
@@ -123,21 +130,127 @@ def create_demo(root: Path) -> ReviewApplication:
     return application
 
 
+SIMPLE_AB_ID = "synthetic-simple-ab"
+DEMO_REVIEWER = "local-reviewer"
+
+
+def create_simple_ab_demo(root: Path) -> ReviewApplication:
+    """Correct and finalize the demo paper, then compare it with the original output.
+
+    The two corrections are the ones the record demo asks a reviewer to make, so the
+    simplified A/B view shows the original extraction against its corrected ground
+    truth. Every step goes through the same public transitions the UI uses.
+    """
+
+    application = create_demo(root)
+    store = application.store
+    citation = [{"block_id": "demo-main-1", "quote": SOURCE_TEXT}]
+    truth = store.load_truth("dev", PAPER_ID)
+    pce = dict(truth["performance_observations"][0]["metrics"][0])
+    pce.update(raw_value="20%", value_number=20)
+    for path, value in (
+        ("/individual_devices/0/family_id", "alternative"),
+        ("/performance_observations/0/metrics/0", pce),
+    ):
+        store.mutate(
+            "dev",
+            PAPER_ID,
+            MutationRequest(
+                action="replace",
+                path=path,
+                value=value,
+                base_revision=store.revision("dev", PAPER_ID),
+                evidence=citation,
+            ),
+            DEMO_REVIEWER,
+        )
+    bundle = store.inventory_audit(
+        "dev",
+        PAPER_ID,
+        InventoryAuditRequest(
+            base_revision=store.revision("dev", PAPER_ID),
+            searched_sources=["main"],
+            expected_counts={},
+        ),
+        DEMO_REVIEWER,
+    )
+    bundle = store.complete_stage(
+        "dev",
+        PAPER_ID,
+        StageRequest(stage="inventory", base_revision=bundle["revision"]),
+        DEMO_REVIEWER,
+    )
+    for collection, identifier in RECORD_IDENTIFIERS.items():
+        for record in bundle["ground_truth"].get(collection, []):
+            bundle = store.decide_record(
+                "dev",
+                PAPER_ID,
+                RecordDecisionRequest(
+                    collection=collection,
+                    record_id=record[identifier],
+                    decision="verified",
+                    base_revision=bundle["revision"],
+                ),
+                DEMO_REVIEWER,
+            )
+    for stage in ("fields", "completeness", "adjudication"):
+        bundle = store.complete_stage(
+            "dev",
+            PAPER_ID,
+            StageRequest(stage=stage, base_revision=bundle["revision"]),
+            DEMO_REVIEWER,
+        )
+    application.create_simple_comparison(
+        {
+            "comparison_id": SIMPLE_AB_ID,
+            "paper_id": PAPER_ID,
+            "split": "dev",
+            "extractor": {"kind": "seed"},
+            "paper": {
+                "title": "Synthetic UI demo: correct the owner and PCE",
+                "authors": ["Ada Example", "Grace Sample", "Alan Placeholder"],
+                "journal": "Synthetic Examples",
+                "year": 2026,
+            },
+            "reviewer_ids": [DEMO_REVIEWER],
+            "randomization_seed": "synthetic demo seed",
+        }
+    )
+    return application
+
+
 @click.command()
 @click.option("--port", default=8765, type=click.IntRange(0, 65535), show_default=True)
-def main(port: int) -> None:
+@click.option(
+    "--simple-ab",
+    is_flag=True,
+    help="Open a simplified A/B comparison: original extraction vs corrected truth.",
+)
+def main(port: int, simple_ab: bool) -> None:
     """Launch a disposable local review workspace with synthetic source evidence."""
 
     with TemporaryDirectory(prefix="perla-review-demo-") as directory:
-        application = create_demo(Path(directory))
+        create = create_simple_ab_demo if simple_ab else create_demo
+        application = create(Path(directory))
         server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(application))
-        click.echo(f"Synthetic review workspace: http://127.0.0.1:{server.server_port}")
-        click.echo(
-            "Open Records. Correct Champion cell's linked family to Alternative;"
-        )
-        click.echo(
-            "then correct reverse-scan PCE from 21% to 20%. Ctrl-C stops and removes this demo."
-        )
+        address = f"http://127.0.0.1:{server.server_port}"
+        if simple_ab:
+            click.echo(
+                f"Simplified A/B: {address}/simple-compare?comparison={SIMPLE_AB_ID}"
+            )
+            click.echo(
+                "Read A and B, click citations to see them in the paper, choose the "
+                "better one and justify it. Ctrl-C stops and removes this demo."
+            )
+        else:
+            click.echo(f"Synthetic review workspace: {address}")
+            click.echo(
+                "Open Records. Correct Champion cell's linked family to Alternative;"
+            )
+            click.echo(
+                "then correct reverse-scan PCE from 21% to 20%. "
+                "Ctrl-C stops and removes this demo."
+            )
         try:
             server.serve_forever()
         except KeyboardInterrupt:
