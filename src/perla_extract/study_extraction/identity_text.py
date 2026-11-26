@@ -56,12 +56,19 @@ _OUTCOME = re.compile(
     # cell20% PCE still contains the outcome 20%, not a specimen code cell20.
     # Require the unit on this branch so Device A20 PCE retains its A20 code.
     rf"(?<![\d.]){_VALUE}\s*{_UNIT}{_CONNECTOR}{_QUALIFIER}{_METRIC}(?!\w)|"
-    rf"(?<!\w)(?:{_QUANTITY}{_CONNECTOR}{_QUALIFIER}{_METRIC}(?!\w)|"
+    rf"(?<!\w)(?:{_QUANTITY}{_CONNECTOR}{_QUALIFIER}{_METRIC}(?!\w)"
+    rf"(?:{_CONNECTOR}{_QUANTITY})?|"
     rf"{_QUALIFIER}{_METRIC}(?!\w)(?:{_CONNECTOR}{_QUANTITY})?)",
     re.IGNORECASE,
 )
 _ATTACHED_OUTCOME = re.compile(
-    rf"(?<!\w){_QUALIFIER}{_METRIC}{_VALUE}\s*{_UNIT}(?!\w)", re.IGNORECASE
+    rf"(?<!\w){_QUALIFIER}{_METRIC}{_VALUE}\s*(?:{_UNIT})?(?!\w)", re.IGNORECASE
+)
+_DESIGNATION_PREFIX = re.compile(r"\b(?:device|sample|cell|specimen|film)\s+$", re.I)
+_CODE_BEFORE_OUTCOME = re.compile(
+    rf"(?P<code>\d+){_CONNECTOR}{_QUALIFIER}{_METRIC}(?!\w)"
+    rf"(?:{_CONNECTOR}{_QUANTITY})?",
+    re.I,
 )
 _SPECIMEN_COUNT = re.compile(
     # Plural nouns distinguish a cohort count from a designation such as Device 20.
@@ -81,8 +88,25 @@ def identity_text(value: str | None) -> str:
 
     if not value:
         return ""
-    text = _ATTACHED_OUTCOME.sub(" ", scientific_text(value))
-    text = _OUTCOME.sub(" ", text)
+    text = scientific_text(value)
+
+    def remove_outcome(match: re.Match[str]) -> str:
+        """Keep explicit unitless designations, never a unit-marked outcome.
+
+        Device 1 PCE distribution names Device 1; cell 20% PCE reports an
+        outcome. A named alphanumeric code such as Device PCE1 also survives.
+        """
+
+        if _DESIGNATION_PREFIX.search(text[: match.start()]):
+            code = _CODE_BEFORE_OUTCOME.fullmatch(match[0])
+            if code:
+                return code["code"] + " "
+            if re.fullmatch(r"(?=[A-Za-z0-9]*\d)[A-Za-z0-9]+", match[0]):
+                return match[0]
+        return " "
+
+    text = _ATTACHED_OUTCOME.sub(remove_outcome, text)
+    text = _OUTCOME.sub(remove_outcome, text)
     text = _SPECIMEN_COUNT.sub(" ", text)
     text = re.sub(r"\(\s*\)|\[\s*\]", " ", text)
     return " ".join(text.split()).strip(" ,;:-")

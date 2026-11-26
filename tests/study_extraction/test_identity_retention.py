@@ -109,6 +109,13 @@ def study(observations):
         ("PCE 20% from 10 devices", "from"),
         ("mean, sample size: 10", "mean"),
         ("Device 20, 0.2 mg/mL", "Device 20, 0.2 mg/mL"),
+        ("Device 1 PCE distribution", "Device 1 distribution"),
+        ("Device1 PCE distribution", "Device1 distribution"),
+        ("Device 1 PCE 20%", "Device 1"),
+        ("Device 1 PCE20%", "Device 1"),
+        ("Device1 PCE20%", "Device1"),
+        ("PCE1", ""),
+        ("Device PCE1", "Device PCE1"),
     ],
 )
 def test_identity_projection_excludes_outcomes_but_retains_source_designations(
@@ -123,6 +130,8 @@ def test_identity_projection_excludes_outcomes_but_retains_source_designations(
         ("Device A20, PCE 20%", "A20"),
         ("Device 1", "1"),
         ("Device 20 from 10 cells", "20"),
+        ("Device 1 PCE distribution", "1"),
+        ("Device PCE1", "PCE1"),
         ("cell 20% PCE", None),
     ],
 )
@@ -158,6 +167,41 @@ def test_outcome_text_cannot_resolve_otherwise_ambiguous_device_ownership(
     assert all(
         match.ambiguous for match in score.matches if match.kind == "individual_devices"
     )
+
+
+def test_numbered_population_designations_survive_metric_distribution_labels():
+    fixture = study([])
+    fixture.population_statistics = [
+        PopulationStatistic(
+            population_id=f"cohort-{number}",
+            family_id=None,
+            label=f"Device {number} PCE distribution",
+            statistic_type="mean",
+            sample_size=None,
+            metrics=[metric(15 + number)],
+            evidence=[CITATION],
+        )
+        for number in (1, 2, 3)
+    ]
+    predicted = fixture.model_copy(deep=True)
+    for number, cohort in enumerate(predicted.population_statistics, start=1):
+        cohort.label = f"Device {number} population"
+    score = evaluate_study(fixture, predicted)
+    assert score.core_facts.fields["measurement:pce"].matched == 3
+    assert all(
+        not match.ambiguous
+        for match in score.matches
+        if match.kind == "population_statistics"
+    )
+
+
+def test_bare_compact_metric_values_cannot_identify_a_device():
+    fixture = study([observation("a", "control", number=15), observation("b", "treated")])
+    for device, number in zip(fixture.individual_devices, (15, 20)):
+        device.label = f"PCE{number}"
+    score = evaluate_study(fixture, fixture.model_copy(deep=True))
+    assert score.core_facts.recovery.fields["measurement:pce"].matched == 2
+    assert score.core_facts.fields["measurement:pce"].matched == 0
 
 
 @pytest.mark.parametrize("field", ["label", "variant"])
