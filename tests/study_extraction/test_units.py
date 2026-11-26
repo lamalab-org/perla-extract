@@ -6,6 +6,7 @@ from perla_extract.study_extraction.models import EvidenceCitation, ReportedValu
 from perla_extract.study_extraction.quantities import convert_reported_value
 from perla_extract.study_extraction.units import (
     canonical_quantity,
+    convert_quantity,
     equivalent_unit_spelling,
     is_concentration_unit,
 )
@@ -39,6 +40,22 @@ def test_lost_unit_exponent_sign_is_not_erased_into_a_valid_positive_power():
     corrupted = "mA cm\x00 2"
     assert canonical_quantity(20, corrupted) is None
     assert convert_reported_value(_reported_value(corrupted), "mA/cm2") is None
+
+
+@pytest.mark.parametrize("unit", ["V/0", "V/(0)"])
+def test_division_by_zero_in_unit_arithmetic_is_unparseable(unit):
+    assert canonical_quantity(1, unit) is None
+    assert convert_quantity(1, unit, "V") is None
+    assert convert_quantity(1, "V", unit) is None
+    assert not equivalent_unit_spelling(unit, unit)
+    assert not is_concentration_unit(unit)
+
+
+@pytest.mark.parametrize(
+    "unit", ["wt%", "wt percent", "weight percent", "vol%", "volume percent"]
+)
+def test_basis_percent_aliases_remain_concentration_units(unit):
+    assert is_concentration_unit(unit)
 
 
 @pytest.mark.parametrize("unit", ["#", "#count", "mW # comment", "wt%#comment"])

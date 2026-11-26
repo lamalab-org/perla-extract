@@ -31,36 +31,36 @@ def reported(name, raw, number=None, unit=None):
     )
 
 
-@pytest.mark.parametrize(
-    "kind,value,expected,base_unit",
-    [
-        ("pce", reported("PCE", "20%", 20, "%"), 0.20, "dimensionless"),
-        ("ff", reported("FF", "80%", 80, "%"), 0.80, "dimensionless"),
-        (
-            "voc",
-            reported("Voc", "1000 mV", 1000, "mV"),
-            1,
-            "kilogram * meter ** 2 / ampere / second ** 3",
-        ),
-        ("jsc", reported("Jsc", "20 mA/cm²", 20, "mA/cm²"), 200, "ampere / meter ** 2"),
-        ("temperature", reported("temperature", "20 °C", 20, "°C"), 293.15, "kelvin"),
-        ("duration", reported("duration", "2 h", 2, "h"), 7200, "second"),
-        ("thickness", reported("thickness", "100 nm", 100, "nm"), 1e-7, "meter"),
-        ("area", reported("active area", "1 cm²", 1, "cm²"), 1e-4, "meter ** 2"),
-        (
-            "spin_speed",
-            reported("spin speed", "60 rpm", 60, "rpm"),
-            6.283185307179586,
-            "radian / second",
-        ),
-        (
-            "relative_humidity",
-            reported("relative humidity", "50% RH", 50, "%"),
-            0.5,
-            "dimensionless",
-        ),
-    ],
-)
+PHYSICAL_CASES = [
+    ("pce", reported("PCE", "20%", 20, "%"), 0.20, "dimensionless"),
+    ("ff", reported("FF", "80%", 80, "%"), 0.80, "dimensionless"),
+    (
+        "voc",
+        reported("Voc", "1000 mV", 1000, "mV"),
+        1,
+        "kilogram * meter ** 2 / ampere / second ** 3",
+    ),
+    ("jsc", reported("Jsc", "20 mA/cm²", 20, "mA/cm²"), 200, "ampere / meter ** 2"),
+    ("temperature", reported("temperature", "20 °C", 20, "°C"), 293.15, "kelvin"),
+    ("duration", reported("duration", "2 h", 2, "h"), 7200, "second"),
+    ("thickness", reported("thickness", "100 nm", 100, "nm"), 1e-7, "meter"),
+    ("area", reported("active area", "1 cm²", 1, "cm²"), 1e-4, "meter ** 2"),
+    (
+        "spin_speed",
+        reported("spin speed", "60 rpm", 60, "rpm"),
+        6.283185307179586,
+        "radian / second",
+    ),
+    (
+        "relative_humidity",
+        reported("relative humidity", "50% RH", 50, "%"),
+        0.5,
+        "dimensionless",
+    ),
+]
+
+
+@pytest.mark.parametrize("kind,value,expected,base_unit", PHYSICAL_CASES)
 def test_every_registered_quantity_has_an_independently_expected_physical_meaning(
     kind, value, expected, base_unit
 ):
@@ -76,19 +76,7 @@ def test_every_registered_quantity_has_an_independently_expected_physical_meanin
 
 
 def test_required_physical_cases_cover_registry_without_parser_based_skips():
-    required = {
-        "pce",
-        "ff",
-        "voc",
-        "jsc",
-        "temperature",
-        "duration",
-        "thickness",
-        "area",
-        "spin_speed",
-        "relative_humidity",
-    }
-    assert set(QUANTITY_SPECS) == required
+    assert set(QUANTITY_SPECS) == {case[0] for case in PHYSICAL_CASES}
 
 
 @pytest.mark.parametrize(
@@ -329,3 +317,51 @@ def test_split_micro_prefix_is_typography_not_a_product(micro):
     assert result.status == "normalized"
     assert result.claim.canonical.magnitude == pytest.approx(5e-8)
     assert result.claim.canonical.unit == "meter ** 3"
+
+
+@pytest.mark.parametrize(
+    "unit,basis",
+    [
+        ("wt%", "mass_fraction"),
+        ("wt %", "mass_fraction"),
+        ("wt percent", "mass_fraction"),
+        ("weight percent", "mass_fraction"),
+        ("vol%", "volume_fraction"),
+        ("vol %", "volume_fraction"),
+        ("vol percent", "volume_fraction"),
+        ("volume percent", "volume_fraction"),
+    ],
+)
+def test_explicit_basis_percent_keeps_its_basis_and_checks_the_complete_claim(
+    unit, basis
+):
+    value = reported("concentration", f"1 {unit}", 1, unit)
+    result = interpret_quantity(value)
+    assert result.kind is None
+    assert result.status == "normalized"
+    assert result.claim.canonical.magnitude == pytest.approx(0.01)
+    assert result.claim.canonical.unit == basis
+    assert convert_reported_value(value, unit) == pytest.approx(1)
+    conflict = interpret_quantity(value.model_copy(update={"value_number": 99}))
+    assert conflict.status == "contradiction"
+    assert conflict.reason == "raw_parsed_conflict"
+
+
+def test_mass_volume_and_ordinary_percent_are_not_interchangeable():
+    mass = reported("concentration", "1 wt%", 1, "wt%")
+    volume = reported("concentration", "1 vol%", 1, "vol%")
+    ordinary = reported("concentration", "1%", 1, "%")
+    for left, right in [(mass, volume), (mass, ordinary), (volume, ordinary)]:
+        assert not equal_claims(normalize_claim(left), normalize_claim(right), 0.01, 0)
+        assert convert_reported_value(left, right.unit) is None
+    invalid_pce = interpret_quantity(mass.model_copy(update={"name": "PCE"}))
+    assert invalid_pce.status == "contradiction"
+    assert invalid_pce.reason == "incompatible_dimension"
+
+
+def test_malformed_unit_arithmetic_remains_literal_without_a_parser_exception():
+    value = reported("Voc", "1 V/0", 1, "V/0")
+    result = interpret_quantity(value)
+    assert result.status == "literal"
+    assert result.reason == "unsupported_unit"
+    assert project_scalar(value, "V") is None

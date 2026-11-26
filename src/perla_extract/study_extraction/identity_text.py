@@ -1,8 +1,8 @@
 """Keep source designations and preparation prose separate from outcome assertions.
 
-This is an identity projection, not a scientific paraphraser. It removes only
-recognized photovoltaic outcome names and their attached quantities. Numeric
-sample codes and preparation amounts remain available to the identity matcher.
+This is an identity projection, not a scientific paraphraser. It removes recognized
+photovoltaic outcomes and explicit specimen counts. Numeric sample codes and
+preparation amounts remain available to the identity matcher.
 """
 
 from __future__ import annotations
@@ -32,20 +32,25 @@ _METRIC = (
             # These identify outcome prose here without asserting that generic
             # efficiency or eta denotes the photovoltaic PCE quantity.
             "efficiency",
+            "efficient",
             "η",
         )
     )
     + ")"
 )
 _NUMBER = r"[+−-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+−-]?\d+)?"
-_VALUE = rf"(?:[≈~∼<>≤≥]\s*)?{_NUMBER}(?:\s*(?:±|\+/-|–|—|to)\s*{_NUMBER})?"
+_APPROXIMATION = r"(?:(?:about|around|approximately|roughly|approx\.?)\s*|[≈~∼<>≤≥]\s*)?"
+_VALUE = rf"{_APPROXIMATION}{_NUMBER}(?:\s*(?:±|\+/-|–|—|to)\s*{_NUMBER})?"
 _UNIT = (
     r"(?:%|percent(?:age)?|dimensionless|fraction|m?V|"
     r"[kmunµμ]?A\s*(?:/|\s)\s*(?:cm|m)\s*(?:\^|\*\*)?\s*[−-]?[²2])"
 )
 _QUANTITY = rf"{_VALUE}\s*(?:{_UNIT})?"
 _QUALIFIER = r"(?:(?:maximum|highest|best|mean|average|median|certified)[\s-]+)*"
-_CONNECTOR = r"\s*(?:(?:of|is|was|at|=|:)\s*)?"
+_CONNECTOR = (
+    r"\s*(?:(?:(?:(?:is|was)\s+)?measured\s+(?:as|at|to\s+be)|"
+    r"of|is|was|at|=|:)\s*)?"
+)
 _OUTCOME = re.compile(
     # A unit-marked outcome can touch its subject after PDF whitespace loss:
     # cell20% PCE still contains the outcome 20%, not a specimen code cell20.
@@ -58,10 +63,16 @@ _OUTCOME = re.compile(
 _ATTACHED_OUTCOME = re.compile(
     rf"(?<!\w){_QUALIFIER}{_METRIC}{_VALUE}\s*{_UNIT}(?!\w)", re.IGNORECASE
 )
+_SPECIMEN_COUNT = re.compile(
+    # Plural nouns distinguish a cohort count from a designation such as Device 20.
+    r"(?<!\w)(?:\d+\s*(?:devices|cells|samples|specimens|films)\b|"
+    r"(?:sample|cohort|population)\s+size\s*(?:(?:of|is|was|=|:)\s*)?\d+\b)",
+    re.IGNORECASE,
+)
 
 
 def identity_text(value: str | None) -> str:
-    """Return identity prose with recognized outcome assertions removed.
+    """Return identity prose with recognized outcomes and specimen counts removed.
 
     The same projection precedes sample-code extraction, lexical features and
     literal descriptors. A removed assertion cannot choose between candidate
@@ -72,6 +83,7 @@ def identity_text(value: str | None) -> str:
         return ""
     text = _ATTACHED_OUTCOME.sub(" ", scientific_text(value))
     text = _OUTCOME.sub(" ", text)
+    text = _SPECIMEN_COUNT.sub(" ", text)
     text = re.sub(r"\(\s*\)|\[\s*\]", " ", text)
     return " ".join(text.split()).strip(" ,;:-")
 

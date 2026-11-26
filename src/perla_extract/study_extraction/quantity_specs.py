@@ -75,6 +75,26 @@ QUANTITY_ALIASES = {
     for name in spec.names
 }
 
+# These explicit unit bases remain distinct from ordinary dimensionless percent.
+# They do not create new property-name concepts in the quantity registry.
+BASIS_PERCENT_UNITS = {"wt%": "mass_fraction", "vol%": "volume_fraction"}
+_BASIS_PERCENT_ALIASES = {
+    **dict.fromkeys(
+        ("wt%", "wtpercent", "weight%", "weightpercent", "mass%", "masspercent"), "wt%"
+    ),
+    **dict.fromkeys(("vol%", "volpercent", "volume%", "volumepercent"), "vol%"),
+}
+
+
+def basis_percent_unit(unit: str | None) -> str | None:
+    """Recognize a complete explicit mass/volume-percent unit, retaining its basis."""
+
+    return (
+        _BASIS_PERCENT_ALIASES.get(re.sub(r"[\s.]+", "", unit.casefold()))
+        if unit
+        else None
+    )
+
 
 def resolve_quantity_kind(name: str) -> str | None:
     """Recognize complete checked names; unknown qualifiers keep names unresolved."""

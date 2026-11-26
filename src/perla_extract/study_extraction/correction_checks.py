@@ -172,6 +172,19 @@ def _record_context(record: object) -> tuple:
     return tuple((name, getattr(record, name)) for name in fields)
 
 
+def _subject_context(subject: SubjectContext) -> tuple:
+    """Identify a treatment arm by its complete, order-independent conditions."""
+
+    return (
+        ("treatment_stage", subject.treatment_stage),
+        ("treated_material", scientific_text(subject.treated_material or "")),
+        (
+            "subject_conditions",
+            tuple(sorted({_claim_key(value) for value in subject.conditions}, key=repr)),
+        ),
+    )
+
+
 def _nested_scope(study: StudyExtraction, path: str) -> tuple[tuple, tuple, tuple]:
     """Locate a value using schema fields; IDs only anchor an explicit edit scope."""
 
@@ -213,12 +226,10 @@ def _nested_scope(study: StudyExtraction, path: str) -> tuple[tuple, tuple, tupl
             if node.time is not None:
                 context.append(("checkpoint_time", _claim_key(node.time)))
         elif isinstance(node, SubjectContext):
-            context.extend(
-                (
-                    ("treatment_stage", node.treatment_stage),
-                    ("treated_material", scientific_text(node.treated_material or "")),
-                )
-            )
+            scope = _subject_context(node)
+            # A device has one treatment context, so additional conditions
+            # cannot collapse independently reported arms within that device.
+            context.extend(scope if roles[0] == "population_statistics" else scope[:2])
         elif isinstance(node, MaterialConstituent):
             context.append(("constituent", scientific_text(node.name), node.role))
     return tuple(roles[1:]), tuple(owners), tuple(context)
@@ -238,6 +249,10 @@ def _verified_claim_inventory(
     seen: set[tuple] = set()
     duplicate_records: dict[tuple[str, str], str] = {}
     duplicate_checkpoints: dict[tuple[str, str], str] = {}
+    subject_counts = {
+        record.population_id: Counter(_subject_context(s) for s in record.subjects)
+        for record in study.population_statistics
+    }
     for kind in ("performance_observation", "population_statistic", "stability_test"):
         collection, identifier = RECORD_COLLECTIONS[kind]
         canonical: dict[str, str] = {}
@@ -290,9 +305,47 @@ def _verified_claim_inventory(
         )
         occurrence = key, owner
         if occurrence not in seen:
-            inventory[key][owner] += 1
+            # Repeating a condition inside one arm is redundant; reporting that
+            # condition in two arms retains two scoped claims, even if arms agree.
+            multiplicity = (
+                subject_counts[original_id][context]
+                if kind == "population_statistic" and roles[:1] == ("subjects",)
+                else 1
+            )
+            inventory[key][owner] += multiplicity
             seen.add(occurrence)
     return dict(inventory)
+
+
+def _subject_extensions(
+    baseline: StudyExtraction, candidate: StudyExtraction
+) -> set[tuple]:
+    """Allow arm enrichment only with unique correspondence in both directions.
+
+    Per-value matching alone could attach disjoint arms to one enlarged arm. The
+    complete arm relation must be unambiguous before any of its claims can move.
+    Multiplicity is checked separately by the source-claim inventory.
+    """
+
+    allowed: set[tuple] = set()
+    candidates = {p.population_id: p for p in candidate.population_statistics}
+    for record in baseline.population_statistics:
+        revised = candidates.get(record.population_id)
+        if revised is None:
+            continue
+        prior = {_subject_context(s) for s in record.subjects}
+        current = {_subject_context(s) for s in revised.subjects}
+        matches = {
+            old: [new for new in current if _context_extends(old, new)]
+            for old in prior
+        }
+        incoming = Counter(new for targets in matches.values() for new in targets)
+        allowed.update(
+            (record.population_id, old, targets[0])
+            for old, targets in matches.items()
+            if len(targets) == 1 and incoming[targets[0]] == 1
+        )
+    return allowed
 
 
 def _retention_changes(
@@ -303,9 +356,11 @@ def _retention_changes(
 ) -> dict[str, int]:
     before = _verified_claim_inventory(baseline, validate_study(baseline, blocks))
     after = _verified_claim_inventory(candidate, validation)
+    subject_extensions = _subject_extensions(baseline, candidate)
     lost = moved = ambiguous = enriched = 0
     for key, owners in before.items():
         remaining = after.get(key, Counter()).copy()
+        subject_scoped = key[0] == "population_statistic" and key[1][:1] == ("subjects",)
         # A uniquely anchored claim can acquire previously missing context. An
         # explicit conflicting method/direction remains a different assertion.
         for owner, count in (owners - remaining).items():
@@ -317,6 +372,10 @@ def _retention_changes(
                 and other[4] == key[4]
                 and _context_extends(key[2], other[2])
                 and _context_extends(key[3], other[3])
+                and (
+                    not subject_scoped
+                    or (owner[0], key[3], other[3]) in subject_extensions
+                )
                 for target in targets
                 if targets[target] > 0
                 and owner[0] == target[0]
@@ -365,6 +424,10 @@ def _context_extends(before: tuple, after: tuple) -> bool:
         values = current.get(entry[0])
         if values is None or len(prior) != len(values):
             return False
+        if entry[0] == "subject_conditions":
+            if not set(prior[0]) <= set(values[0]):
+                return False
+            continue
         if any(
             a not in (None, "", "not_reported") and a != b
             for a, b in zip(prior, values)

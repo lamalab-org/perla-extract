@@ -23,6 +23,7 @@ from perla_extract.study_extraction.models import (
     StabilityCheckpoint,
     StabilityTest,
     StudyExtraction,
+    SubjectContext,
 )
 from perla_extract.study_extraction.scoring_facts import scientific_descriptor
 from perla_extract.study_extraction.scoring_identity import sample_code
@@ -101,6 +102,13 @@ def study(observations):
         ("0.2 mg/mL maximum-PCE device", "0.2 mg/mL device"),
         ("c-NiOx specimen, Voc=1.2 V", "c-NiOx specimen"),
         ("Device A20, Jsc22 mA/cm2", "Device A20"),
+        ("PCE of about 20%", ""),
+        ("PCE approximately 20%", ""),
+        ("PCE was measured as 20%", ""),
+        ("20% efficient cell", "cell"),
+        ("PCE 20% from 10 devices", "from"),
+        ("mean, sample size: 10", "mean"),
+        ("Device 20, 0.2 mg/mL", "Device 20, 0.2 mg/mL"),
     ],
 )
 def test_identity_projection_excludes_outcomes_but_retains_source_designations(
@@ -111,7 +119,12 @@ def test_identity_projection_excludes_outcomes_but_retains_source_designations(
 
 @pytest.mark.parametrize(
     "label,expected",
-    [("Device A20, PCE 20%", "A20"), ("Device 1", "1"), ("cell 20% PCE", None)],
+    [
+        ("Device A20, PCE 20%", "A20"),
+        ("Device 1", "1"),
+        ("Device 20 from 10 cells", "20"),
+        ("cell 20% PCE", None),
+    ],
 )
 def test_sample_code_is_read_after_outcome_projection(label, expected):
     device = study([]).individual_devices[0].model_copy(update={"label": label})
@@ -119,7 +132,17 @@ def test_sample_code_is_read_after_outcome_projection(label, expected):
 
 
 @pytest.mark.parametrize("field", ["label", "variant"])
-@pytest.mark.parametrize("template", ["PCE {number}%", "cell{number}% PCE"])
+@pytest.mark.parametrize(
+    "template",
+    [
+        "PCE {number}%",
+        "cell{number}% PCE",
+        "PCE of about {number}%",
+        "PCE approximately {number}%",
+        "PCE was measured as {number}%",
+        "{number}% efficient cell",
+    ],
+)
 def test_outcome_text_cannot_resolve_otherwise_ambiguous_device_ownership(
     field, template
 ):
@@ -193,6 +216,34 @@ def test_population_outcome_labels_cannot_establish_cohort_identity():
     score = evaluate_study(fixture, fixture.model_copy(deep=True))
     assert score.core_facts.recovery.fields["measurement:pce"].matched == 2
     assert score.core_facts.fields["measurement:pce"].matched == 0
+    assert all(
+        match.ambiguous
+        for match in score.matches
+        if match.kind == "population_statistics"
+    )
+
+
+@pytest.mark.parametrize(
+    "label", ["from {count} devices", "from {count}devices", "sample size: {count}"]
+)
+def test_population_counts_copied_into_labels_cannot_establish_cohort_identity(label):
+    fixture = study([])
+    fixture.population_statistics = [
+        PopulationStatistic(
+            population_id=f"cohort-{index}",
+            family_id=None,
+            label=f"PCE {number}% {label.format(count=count)}",
+            statistic_type="mean",
+            sample_size=count,
+            metrics=[metric(number)],
+            evidence=[CITATION],
+        )
+        for index, (number, count) in enumerate(((15, 10), (20, 20)))
+    ]
+    score = evaluate_study(fixture, fixture.model_copy(deep=True))
+    for field in ("measurement:pce", "measurement:sample_size"):
+        assert score.core_facts.recovery.fields[field].matched == 2
+        assert score.core_facts.fields[field].matched == 0
     assert all(
         match.ambiguous
         for match in score.matches
@@ -417,3 +468,115 @@ def test_final_integrity_check_does_not_overwrite_proposal_rejection():
     assert audit["reason"] == original["reason"]
     assert audit["final_integrity_check"]["accepted"]
     assert selection == original
+
+
+def treatment_arm_fixture():
+    """Two source-stated arms share temperature but differ in atmosphere."""
+
+    text = (
+        "Film cohorts were treated in air at 80 °C and in nitrogen at 80 °C. "
+        "The treatment lasted 10 min. Mean PCE was 20%."
+    )
+    block = EvidenceBlock(
+        block_id="arms", source="main", page=1, kind="text", text=text
+    )
+    citation = EvidenceCitation(block_id="arms", quote=text)
+
+    def value(name, raw, number=None, unit=None):
+        return ReportedValue(
+            name=name,
+            raw_value=raw,
+            value_number=number,
+            unit=unit,
+            evidence=[citation],
+        )
+
+    fixture = study([])
+    fixture.individual_devices = []
+    fixture.population_statistics = [
+        PopulationStatistic(
+            population_id="cohort",
+            family_id=None,
+            label="Treated films",
+            statistic_type="mean",
+            sample_size=None,
+            subjects=[
+                SubjectContext(
+                    treatment_stage="before_device_completion",
+                    treated_material="film",
+                    conditions=[
+                        value("temperature", "80 °C", 80, "°C"),
+                        value("atmosphere", atmosphere),
+                    ],
+                )
+                for atmosphere in ("air", "nitrogen")
+            ],
+            metrics=[value("PCE", "20%", 20, "%")],
+            evidence=[citation],
+        )
+    ]
+    return fixture, [block], value
+
+
+@pytest.mark.parametrize("shared_temperature", [True, False])
+def test_distinct_population_arms_cannot_be_collapsed_into_one(
+    shared_temperature,
+):
+    draft, blocks, _ = treatment_arm_fixture()
+    if not shared_temperature:
+        for arm in draft.population_statistics[0].subjects:
+            arm.conditions.pop(0)
+    revised = draft.model_copy(deep=True)
+    first, second = revised.population_statistics[0].subjects
+    first.conditions.extend(second.conditions)
+    revised.population_statistics[0].subjects.pop()
+    selected, audit = _select_refinement_candidate(draft, revised, blocks, None)
+    assert selected == draft
+    assert audit["refinement_quality"]["lost_verified_values"] > 0
+
+
+def test_repeated_population_arms_retain_their_multiplicity():
+    draft, blocks, _ = treatment_arm_fixture()
+    subjects = draft.population_statistics[0].subjects
+    subjects.append(subjects[0].model_copy(deep=True))
+    revised = draft.model_copy(deep=True)
+    revised.population_statistics[0].subjects.pop()
+    selected, audit = _select_refinement_candidate(draft, revised, blocks, None)
+    assert selected == draft
+    assert audit["refinement_quality"]["lost_verified_values"] == 2
+
+
+def test_population_arm_and_condition_reordering_preserves_claims():
+    draft, blocks, _ = treatment_arm_fixture()
+    revised = draft.model_copy(deep=True)
+    revised.population_statistics[0].subjects.reverse()
+    for arm in revised.population_statistics[0].subjects:
+        arm.conditions.reverse()
+    selected, audit = _select_refinement_candidate(draft, revised, blocks, None)
+    assert selected == revised
+    assert audit["refinement_quality"]["lost_verified_values"] == 0
+    assert audit["refinement_quality"]["context_enrichments"] == 0
+
+
+@pytest.mark.parametrize("enrichment", ["condition", "stage", "material"])
+def test_uniquely_corresponding_population_arm_can_acquire_missing_context(
+    enrichment,
+):
+    draft, blocks, value = treatment_arm_fixture()
+    arm = draft.population_statistics[0].subjects[0]
+    if enrichment == "stage":
+        arm.treatment_stage = "not_reported"
+    elif enrichment == "material":
+        arm.treated_material = None
+    revised = draft.model_copy(deep=True)
+    revised_arm = revised.population_statistics[0].subjects[0]
+    if enrichment == "condition":
+        revised_arm.conditions.append(value("duration", "10 min", 10, "min"))
+    elif enrichment == "stage":
+        revised_arm.treatment_stage = "before_device_completion"
+    else:
+        revised_arm.treated_material = "film"
+    selected, audit = _select_refinement_candidate(draft, revised, blocks, None)
+    assert selected == revised
+    assert audit["refinement_quality"]["lost_verified_values"] == 0
+    assert audit["refinement_quality"]["context_enrichments"] == 2

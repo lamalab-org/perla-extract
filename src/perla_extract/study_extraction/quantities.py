@@ -15,7 +15,12 @@ from functools import lru_cache
 from typing import Literal
 
 from .models import ReportedValue
-from .quantity_specs import QUANTITY_SPECS, resolve_quantity_kind
+from .quantity_specs import (
+    BASIS_PERCENT_UNITS,
+    QUANTITY_SPECS,
+    basis_percent_unit,
+    resolve_quantity_kind,
+)
 from .units import canonical_quantity, convert_quantity, equivalent_unit_spelling
 
 
@@ -153,6 +158,8 @@ _SCALAR = re.compile(rf"({_NUMBER})\s*(.*)")
 
 
 def _quantity_unit(unit: str | None, kind: str | None) -> str | None:
+    if (basis_unit := basis_percent_unit(unit)) is not None:
+        return basis_unit
     if unit is not None and (spec := QUANTITY_SPECS.get(kind or "")) is not None:
         for alias, standard in spec.unit_aliases:
             if scientific_text(unit) == alias:
@@ -168,16 +175,46 @@ def _quantity_unit(unit: str | None, kind: str | None) -> str | None:
     return unit.strip() if unit is not None and unit.strip() else None
 
 
+def _basis_unit(unit: str) -> tuple[float, str] | None:
+    if unit in BASIS_PERCENT_UNITS:
+        return 0.01, BASIS_PERCENT_UNITS[unit]
+    if unit in BASIS_PERCENT_UNITS.values():
+        return 1.0, unit
+    return None
+
+
+def _base_quantity(number: float, unit: str) -> tuple[float, str] | None:
+    basis = _basis_unit(unit)
+    return (number * basis[0], basis[1]) if basis else canonical_quantity(number, unit)
+
+
+def _convert_physical(number: float, unit: str, target: str) -> float | None:
+    source_basis = _basis_unit(unit)
+    target = basis_percent_unit(target) or target
+    target_basis = _basis_unit(target)
+    if source_basis or target_basis:
+        if source_basis and target_basis and source_basis[1] == target_basis[1]:
+            return number * source_basis[0] / target_basis[0]
+        return None
+    return convert_quantity(number, unit, target)
+
+
+def _same_unit_scale(left: str, right: str) -> bool:
+    if _basis_unit(left) or _basis_unit(right):
+        return left == right
+    return equivalent_unit_spelling(left, right)
+
+
 def _canonical(number: float, unit: str, kind: str | None) -> tuple[float, str] | None:
     spec = QUANTITY_SPECS.get(kind or "")
     if spec:
-        number_in_target = convert_quantity(number, unit, spec.unit)
+        number_in_target = _convert_physical(number, unit, spec.unit)
         return (
-            canonical_quantity(number_in_target, spec.unit)
+            _base_quantity(number_in_target, spec.unit)
             if number_in_target is not None
             else None
         )
-    return canonical_quantity(number, unit)
+    return _base_quantity(number, unit)
 
 
 def _consistency_issue(
@@ -187,21 +224,17 @@ def _consistency_issue(
     parsed_unit: str | None,
 ) -> Literal["raw_parsed_conflict", "ambiguous_unit_scale"] | None:
     if parsed is None:
-        if (
-            not raw_unit
-            or not parsed_unit
-            or equivalent_unit_spelling(raw_unit, parsed_unit)
-        ):
+        if not raw_unit or not parsed_unit or _same_unit_scale(raw_unit, parsed_unit):
             return None
         # A different scale may describe an intended converted convenience field,
         # but no parsed magnitude establishes that conversion. Preserve ambiguity.
         return (
             "ambiguous_unit_scale"
-            if convert_quantity(1, raw_unit, parsed_unit) is not None
+            if _convert_physical(1, raw_unit, parsed_unit) is not None
             else "raw_parsed_conflict"
         )
     if raw_unit and parsed_unit:
-        converted = convert_quantity(parsed, parsed_unit, raw_unit)
+        converted = _convert_physical(parsed, parsed_unit, raw_unit)
         if converted is not None:
             return (
                 None
@@ -235,7 +268,7 @@ def interpret_quantity(
         if (
             spec is not None
             and candidate_unit is not None
-            and convert_quantity(1, candidate_unit, spec.unit) is not None
+            and _convert_physical(1, candidate_unit, spec.unit) is not None
         ):
             kind, name_unit = candidate_kind, candidate_unit
         elif (
@@ -306,8 +339,7 @@ def _interpret_fields(
     effective_unit = raw_unit or parsed_unit or name_unit
     unit_source = (
         "raw_value"
-        if raw_unit
-        and (not parsed_unit or not equivalent_unit_spelling(raw_unit, parsed_unit))
+        if raw_unit and (not parsed_unit or not _same_unit_scale(raw_unit, parsed_unit))
         else "reported"
         if parsed_unit
         else "field_name"
@@ -323,7 +355,7 @@ def _interpret_fields(
     # not prove a physical contradiction with a supplied unit. Keep the complete
     # literal unless both unit expressions can actually be interpreted.
     if any(
-        canonical_quantity(first, candidate) is None
+        _base_quantity(first, candidate) is None
         for candidate in (raw_unit, parsed_unit)
         if candidate is not None
     ):
@@ -345,7 +377,7 @@ def _interpret_fields(
             consistency_issue == "raw_parsed_conflict"
             and raw_unit
             and parsed_unit
-            and not equivalent_unit_spelling(raw_unit, parsed_unit)
+            and not _same_unit_scale(raw_unit, parsed_unit)
             and re.search(r"\s", raw_unit)
             and not re.search(r"[/^*·°⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻+−-]", raw_unit)
         ):
@@ -358,7 +390,7 @@ def _interpret_fields(
         )
 
     if effective_unit is not None:
-        generic = canonical_quantity(first, effective_unit)
+        generic = _base_quantity(first, effective_unit)
         canonical = _canonical(first, effective_unit, kind)
         if generic is not None and canonical is None and spec:
             return fallback("incompatible_dimension", contradiction=True)
@@ -476,7 +508,7 @@ def project_scalar(
         if claim.qualifier is not None and not allow_qualified:
             return None
         return (
-            convert_quantity(claim.number, claim.unit, target_unit)
+            _convert_physical(claim.number, claim.unit, target_unit)
             if claim.unit is not None
             else None
         )
@@ -486,7 +518,7 @@ def project_scalar(
         and claim.kind == "uncertainty"
         and claim.unit is not None
     ):
-        return convert_quantity(claim.first, claim.unit, target_unit)
+        return _convert_physical(claim.first, claim.unit, target_unit)
     return None
 
 

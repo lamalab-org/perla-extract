@@ -12,6 +12,8 @@ import re
 from functools import lru_cache
 from tokenize import TokenError
 
+from .quantity_specs import basis_percent_unit
+
 _UNIT_MINUS_SIGNS = str.maketrans(
     {
         "\u2212": "-",  # Mathematical minus.
@@ -112,6 +114,7 @@ def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
         TypeError,
         ValueError,
         OverflowError,
+        ZeroDivisionError,
     ):
         return None
 
@@ -134,6 +137,7 @@ def convert_quantity(number: float, unit: str, target_unit: str) -> float | None
         TypeError,
         ValueError,
         OverflowError,
+        ZeroDivisionError,
     ):
         return None
 
@@ -169,6 +173,7 @@ def equivalent_unit_spelling(left: str, right: str) -> bool:
         TypeError,
         ValueError,
         OverflowError,
+        ZeroDivisionError,
     ):
         return False
 
@@ -180,6 +185,8 @@ def is_concentration_unit(unit: str | None) -> bool:
 
     if unit is None:
         return False
+    if basis_percent_unit(unit) is not None:
+        return True
     try:
         source = _pint_unit(unit)
         compact = _unit_key(unit)
@@ -197,5 +204,12 @@ def is_concentration_unit(unit: str | None) -> bool:
             quantity.is_compatible_with(target)
             for target in ("mole / liter", "gram / liter")
         )
-    except (PintError, TokenError, AssertionError, TypeError, ValueError):
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        ZeroDivisionError,
+    ):
         return False
