@@ -1011,6 +1011,7 @@ def test_material_form_raw_is_checked_against_layer_evidence():
             "path": "$.device_families[0].layers[0].material_form_raw",
             "reason": "material_form_raw not found in cited evidence",
             "category": "citation",
+            "code": "material_form_not_grounded",
         }
     ]
     details = validate_study_details(extraction, [source])

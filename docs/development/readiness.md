@@ -1,5 +1,9 @@
 # Readiness review — 25 November 2026
 
+For the focused 26 November review of extraction, scoring and their testing
+procedure, see the [revision plan](extraction-scoring-plan.md). The study-management
+gaps below are a separate workstream.
+
 **The core is testable; the intended development-to-test study is not ready yet.**
 This review traced input binding, extraction, scoring, resume/accounting and the
 student entry points. It is not a claim that every legacy UI/export branch was audited.

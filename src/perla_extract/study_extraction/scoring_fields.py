@@ -9,7 +9,7 @@ import re
 from typing import Literal, get_args
 
 from .models import ReportedValue
-from .scoring_claims import LiteralClaim, normalize_claim
+from .quantities import LiteralClaim, normalize_claim
 from .scoring_coverage import FACT_GROUPS as FACT_GROUPS
 from .scoring_coverage import FactGroup as FactGroup
 from .scoring_protocol import protocol_name

@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass, field
 
 from .models import DeviceFamily, ProcessingStep, StudyExtraction
-from .scoring_claims import scientific_text
+from .quantities import scientific_text
 from .scoring_vocabulary import material_name, processing_name
 
 # These conditions describe the identified operation, independently of an optional

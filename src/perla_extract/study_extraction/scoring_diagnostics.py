@@ -6,10 +6,10 @@ unambiguous candidate satisfies the context, regardless of its outcome value.
 """
 
 from collections import Counter
-from typing import Literal
+from typing import Literal, cast
 
 from .models import ReportedValue, StrictModel
-from .scoring_claims import LiteralClaim, ScalarClaim, normalize_claim
+from .quantities import LiteralClaim, ScalarClaim, interpret_quantity
 from .scoring_facts import FactComparison, ScientificFact
 from .scoring_protocol import protocol_name
 from .scoring_requirements import requirements_for
@@ -50,6 +50,8 @@ class FactDiagnostic(StrictModel):
     eligible_candidates: int
     matched: bool
     blockers: list[Blocker]
+    quantity_status: Literal["normalized", "literal", "contradiction"] | None = None
+    normalization_reason: str | None = None
 
 
 class DiagnosticCoverage(StrictModel):
@@ -104,11 +106,27 @@ def diagnose_fact(
     level = context.get("statistical_level")
     interpretation: Literal["quantity", "literal", "nonquantity"] = "nonquantity"
     unit_source: UnitSource = "not_quantity"
+    quantity_status: Literal["normalized", "literal", "contradiction"] | None = None
+    normalization_reason: str | None = None
     if isinstance(fact.value, ReportedValue):
-        claim = normalize_claim(fact.value)
-        interpretation = "literal" if isinstance(claim, LiteralClaim) else "quantity"
-        if isinstance(claim, LiteralClaim):
+        result = interpret_quantity(fact.value)
+        claim = result.claim
+        quantity_status, normalization_reason = result.status, result.reason
+        interpretation = "quantity" if result.status == "normalized" else "literal"
+        if result.status == "literal":
+            unit_source = (
+                "unsupported"
+                if fact.value.unit and result.reason == "unsupported_unit"
+                else "unparsed"
+            )
+        elif isinstance(claim, LiteralClaim) and result.unit_source not in {
+            "reported",
+            "raw_value",
+            "field_name",
+        }:
             unit_source = "unparsed"
+        elif result.unit_source:
+            unit_source = cast(UnitSource, fact.unit_source or result.unit_source)
         elif claim.unit is None:
             unit_source = "missing"
         elif isinstance(claim, ScalarClaim) and claim.canonical is None:
@@ -124,6 +142,8 @@ def diagnose_fact(
         statistical_level=level if isinstance(level, str) else None,
         value_interpretation=interpretation,
         unit_source=unit_source,
+        quantity_status=quantity_status,
+        normalization_reason=normalization_reason,
         unsupported_condition_name=(
             fact.subfield == "measurement_protocol" and protocol_name(fact.name) is None
         ),

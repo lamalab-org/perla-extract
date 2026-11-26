@@ -19,6 +19,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from .identity_text import identity_tokens
 from .models import (
     DeviceFamily,
     IndividualDevice,
@@ -27,6 +28,7 @@ from .models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from .quantities import interpret_quantity
 from .reference_release import ReferenceRelease
 from .scoring_coverage import ReferenceCoverage
 from .scoring_diagnostics import (
@@ -67,13 +69,12 @@ from .scoring_identity import (
 from .scoring_identity import record_similarity as _record_similarity
 from .scoring_layers import align_layers
 from .scoring_process import align_processes
-from .scoring_vocabulary import label_tokens
 
 EVALUATION_FORMAT_VERSION: Final[Literal[17]] = 17
 MAX_FACT_CANDIDATES = 1_000_000
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v26"]] = "rich-study-hungarian-v26"
-FACT_PROFILE_VERSION: Final[Literal["core-scientific-facts-v23"]] = (
-    "core-scientific-facts-v23"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v27"]] = "rich-study-hungarian-v27"
+FACT_PROFILE_VERSION: Final[Literal["core-scientific-facts-v24"]] = (
+    "core-scientific-facts-v24"
 )
 RecordKind = Literal[
     "device_families",
@@ -273,7 +274,10 @@ class EvaluationValidationIssue(StrictModel):
 
     path: str
     reason: str
-    category: Literal["structural", "citation", "unspecified"] = "unspecified"
+    category: Literal["structural", "citation", "quantity", "unspecified"] = (
+        "unspecified"
+    )
+    code: str | None = None
 
 
 class PredictionValidation(StrictModel):
@@ -392,6 +396,7 @@ class ScoringIssue(StrictModel):
         "ambiguous_scope",
         "unmatched_records",
         "conflicting_representations",
+        "quantity_conflict",
     ]
     side: Literal["truth", "prediction"]
     paths: list[str]
@@ -401,7 +406,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v23"] = FACT_PROFILE_VERSION
+    profile: Literal["core-scientific-facts-v24"] = FACT_PROFILE_VERSION
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -470,7 +475,7 @@ class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
     format_version: Literal[17] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v26"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v27"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -562,7 +567,7 @@ class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
     format_version: Literal[17] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v26"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v27"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -1072,6 +1077,19 @@ def _core_fact_score(
         ),
     ]
     issues: list[ScoringIssue] = []
+    for side, projection in zip(("truth", "prediction"), projections):
+        for fact in projection.facts:
+            if isinstance(fact.value, ReportedValue):
+                interpretation = interpret_quantity(fact.value)
+                if interpretation.status == "contradiction":
+                    issues.append(
+                        ScoringIssue(
+                            kind="quantity_conflict",
+                            side=side,
+                            paths=[fact.path],
+                            reason=f"Explicit quantity contradiction: {interpretation.reason}. The claim remains counted but cannot earn numerical credit.",
+                        )
+                    )
     for kind in RECORD_KINDS:
         if (
             getattr(truth, kind)
@@ -1557,9 +1575,11 @@ def evaluate_study(
                     if kind == "device_families"
                     else None,
                     identity_evidence={
-                        "truth_label_tokens": sorted(label_tokens(truth_record.label)),
+                        "truth_label_tokens": sorted(
+                            identity_tokens(truth_record.label)
+                        ),
                         "prediction_label_tokens": sorted(
-                            label_tokens(predicted_record.label)
+                            identity_tokens(predicted_record.label)
                         ),
                         "truth_sample_code": [sample_code(truth_record)]
                         if sample_code(truth_record)
@@ -1643,6 +1663,23 @@ def evaluate_study(
         total_truth_values,
         matched_value_count,
     )
+    core_facts = _core_fact_score(
+        truth,
+        prediction,
+        identity_pairs,
+        config,
+        ambiguous_truth,
+        ambiguous_prediction,
+        _explanation,
+    )
+    warnings = _input_warnings(truth, prediction, benchmark, run_manifest_sha256)
+    if any(
+        issue.kind == "quantity_conflict" and issue.side == "truth"
+        for issue in core_facts.issues
+    ):
+        warnings.append(
+            "Reference quantity metadata contains explicit contradictions. These facts remain counted; resolve the reference issues before claiming quantitative accuracy."
+        )
     return EvaluationReport(
         interpretation="reviewed_scope"
         if benchmark and benchmark.coverage.complete()
@@ -1655,19 +1692,9 @@ def evaluate_study(
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,
-        input_warnings=_input_warnings(
-            truth, prediction, benchmark, run_manifest_sha256
-        ),
+        input_warnings=warnings,
         config=config,
-        core_facts=_core_fact_score(
-            truth,
-            prediction,
-            identity_pairs,
-            config,
-            ambiguous_truth,
-            ambiguous_prediction,
-            _explanation,
-        ),
+        core_facts=core_facts,
         inventory=inventory,
         micro_inventory=_prf(micro_predicted, micro_truth, micro_matched),
         field_agreement=FieldAgreement(

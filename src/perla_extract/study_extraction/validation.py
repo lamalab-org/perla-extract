@@ -15,7 +15,8 @@ from .evidence import (
     source_contains_text,
 )
 from .identifiers import entity_id_lists
-from .models import EvidenceBlock, StudyExtraction
+from .models import EvidenceBlock, ReportedValue, StudyExtraction
+from .quantities import interpret_quantity
 
 _DUPLICATE_IGNORED_FIELDS = {
     "device_families": {"family_id", "evidence"},
@@ -26,6 +27,23 @@ _DUPLICATE_IGNORED_FIELDS = {
 
 PathPart = str | int
 Location = tuple[PathPart, ...]
+IssueCode = Literal[
+    "invalid_structure",
+    "invalid_citation",
+    "unknown_evidence_block",
+    "quote_not_found",
+    "raw_value_not_grounded",
+    "material_form_not_grounded",
+    "quantity_conflict",
+    "duplicate_identifier",
+    "duplicate_record",
+    "ambiguous_absorber_scope",
+    "unknown_layer_reference",
+    "wrong_layer_role",
+    "unknown_family_reference",
+    "unknown_device_reference",
+    "conflicting_family_reference",
+]
 
 
 def _json_path(location: Location) -> str:
@@ -42,7 +60,8 @@ class ValidationIssue:
 
     location: Location
     reason: str
-    category: Literal["structural", "citation"] = "structural"
+    category: Literal["structural", "citation", "quantity"] = "structural"
+    code: IssueCode = "invalid_structure"
 
     @property
     def path(self) -> str:
@@ -53,7 +72,12 @@ class ValidationIssue:
     def as_dict(self) -> dict[str, str]:
         """Serialize without exposing internal navigation details as public schema."""
 
-        return {"path": self.path, "reason": self.reason, "category": self.category}
+        return {
+            "path": self.path,
+            "reason": self.reason,
+            "category": self.category,
+            "code": self.code,
+        }
 
 
 @dataclass(frozen=True)
@@ -75,7 +99,7 @@ class StudyValidation:
         }
 
 
-def _scientific_fingerprint(record: object, ignored_fields: set[str]) -> str:
+def scientific_record_fingerprint(record: object, ignored_fields: set[str]) -> str:
     """Compare record meaning while ignoring run-local IDs and evidence pointers.
 
     This deliberately detects only exact semantic duplicates. Similarity-based merging
@@ -112,9 +136,9 @@ def _report_exact_duplicates(
 
     indexes: dict[str, list[int]] = {}
     for index, record in enumerate(records):
-        indexes.setdefault(_scientific_fingerprint(record, ignored_fields), []).append(
-            index
-        )
+        indexes.setdefault(
+            scientific_record_fingerprint(record, ignored_fields), []
+        ).append(index)
     for duplicate_indexes in indexes.values():
         if len(duplicate_indexes) > 1:
             issue(
@@ -140,12 +164,17 @@ def validate_study_details(
     source_verified_values = 0
     source_assembled_values = 0
     verified_values: list[dict[str, object]] = []
+    quantity_counts: Counter[str] = Counter()
 
-    def issue(location: Location, reason: str) -> None:
-        issues.append(ValidationIssue(location=location, reason=reason))
+    def issue(
+        location: Location, reason: str, code: IssueCode = "invalid_structure"
+    ) -> None:
+        issues.append(ValidationIssue(location=location, reason=reason, code=code))
 
-    def citation(location: Location, reason: str) -> None:
-        issues.append(ValidationIssue(location, reason, "citation"))
+    def citation(
+        location: Location, reason: str, code: IssueCode = "invalid_citation"
+    ) -> None:
+        issues.append(ValidationIssue(location, reason, "citation", code))
 
     def evidence_supported(items: list[dict], location: Location) -> bool:
         supported = bool(items)
@@ -154,10 +183,16 @@ def validate_study_details(
             block = block_by_id.get(block_id) if isinstance(block_id, str) else None
             reference_location = (*location, "evidence", index)
             if block is None:
-                citation(reference_location, "unknown block_id")
+                citation(
+                    reference_location, "unknown block_id", "unknown_evidence_block"
+                )
                 supported = False
             elif not source_contains_text(block.text, reference.get("quote")):
-                citation(reference_location, "quote not found in cited block")
+                citation(
+                    reference_location,
+                    "quote not found in cited block",
+                    "quote_not_found",
+                )
                 supported = False
         return supported
 
@@ -166,6 +201,17 @@ def validate_study_details(
         if isinstance(value, dict):
             if {"name", "raw_value", "evidence"} <= value.keys():
                 total_reported_values += 1
+                interpretation = interpret_quantity(ReportedValue.model_validate(value))
+                quantity_counts[interpretation.status] += 1
+                if interpretation.status == "contradiction":
+                    issues.append(
+                        ValidationIssue(
+                            location,
+                            f"quantity conflict: {interpretation.reason}",
+                            "quantity",
+                            "quantity_conflict",
+                        )
+                    )
                 evidence_ok = evidence_supported(value["evidence"], location)
                 scientific_evidence_ok = evidence_ok and all(
                     (block := block_by_id.get(reference.get("block_id"))) is not None
@@ -196,7 +242,11 @@ def validate_study_details(
                 )
                 raw_ok = raw_direct or raw_assembled or raw_shared_unit
                 if not raw_ok:
-                    citation(location, "raw_value not found in cited evidence")
+                    citation(
+                        location,
+                        "raw_value not found in cited evidence",
+                        "raw_value_not_grounded",
+                    )
                 if evidence_ok and raw_ok:
                     source_verified_values += 1
                     source_assembled_values += int(
@@ -216,6 +266,7 @@ def validate_study_details(
                     citation(
                         (*location, "material_form_raw"),
                         "material_form_raw not found in cited evidence",
+                        "material_form_not_grounded",
                     )
             elif isinstance(value.get("evidence"), list):
                 evidence_supported(value["evidence"], location)
@@ -245,7 +296,7 @@ def validate_study_details(
     for kind, ids in identifiers.items():
         if len(ids) != len(set(ids)):
             location, field = collections[kind]
-            issue(location, f"duplicate {field}")
+            issue(location, f"duplicate {field}", "duplicate_identifier")
     for collection in (
         "device_families",
         "performance_observations",
@@ -256,7 +307,7 @@ def validate_study_details(
             list(getattr(extraction, collection)),
             (collection,),
             _DUPLICATE_IGNORED_FIELDS[collection],
-            issue,
+            lambda location, reason: issue(location, reason, "duplicate_record"),
         )
     absorber_ids = [
         absorber.absorber_id
@@ -264,20 +315,21 @@ def validate_study_details(
         for absorber in family.absorbers
     ]
     if len(absorber_ids) != len(set(absorber_ids)):
-        issue(("device_families",), "duplicate absorber_id")
+        issue(("device_families",), "duplicate absorber_id", "duplicate_identifier")
     step_ids = [
         step.step_id
         for family in extraction.device_families
         for step in family.processing_steps
     ]
     if len(step_ids) != len(set(step_ids)):
-        issue(("device_families",), "duplicate step_id")
+        issue(("device_families",), "duplicate step_id", "duplicate_identifier")
     for family_index, family in enumerate(extraction.device_families):
         layer_ids = [layer.layer_id for layer in family.layers]
         if len(layer_ids) != len(set(layer_ids)):
             issue(
                 ("device_families", family_index, "layers"),
                 "duplicate layer_id within family",
+                "duplicate_identifier",
             )
         layer_roles = {layer.layer_id: layer.role for layer in family.layers}
         absorber_layers = {
@@ -296,25 +348,33 @@ def validate_study_details(
                     issue(
                         (*location, "layer_id"),
                         "absorber is unscoped in a multi-absorber family",
+                        "ambiguous_absorber_scope",
                     )
                 continue
             if absorber.layer_id not in layer_roles:
-                issue((*location, "layer_id"), "unknown layer_id")
+                issue(
+                    (*location, "layer_id"),
+                    "unknown layer_id",
+                    "unknown_layer_reference",
+                )
             elif layer_roles[absorber.layer_id] != "absorber":
                 issue(
                     (*location, "layer_id"),
                     "layer_id does not identify an absorber",
+                    "wrong_layer_role",
                 )
             elif absorber.layer_id in scoped_layers:
                 issue(
                     (*location, "layer_id"),
                     "more than one absorber uses this layer_id",
+                    "ambiguous_absorber_scope",
                 )
             scoped_layers.add(absorber.layer_id)
         if len(absorber_layers) > 1 and absorber_layers - scoped_layers:
             issue(
                 ("device_families", family_index, "absorbers"),
                 "one or more absorber layers lack a scoped composition record",
+                "ambiguous_absorber_scope",
             )
         for step_index, step in enumerate(family.processing_steps):
             for target_index, target_id in enumerate(step.target_layer_ids):
@@ -329,30 +389,49 @@ def validate_study_details(
                             target_index,
                         ),
                         "unknown layer_id in this family",
+                        "unknown_layer_reference",
                     )
     for index, device in enumerate(extraction.individual_devices):
         if device.family_id and device.family_id not in families:
-            issue(("individual_devices", index, "family_id"), "unknown family_id")
+            issue(
+                ("individual_devices", index, "family_id"),
+                "unknown family_id",
+                "unknown_family_reference",
+            )
     for index, observation in enumerate(extraction.performance_observations):
         if observation.device_id not in devices:
             issue(
                 ("performance_observations", index, "device_id"),
                 "unknown device_id",
+                "unknown_device_reference",
             )
     for index, population in enumerate(extraction.population_statistics):
         if population.family_id and population.family_id not in families:
-            issue(("population_statistics", index, "family_id"), "unknown family_id")
+            issue(
+                ("population_statistics", index, "family_id"),
+                "unknown family_id",
+                "unknown_family_reference",
+            )
     for index, test in enumerate(extraction.stability_tests):
         checkpoint_ids = [checkpoint.checkpoint_id for checkpoint in test.checkpoints]
         if len(checkpoint_ids) != len(set(checkpoint_ids)):
             issue(
                 ("stability_tests", index, "checkpoints"),
                 "duplicate checkpoint_id within stability test",
+                "duplicate_identifier",
             )
         if test.family_id and test.family_id not in families:
-            issue(("stability_tests", index, "family_id"), "unknown family_id")
+            issue(
+                ("stability_tests", index, "family_id"),
+                "unknown family_id",
+                "unknown_family_reference",
+            )
         if test.device_id and test.device_id not in devices:
-            issue(("stability_tests", index, "device_id"), "unknown device_id")
+            issue(
+                ("stability_tests", index, "device_id"),
+                "unknown device_id",
+                "unknown_device_reference",
+            )
         if test.device_id and test.device_id in devices and test.family_id:
             device = next(
                 item
@@ -363,6 +442,7 @@ def validate_study_details(
                 issue(
                     ("stability_tests", index, "family_id"),
                     "family_id does not match the linked device",
+                    "conflicting_family_reference",
                 )
 
     return StudyValidation(
@@ -377,6 +457,8 @@ def validate_study_details(
             "source_verified_values": source_verified_values,
             "source_assembled_values": source_assembled_values,
             "issues_by_reason": dict(Counter(item.reason for item in issues)),
+            "issues_by_code": dict(Counter(item.code for item in issues)),
+            "quantity_interpretations": dict(quantity_counts),
         },
         verified_values=verified_values,
     )

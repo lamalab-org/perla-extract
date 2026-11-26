@@ -21,7 +21,7 @@ project each input independently → align subjects without outcomes
 | --- | --- | --- |
 | Concept/name equivalence | `scoring_vocabulary.py` | Checked positive and negative examples; unknowns stay literal |
 | Measurement protocol | `scoring_protocol.py` | Identity and outcome context use the same definition |
-| Quantity interpretation | `scoring_claims.py`, `units.py` | Preserve units, bounds, uncertainty and raw/parsed contradictions |
+| Quantity interpretation | `quantities.py`, `quantity_specs.py`, `units.py` | Preserve units, bounds, uncertainty and raw/parsed contradictions |
 | Subject identity | `scoring_identity.py`, `scoring_layers.py` | No scored outcomes or completeness-based tie-breaking |
 | Measurement ownership | `scoring_identity.measurement_subject` | Explicit device links identify subjects; observation IDs only group fields |
 | Context | `scoring_context.py` | Named requirements; preserve missingness, units and multiplicity |
@@ -153,8 +153,9 @@ Use a new output path. Read `calibration_coverage` for applicable, passed and
 inapplicable cases; the tool exits unsuccessfully if any applicable control fails.
 Synthetic conditions are explicitly marked and never written back into references.
 
-Evaluation format **17**, matcher **v25**, fact profile **v22**, explanation format
-**6**, and study schema **8** are current. Ground-truth format **4** is unchanged.
+The current format, matcher and fact profile are recorded in each report and in
+the [scientific specification](../methods/scientific-scoring.md). Study schema
+**8** and ground-truth format **4** are unchanged.
 Archived schema-6/7 inputs load through the additive schema with unknown defaults;
 no treatment/protocol is inferred and no archived file is overwritten. Existing
 hash-scoped reviewed descriptor rules were rebound to the parsed schema-8 content
@@ -169,7 +170,10 @@ frequent fact types carry more weight within a paper.
 
 Numeric tolerance remains **1% relative, zero absolute**, after unit conversion.
 Counts are exact. Duplicate merging allows conversion roundoff only, independently
-of scoring tolerance. Unknown or inconsistent quantities remain literal.
+of scoring tolerance. Unknown quantities remain literal. Explicit raw/parsed
+contradictions remain counted but cannot earn numerical-field credit, even against
+an identical bad reference value. Diagnostics distinguish this from unsupported
+notation.
 PV units explicitly written in a metric name can fill a missing unit field in the
 scoring projection. `unit_source` in fact diagnostics records the source or the
 unresolved state. No unit is inferred from another fact, a citation or the paired
@@ -245,3 +249,27 @@ the audit comparison helper, not supported as a second runtime scorer.
 The [saved-extraction validation report](context-calibration-results.md) records
 what changed in the 117-output replay, the automatic controls and the remaining
 context limitations.
+
+## Replay saved extractions
+
+Use the existing results CSV, which supplies `paper_id` and `run_directory`:
+
+```bash
+PYTHONPATH=.:src python -m examples.scoring.replay \
+  --runs path/to/results.csv --references data/study_extraction/ground_truth/v2/dev \
+  --output /tmp/perla-baseline
+```
+
+Run that command on the baseline checkout, then run the revised checkout in the
+**same Python/dependency environment**, adding `--baseline /tmp/perla-baseline`
+and choosing a fresh output directory. Input hashes, original run IDs, source
+PDF/SI hashes, roster, settings and dependencies must agree. No extraction runs.
+Do not edit scorer code during a replay.
+
+`manifest.json` accounts for every attempt and unavailable input; unavailable
+inputs cause a failing exit status. `field-deltas.csv` records both views and all
+denominators. `decision-changes.json` includes gained/lost facts and assignments
+by original path, with before/after diagnostics. Preserve failed and partial runs
+in the input roster. A score for a failed extraction is not extraction completion.
+Rescoring cannot measure improvements to evidence parsing or prompt behavior;
+those require a later paired extraction experiment with scoring frozen.

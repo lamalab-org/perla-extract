@@ -165,8 +165,8 @@ def test_explicit_units_in_pv_labels_are_read_without_mutating_inputs(
         ("PCE [%]", 0.2, None, "0.2", "field_name", 0),
         ("PCE", 20, "V", "20", "reported", 0),
         ("PCE", 20, "unknownunit", "20", "unsupported", 0),
-        ("PCE [%]", 20, None, "25%", "unparsed", 0),
-        ("PCE [%]", 20, None, "20 V", "unparsed", 0),
+        ("PCE [%]", 20, None, "25%", "field_name", 0),
+        ("PCE [%]", 20, None, "20 V", "field_name", 0),
     ],
 )
 def test_unit_evidence_and_contradictions_stay_visible(
@@ -183,6 +183,9 @@ def test_unit_evidence_and_contradictions_stay_visible(
         d for d in core.diagnostics.facts["prediction"] if d.path.endswith("/metrics/0")
     )
     assert diagnostic.unit_source == source
+    if raw in {"25%", "20 V"}:
+        # Unit provenance is still explicit when the quantity is contradictory.
+        assert diagnostic.quantity_status == "contradiction"
 
 
 def test_cli_exposes_percentage_point_convention(tmp_path):

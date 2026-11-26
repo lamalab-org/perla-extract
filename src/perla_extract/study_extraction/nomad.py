@@ -8,8 +8,10 @@ source record, and reports every value that cannot be projected without guessing
 from __future__ import annotations
 
 import json
+import math
 import re
-from collections.abc import Iterable
+import sys
+from collections.abc import Iterable, Sequence
 from typing import Literal, cast
 
 from .enrichment import (
@@ -52,7 +54,7 @@ from .nomad_contract import (
     NOMADStability,
     SourceKind,
 )
-from .units import convert_reported_value
+from .quantities import convert_reported_value, interpret_quantity
 from .vocabulary import NORMALIZED_ATMOSPHERES
 
 _METRIC_NAMES = {
@@ -116,12 +118,19 @@ def _key(value: str) -> str:
 def _payload(value: ReportedValue) -> dict[str, object]:
     """Retain an atomic value and its evidence whenever NOMAD has no faithful field."""
 
+    interpretation = interpret_quantity(value)
     return {
         "name": value.name,
         "raw_value": value.raw_value,
         "value_number": value.value_number,
         "unit": value.unit,
         "evidence_blocks": [citation.block_id for citation in value.evidence],
+        "interpretation": {
+            "status": interpretation.status,
+            "reason": interpretation.reason,
+            "quantity_kind": interpretation.kind,
+            "unit_source": interpretation.unit_source,
+        },
     }
 
 
@@ -304,7 +313,12 @@ def _project_metrics(
                 field,
             )
             continue
-        converted = convert_reported_value(matches[0], _METRIC_UNITS[field])
+        # Recognized qualified centers are usable only because the complete raw
+        # metrics are retained in each archive's notes below. Bounds/ranges and
+        # contradictory convenience fields never supply scalar output.
+        converted = convert_reported_value(
+            matches[0], _METRIC_UNITS[field], allow_qualified=True
+        )
         if converted is None:
             remainder.append(_payload(matches[0]))
             _issue(
@@ -402,7 +416,11 @@ def _project_step(
                     value = step.conditions[assignment.concentration_condition_index]
                     concentration_unit = _concentration_unit(value.unit)
                     if concentration_unit:
-                        concentration = value.value_number
+                        concentration = convert_reported_value(
+                            value, concentration_unit
+                        )
+                        if concentration is None:
+                            concentration_unit = None
                 solutes.append(
                     NOMADSolute(
                         name=name,
@@ -545,49 +563,97 @@ def _stability_summary(
     """Fill only unambiguous NOMAD stability summary fields from rich checkpoints."""
 
     fields: dict[str, object] = {}
+    candidates: dict[str, list[float]] = {}
+
+    def unique(field: str, values: Sequence[float | None]) -> float | None:
+        if not values:
+            return None
+        scalars = [value for value in values if value is not None]
+        if len(scalars) != len(values):
+            _issue(
+                issues,
+                "unprojectable_stability_summary",
+                "stability_test",
+                test.test_id,
+                f"Not every candidate for {field} is a consistent scalar; the summary field was withheld.",
+                field,
+            )
+            return None
+        first = min(scalars)
+        if all(
+            math.isclose(first, other, rel_tol=16 * sys.float_info.epsilon, abs_tol=0)
+            for other in scalars
+        ):
+            return first
+        _issue(
+            issues,
+            "conflicting_stability_summary",
+            "stability_test",
+            test.test_id,
+            f"Conflicting candidates for {field}; the summary field was withheld.",
+            field,
+        )
+        return None
+
     for value in test.conditions:
         target = _STABILITY_CONDITIONS.get(_key(value.name))
         if target is None:
             continue
         field, unit = target
         converted = convert_reported_value(value, unit)
-        if converted is not None and field not in fields:
+        if converted is not None:
+            candidates.setdefault(field, []).append(converted)
+    for field, values in candidates.items():
+        converted = unique(field, values)
+        if converted is not None:
             fields[field] = converted
     final = test.checkpoints[-1]
     if final.time:
         duration = convert_reported_value(final.time, "hour")
         if duration is not None:
             fields["time"] = duration
+    # Collect every matching outcome before resolving uniqueness. Discarding an
+    # ambiguous checkpoint here would let a different checkpoint mask its conflict.
     absolute_pce = {
-        checkpoint.checkpoint_id: _unique_value(
-            checkpoint.outcomes, _METRIC_NAMES["pce"]
-        )
+        checkpoint.checkpoint_id: [
+            convert_reported_value(value, "percent")
+            for value in checkpoint.outcomes
+            if _key(value.name) in _METRIC_NAMES["pce"]
+        ]
         for checkpoint in test.checkpoints
     }
     first = test.checkpoints[0]
-    first_pce = absolute_pce[first.checkpoint_id]
-    last_pce = absolute_pce[final.checkpoint_id]
     first_time = convert_reported_value(first.time, "hour") if first.time else None
-    first_value = (
-        convert_reported_value(first_pce, "percent")
-        if first_pce is not None and first_time == 0
-        else None
-    )
-    last_value = convert_reported_value(last_pce, "percent") if last_pce else None
+    start_candidates = []
+    if first_time == 0:
+        for checkpoint in test.checkpoints:
+            if checkpoint.time and convert_reported_value(checkpoint.time, "hour") == 0:
+                start_candidates.extend(absolute_pce[checkpoint.checkpoint_id])
+    first_value = unique("PCE_at_start", start_candidates)
+    # A tied final time with conflicting outcomes cannot establish a unique end
+    # value. Preserve sequence; do not sort checkpoints across aging-stage resets.
+    final_time = convert_reported_value(final.time, "hour") if final.time else None
+    end_candidates = []
+    for checkpoint in test.checkpoints:
+        same_time = (checkpoint is final) or (
+            final_time is not None
+            and checkpoint.time is not None
+            and convert_reported_value(checkpoint.time, "hour") == final_time
+        )
+        if same_time:
+            end_candidates.extend(absolute_pce[checkpoint.checkpoint_id])
+    last_value = unique("PCE_at_end", end_candidates)
     if first_value is not None:
         fields["PCE_at_start"] = first_value
     if last_value is not None:
         fields["PCE_at_end"] = last_value
+    at_1000_hours = []
     for checkpoint in test.checkpoints:
         if checkpoint.time and convert_reported_value(checkpoint.time, "hour") == 1000:
-            checkpoint_pce = absolute_pce[checkpoint.checkpoint_id]
-            converted = (
-                convert_reported_value(checkpoint_pce, "percent")
-                if checkpoint_pce
-                else None
-            )
-            if converted is not None:
-                fields["PCE_after_1000_hours"] = converted
+            at_1000_hours.extend(absolute_pce[checkpoint.checkpoint_id])
+    at_1000 = unique("PCE_after_1000_hours", at_1000_hours)
+    if at_1000 is not None:
+        fields["PCE_after_1000_hours"] = at_1000
     _issue(
         issues,
         "stability_checkpoints_preserved_in_notes",
@@ -883,6 +949,7 @@ def to_nomad_with_report(
                 if observation_device
                 else [],
                 "family": family_note,
+                "reported_metrics": [_payload(value) for value in observation.metrics],
                 "unprojected_metrics": remainder,
             },
         )
@@ -936,6 +1003,7 @@ def to_nomad_with_report(
                     _payload(value) for value in population.measurement_conditions
                 ],
                 "family": family_note,
+                "reported_metrics": [_payload(value) for value in population.metrics],
                 "unprojected_metrics": remainder,
             },
         )

@@ -670,9 +670,11 @@ def _attach_explicit_table_notes(blocks: list[EvidenceBlock]) -> None:
         linked = linked_context_ids(table)
         if note.block_id not in linked:
             table.metadata["context_block_ids"] = [*linked, note.block_id]
-            table.metadata.setdefault("explicit_table_note_ids", []).append(
-                note.block_id
-            )
+            note_ids = table.metadata.get("explicit_table_note_ids", [])
+            table.metadata["explicit_table_note_ids"] = [
+                *(note_ids if isinstance(note_ids, list) else []),
+                note.block_id,
+            ]
 
 
 def available_parsers() -> list[str]:

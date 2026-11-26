@@ -313,7 +313,26 @@ def run(
         if reference_content_digest(manifest) != paper["manifest_sha256"]:
             raise ValueError(f"Reference manifest differs from release: {identity}")
         baseline = evaluate_study(truth, truth)
-        if baseline.core_facts.recovery.micro.f1 != 1 or (
+        quantity_conflicts = {
+            side: {
+                path
+                for issue in baseline.core_facts.issues
+                if issue.kind == "quantity_conflict" and issue.side == side
+                for path in issue.paths
+            }
+            for side in ("truth", "prediction")
+        }
+        # A contradictory reference is a visible data issue, not permission for
+        # the scorer to agree numerically with its invalid convenience fields.
+        # Every other missing recovery match remains an unexplained failure.
+        recovery = baseline.core_facts.recovery
+        explained_recovery = (
+            bool(quantity_conflicts["truth"])
+            and set(recovery.unmatched_truth_paths) <= quantity_conflicts["truth"]
+            and set(recovery.unmatched_prediction_paths)
+            <= quantity_conflicts["prediction"]
+        )
+        if (recovery.micro.f1 != 1 and not explained_recovery) or (
             baseline.core_facts.micro.f1 != 1 and not baseline.core_facts.issues
         ):
             raise ValueError(f"Unexplained baseline self-check failure: {identity}")
@@ -396,7 +415,7 @@ def run(
                         "scoring_fields.py",
                         "scoring_protocol.py",
                         "scoring_process.py",
-                        "scoring_claims.py",
+                        "quantities.py",
                         "scoring_vocabulary.py",
                         "scoring_explanation.py",
                         "scoring_requirements.py",
@@ -476,7 +495,7 @@ def main(release_path, feedback_zip, output, include_controls, descriptor_equiva
     write_json_exclusive(output, report)
     click.echo(json.dumps(report["control_summary"], indent=2))
     click.echo(
-        f"Reference self-checks needing identity/scope review: "
+        f"Reference self-checks with scientific issues: "
         f"{sum(row['score']['status'] != 'ready' for row in report['reference_self_checks'])}"
     )
     click.echo(

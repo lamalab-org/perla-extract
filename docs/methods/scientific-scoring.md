@@ -2,8 +2,8 @@
 
 This method measures agreement with a fixed reference. It does not use an LLM
 judge. Citation checks are separate diagnostics; this method does not establish source completeness. The
-current contract is evaluation format 17, matcher `rich-study-hungarian-v26`, fact
-profile `core-scientific-facts-v23`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
+current contract is evaluation format 17, matcher `rich-study-hungarian-v27`, fact
+profile `core-scientific-facts-v24`, and explanation format 6. Extraction schema 8 adds optional measurement conditions. Ground-truth format 4 is unchanged.
 
 Metric labels use a closed vocabulary and qualifier grammar. `certified PCE`,
 `certified power conversion efficiency` and `PCE (certified)` identify PCE with
@@ -52,6 +52,12 @@ ambiguity; facts depending on an unresolved scientific subject receive no attrib
 credit. An inventory pair
 is a candidate correspondence, not evidence that all of its scientific fields
 agree.
+
+All label and sample-code features first remove recognized outcome assertions
+(including common approximation/measured-as wording) and explicit specimen-count
+phrases. Thus `PCE of about 20%` and `from 20 devices` cannot identify a cohort.
+Genuine source codes such as `Device A20` and preparation quantities remain usable.
+This is a bounded text policy, not a semantic guarantee for arbitrary prose.
 
 An individual performance observation with an explicit device link is a container
 of facts about that device. Its facts therefore use the device as owner and retain
@@ -286,6 +292,25 @@ as complete claims; a matching central number alone is insufficient. Offset unit
 are converted before comparison. Bounds, unknown units and contradictions between
 raw text, parsed number and unit are not silently discarded. Unsupported claims
 remain literal assertions.
+
+Validation, scoring and numeric export use the same complete-claim interpreter.
+It checks registered quantity dimensions and, when both representations are
+explicit, agreement between raw text and supplied parsed metadata. `20 ms` with
+parsed `0.02 s` is consistent; `20%` with parsed `2%` is a contradiction. This
+internal check permits conversion roundoff only, independently of the 1% scoring
+tolerance. Missing information or unsupported notation remains unresolved rather
+than becoming an invented contradiction. Relative humidity accepts its explicit
+`% RH` qualifier only under recognized humidity names. Weight- and volume-percent
+concentrations retain their separate bases and are not interchangeable with `%`.
+
+Contradictions remain in both inventories but cannot earn numerical-field credit,
+including when a reference repeats the same contradiction. Reports flag reference
+issues without changing its files or denominators. Citation grounding only proves
+that the text occurs in supplied evidence; it does not prove numeric consistency.
+Scalar exports withhold bounds, ranges and contradictions. An uncertainty center
+or approximate value is exported only with the complete raw claim retained in
+notes. Conflicting stability candidates withhold the affected summary field;
+the complete ordered checkpoints remain authoritative.
 
 Before unit parsing, mathematical minus, figure/en dashes and the legacy
 Symbol-font minus are mapped to ASCII minus. Thus `mA cm‒2` and `mA/cm2` describe

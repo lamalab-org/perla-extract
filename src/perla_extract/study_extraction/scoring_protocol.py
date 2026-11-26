@@ -13,7 +13,12 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .models import PerformanceObservation, PopulationStatistic, ReportedValue
-from .scoring_claims import CompoundClaim, ScalarClaim, equal_claims, normalize_claim
+from .quantities import (
+    ScalarClaim,
+    equal_claims,
+    interpret_quantity,
+    normalize_claim,
+)
 from .scoring_vocabulary import property_name
 from .scoring_vocabulary import protocol_name as protocol_name
 from .units import canonical_quantity
@@ -99,8 +104,11 @@ def metric_value(
         # so an explicit fraction/other suffix cannot acquire a percentage scale.
         if value.unit is not None:
             value = value.model_copy(update={"unit": None})
-        claim = normalize_claim(value)
-        if isinstance(claim, (ScalarClaim, CompoundClaim)) and claim.unit is None:
+        interpretation = interpret_quantity(value, quantity)
+        if (
+            interpretation.status == "normalized"
+            and interpretation.unit_source == "percentage_points"
+        ):
             return value.model_copy(update={"unit": "%"}), "percentage_points"
     return value, None
 

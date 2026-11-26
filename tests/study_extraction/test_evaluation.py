@@ -585,7 +585,10 @@ def test_scoring_guide_numeric_examples(reference, prediction, expected):
     """
 
     config = EvaluationConfig()
-    left, right = value(*reference), value(*prediction)
+    # This table exercises generic physical quantities. PV percentage-point
+    # conventions are covered separately with explicitly named PCE/FF claims.
+    left = value(*reference).model_copy(update={"name": "reported quantity"})
+    right = value(*prediction).model_copy(update={"name": "reported quantity"})
     for a, b in ((left, right), (right, left)):
         assert (
             equal_value(
@@ -1186,8 +1189,8 @@ def test_default_tolerance_has_no_absolute_floor(a, b, unit, expected):
 
 @pytest.mark.parametrize("raw", ["1e-13", "-1e-13", "0.0000000000001 m"])
 def test_inconsistent_tiny_raw_number_cannot_match_zero(raw):
-    inconsistent = value(raw, 0.0, "m")
-    zero = value("0", 0.0, "m")
+    inconsistent = value(raw, 0.0, "m").model_copy(update={"name": "thickness"})
+    zero = value("0", 0.0, "m").model_copy(update={"name": "thickness"})
     config = EvaluationConfig()
 
     assert not is_plain_number(inconsistent)
@@ -1211,7 +1214,12 @@ def test_inconsistent_tiny_raw_number_cannot_match_zero(raw):
     ],
 )
 def test_raw_number_consistency_uses_only_relative_tolerance(raw, number, expected):
-    assert is_plain_number(value(raw, number, "m")) is expected
+    assert (
+        is_plain_number(
+            value(raw, number, "m").model_copy(update={"name": "thickness"})
+        )
+        is expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -1517,7 +1525,7 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
 
     payload = evaluate_study(study(), study()).model_dump()
     assert payload["format_version"] == 17
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v23"
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v24"
     payload["format_version"] = 9
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

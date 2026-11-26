@@ -26,7 +26,8 @@ from .models import (
     ReportedValue,
     StudyExtraction,
 )
-from .units import convert_reported_value, is_concentration_unit
+from .quantities import convert_reported_value
+from .units import is_concentration_unit
 from .vocabulary import NormalizedAtmosphere
 
 if TYPE_CHECKING:
@@ -597,12 +598,17 @@ def validate_processing_proposals(
                         issues.append(
                             f"concentration_condition_index {concentration} is out of range"
                         )
-                    elif step.conditions[concentration].value_number is None or not (
-                        is_concentration_unit(step.conditions[concentration].unit)
-                    ):
-                        issues.append(
-                            "a concentration must reference an explicit number and concentration-compatible unit"
-                        )
+                    else:
+                        value = step.conditions[concentration]
+                        if (
+                            value.value_number is None
+                            or value.unit is None
+                            or not is_concentration_unit(value.unit)
+                            or convert_reported_value(value, value.unit) is None
+                        ):
+                            issues.append(
+                                "a concentration must reference a consistent explicit scalar and concentration-compatible unit"
+                            )
             status = "needs_review" if issues else "accepted"
         seen.add(proposal.step_id)
         results.append(
