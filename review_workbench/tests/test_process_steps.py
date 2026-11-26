@@ -684,15 +684,137 @@ bundle.ground_truth.device_families.push({family_id:'variant', label:'Variant', 
 editor.open('device_families', 1);
 const source = document.getElementById('record-copy-steps-source');
 assert.deepEqual(source.children.map(option => option.value), ['control']);
+assert.equal(document.getElementById('record-copy-steps-layers').checked, true, 'missing layers are added by default');
+document.getElementById('record-copy-steps-layers').checked = false;
 click('Copy steps');
 assert.deepEqual(editor.value().processing_steps, []);
 assert.match(document.getElementById('dialog-status').textContent, /Copied 0 steps.*FAPbI3/);
 bundle.ground_truth.device_families[0].processing_steps[0].target_layer_ids = ['a'];
 editor.open('device_families', 1);
+document.getElementById('record-copy-steps-layers').checked = false;
 click('Copy steps');
 assert.deepEqual(editor.value().processing_steps.map(item => [item.step_id, item.sequence, item.target_layer_ids, item.operation]),
   [['step-2', 1, ['v1'], 'spin coating']]);
 assert.equal(bundle.ground_truth.device_families[1].processing_steps.length, 0, 'saved only on save');
+"""
+    )
+
+
+def test_copying_steps_can_add_the_layers_and_absorber_a_family_is_missing():
+    output = run_javascript(
+        FAMILY_SETUP
+        + """
+let n = 0;
+const freshId = prefix => `${prefix}-new-${++n}`;
+// f2 has no PEAI layer: it is added between the perovskite and Spiro-OMeTAD, with its citation.
+const withPeai = T.copyMissingLayers(f1, f2, freshId);
+assert.deepEqual(withPeai.added, ['PEAI']);
+assert.deepEqual(withPeai.layers.map(layer => [layer.layer_id, layer.sequence, layer.material]), [
+  ['f2-g',1,'glass'], ['f2-ito',2,'ITO'], ['f2-sn',3,'SnO2'], ['f2-pvk',4,'perovskite'], ['layer-new-1',5,'PEAI'], ['f2-sp',6,'Spiro-OMeTAD']]);
+assert.deepEqual(withPeai.layers[4].evidence, [c]);
+assert.equal(withPeai.absorbers.length, 1, 'the perovskite layer already exists');
+assert.equal(f2.layers.length, 5, 'the family itself is not changed');
+// A family with only the bottom layers gets the rest, and the absorber of the copied perovskite layer.
+const bare = {...structuredClone(f2), family_id:'f3', layers:structuredClone(f2.layers.slice(0, 3)), absorbers:[], processing_steps:[]};
+const filled = T.copyMissingLayers(f1, bare, freshId);
+assert.deepEqual(filled.added, ['perovskite', 'PEAI', 'Spiro-OMeTAD']);
+assert.deepEqual(filled.layers.map(layer => layer.material), ['glass', 'ITO', 'SnO2', 'perovskite', 'PEAI', 'Spiro-OMeTAD']);
+assert.deepEqual(filled.absorbers.map(item => [item.absorber_id, item.layer_id]), [['absorber-new-3', filled.layers[3].layer_id]]);
+const f3 = {...bare, layers:filled.layers, absorbers:filled.absorbers};
+const all = T.copySteps(f1, f3, () => `step-${++next}`);
+assert.deepEqual(all.skipped, [], 'every step has its layer now');
+f3.processing_steps = all.steps.map((item, index) => ({...item, sequence:index + 1}));
+// Copying again adds nothing: every step is already there. A repeated source step counts twice.
+const again = T.copySteps(f1, f3, () => `step-${++next}`);
+assert.deepEqual([again.steps.length, again.present.length], [0, 6]);
+const repeated = {...structuredClone(f1), processing_steps:[f1.processing_steps[1], f1.processing_steps[1]]};
+const partly = {...structuredClone(f2), processing_steps:[structuredClone(f1.processing_steps[1])]};
+partly.processing_steps[0].target_layer_ids = ['f2-sn'];
+const counted = T.copySteps(repeated, partly, () => `step-${++next}`);
+assert.deepEqual([counted.steps.length, counted.present], [1, ['annealing']]);
+// Nothing to add when every layer has a counterpart.
+assert.deepEqual(T.copyMissingLayers(f1, f3, freshId).added, []);
+// A duplicated family gets new step and absorber identifiers, which are unique across families.
+const copy = T.renewFamilyIdentifiers({...structuredClone(f1), family_id:'f4'}, freshId);
+assert.ok(copy.processing_steps.every(item => item.step_id.startsWith('step-new-')));
+assert.ok(copy.absorbers.every(item => item.absorber_id.startsWith('absorber-new-')));
+assert.deepEqual(copy.layers.map(layer => layer.layer_id), f1.layers.map(layer => layer.layer_id), 'layer ids are per family');
+console.log(JSON.stringify([f1, f2, f3, copy]));
+"""
+    )
+    families = json.loads(output)
+    issues = [
+        issue.as_dict()
+        for issue in validate_study_details(study(families), BLOCKS).issues
+    ]
+    assert issues == [], "copies validate, with no duplicate identifiers"
+
+
+def test_values_without_a_current_check_are_found_and_recorded():
+    run_javascript("""
+const c = {block_id:'b', quote:'spun at 3000 rpm'};
+const step = {step_id:'s1', evidence:[c], conditions:[
+  {name:'spin speed', raw_value:'3000', unit:'rpm', evidence:[c]},
+  {name:'spin duration', raw_value:'30', unit:'s', evidence:[]}]};
+const checks = new Map();
+assert.equal(T.stepStatus(step, checks).state, 'pending');
+step.conditions[1].evidence = [c];
+let entries = T.uncheckedConditions([step], checks);
+assert.deepEqual(entries.map(entry => entry.condition.name), ['spin speed', 'spin duration']);
+assert.equal(T.stepStatus(step, checks).state, 'checking');
+// A value changed while the check ran gets no result and is checked again.
+step.conditions[1].unit = 'min';
+T.recordConditionChecks(entries, [{ok:true}, {ok:true}], checks);
+assert.deepEqual(T.uncheckedConditions([step], checks).map(entry => entry.condition.name), ['spin duration']);
+entries = T.uncheckedConditions([step], checks);
+T.recordConditionChecks(entries, [{ok:false, reason:'"30" is not in the quote.', hint:''}], checks);
+assert.equal(T.stepStatus(step, checks).state, 'error', 'a failure blocks like one found on confirming');
+// Two values of one name keep their own results (they used to overwrite each other).
+const twice = {step_id:'s2', evidence:[c], conditions:[
+  {name:'volume', raw_value:'350', unit:'µL', evidence:[c]}, {name:'volume', raw_value:'28.5', unit:'µL', evidence:[c]}]};
+const both = T.uncheckedConditions([twice], checks);
+T.recordConditionChecks(both, [{ok:true}, {ok:true}], checks);
+assert.deepEqual(T.uncheckedConditions([twice], checks), []);
+assert.equal(T.stepStatus(twice, checks).state, 'done');
+""")
+
+
+def test_family_editor_adds_missing_layers_checks_copies_and_defaults_step_evidence():
+    run_javascript(
+        EDITOR
+        + """
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sentence = {block_id:'main-2', quote:'The perovskite was spin-coated.'};
+bundle.ground_truth.device_families[0].processing_steps[0].evidence = [sentence];
+bundle.ground_truth.device_families[0].processing_steps[0].conditions = [{name:'spin speed', raw_value:'3000', value_number:3000, unit:'rpm', evidence:[sentence]}];
+bundle.ground_truth.device_families.push({family_id:'variant', label:'Variant', evidence:[c],
+  layers:[{layer_id:'v1',sequence:1,material:'SnO2',role:'electron_transport_layer',evidence:[c]}],
+  absorbers:[], processing_steps:[]});
+editor.open('device_families', 1);
+await wait(10);
+click('Copy steps');
+const value = editor.value();
+assert.deepEqual(value.layers.map(layer => [layer.material, layer.sequence]), [['SnO2', 1], ['FAPbI3', 2]]);
+assert.deepEqual(value.processing_steps[0].target_layer_ids, ['v1', value.layers[1].layer_id]);
+assert.match(status(), /Added 1 layer this family was missing.*FAPbI3/);
+// Copied steps are checked on their own; "Checking evidence" ends.
+assert.deepEqual(badges(), ['checking']);
+await wait(400);
+assert.deepEqual(badges(), ['done']);
+assert.deepEqual(checked.at(-1).map(item => item.raw_value), ['3000'], 'the copied value was checked');
+// A new step offers the evidence of the step before it...
+assert.equal(document.getElementById('citation-block').value, 'main-1', 'the family citation');
+click('+ Spin coating');
+assert.deepEqual([document.getElementById('citation-block').value, document.getElementById('citation-quote').value], ['main-2', sentence.quote]);
+// ...unless new evidence was already selected in the paper.
+await confirmStep(1, sentence.quote);
+document.getElementById('citation-block').value = 'main-9';
+document.getElementById('citation-quote').value = 'A sentence selected just now.';
+click('+ Spin coating');
+assert.equal(document.getElementById('citation-block').value, 'main-9');
+// A duplicated family gets new step identifiers, so that it can be saved.
+editor.open('device_families', null, bundle.ground_truth.device_families[0], 'copy');
+assert.notEqual(editor.value().processing_steps[0].step_id, 'step-1');
 """
     )
 

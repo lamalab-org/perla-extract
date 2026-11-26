@@ -357,6 +357,53 @@ export function matchingLayer(sourceLayers, layerId, targetLayers) {
   return sameRole.length === sourceLayers.filter(layer => layer.role === source.role).length ? sameRole[rank] ?? null : null;
 }
 
+const bySequence = items => [...items]
+  .map((item, index) => [item, index])
+  .sort(([a, i], [b, j]) => (a.sequence ?? Infinity) - (b.sequence ?? Infinity) || i - j)
+  .map(([item]) => item);
+
+/** Add to `targetFamily` the layers of `sourceFamily` that it has no counterpart for (see
+ * matchingLayer), each placed after the counterpart of the source layer before it, with a
+ * new identifier from `freshId(prefix)`. Absorbers on a copied layer are copied with it.
+ * Returns new `layers` and `absorbers` lists (renumbered) and the materials added.
+ */
+export function copyMissingLayers(sourceFamily, targetFamily, freshId) {
+  const sourceLayers = bySequence(sourceFamily.layers || []);
+  const layers = bySequence(targetFamily.layers || []).map(layer => structuredClone(layer));
+  const absorbers = (targetFamily.absorbers || []).map(absorber => structuredClone(absorber));
+  const original = [...layers];
+  const counterpart = new Map();
+  for (const layer of sourceLayers) {
+    const match = matchingLayer(sourceLayers, layer.layer_id, original);
+    if (match) counterpart.set(layer.layer_id, match);
+  }
+  const added = [];
+  sourceLayers.forEach((layer, index) => {
+    if (counterpart.has(layer.layer_id)) return;
+    const copy = { ...structuredClone(layer), layer_id: freshId("layer") };
+    const before = sourceLayers.slice(0, index).reverse().find(item => counterpart.has(item.layer_id));
+    layers.splice(before ? layers.indexOf(counterpart.get(before.layer_id)) + 1 : 0, 0, copy);
+    counterpart.set(layer.layer_id, copy);
+    added.push(layer.material || layer.role || copy.layer_id);
+    for (const absorber of sourceFamily.absorbers || []) {
+      if (absorber.layer_id === layer.layer_id) {
+        absorbers.push({ ...structuredClone(absorber), absorber_id: freshId("absorber"), layer_id: copy.layer_id });
+      }
+    }
+  });
+  layers.forEach((layer, index) => { layer.sequence = index + 1; });
+  return { layers, absorbers, added };
+}
+
+/** A family copied as a new record keeps its layers (identifiers are per family) but needs
+ * new step and absorber identifiers, which must be unique across all families.
+ */
+export function renewFamilyIdentifiers(family, freshId) {
+  for (const step of family.processing_steps || []) step.step_id = freshId("step");
+  for (const absorber of family.absorbers || []) absorber.absorber_id = freshId("absorber");
+  return family;
+}
+
 /** Copies of another family's steps, retargeted to this family's layers (see matchingLayer).
  * A step whose target layer has no counterpart is not copied; its label is returned in `skipped`.
  * Copies keep their values and citations (same paper) and get new identifiers from `freshId`.
@@ -370,6 +417,12 @@ export function copySteps(sourceFamily, targetFamily, freshId) {
     .map(([step]) => step);
   const steps = [];
   const skipped = [];
+  const present = [];
+  // A step the family already has (same method, materials, values, evidence and layers) is not
+  // added twice. Counted, so a step the source repeats is copied as often as it is missing.
+  const content = item => JSON.stringify([item.operation, item.materials, item.conditions, item.evidence, item.target_layer_ids]);
+  const existing = new Map();
+  for (const item of targetFamily.processing_steps || []) existing.set(content(item), (existing.get(content(item)) || 0) + 1);
   for (const step of ordered) {
     const targets = (step.target_layer_ids || []).map(id => matchingLayer(sourceLayers, id, targetLayers));
     if (targets.some(layer => !layer)) {
@@ -379,9 +432,16 @@ export function copySteps(sourceFamily, targetFamily, freshId) {
       skipped.push(`${step.operation || "step"} (${missing.join(", ")})`);
       continue;
     }
-    steps.push({ ...structuredClone(step), step_id: freshId(), sequence: null, target_layer_ids: targets.map(layer => layer.layer_id) });
+    const copy = { ...structuredClone(step), sequence: null, target_layer_ids: targets.map(layer => layer.layer_id) };
+    const remaining = existing.get(content(copy)) || 0;
+    if (remaining) {
+      existing.set(content(copy), remaining - 1);
+      present.push(step.operation || "step");
+      continue;
+    }
+    steps.push({ ...copy, step_id: freshId() });
   }
-  return { steps, skipped };
+  return { steps, skipped, present };
 }
 
 /* Evidence per step. A step is finished when the step and each of its values are cited
@@ -389,7 +449,9 @@ export function copySteps(sourceFamily, targetFamily, freshId) {
  * Check results are kept per value with a signature of what was checked, so that any
  * later edit of the value or its evidence makes the result stale.
  */
-export const checkKey = (step, condition) => `${step.step_id || ""}|${condition.name || ""}`;
+// Per value position, not name alone: two values of one name (a typo, or two volumes) must
+// not overwrite each other's result. A moved value is simply checked again.
+export const checkKey = (step, condition) => `${step.step_id || ""}|${(step.conditions || []).indexOf(condition)}|${condition.name || ""}`;
 export const conditionSignature = condition => `${condition.raw_value ?? ""}\u0000${condition.unit ?? ""}\u0000${JSON.stringify(condition.evidence || [])}`;
 
 /** The evidence state of a step:
@@ -470,6 +532,36 @@ export function recordInheritedChecks(steps, results, checks) {
       quote: condition.evidence[0]?.quote, inherited: true,
     });
   }
+}
+
+/** Cited values whose current form has no check result: copied steps, and values whose unit
+ * or evidence changed while the citation stayed. Each entry keeps the signature it is checked with.
+ */
+export function uncheckedConditions(steps, checks) {
+  const entries = [];
+  for (const step of steps) for (const condition of step.conditions || []) {
+    if (!condition.evidence?.length) continue;
+    const result = checks.get(checkKey(step, condition));
+    if (!result || result.signature !== conditionSignature(condition)) {
+      entries.push({ step, condition, signature: conditionSignature(condition) });
+    }
+  }
+  return entries;
+}
+
+/** Record the results for `uncheckedConditions` entries. A value changed while the check ran
+ * keeps no result, so it is checked again. Failures block like those of a confirmed step.
+ */
+export function recordConditionChecks(entries, results, checks) {
+  entries.forEach(({ step, condition, signature }, index) => {
+    const result = results[index];
+    if (!result || conditionSignature(condition) !== signature) return;
+    if (result.ok) adoptPrintedSpelling(condition, result.raw_value);
+    checks.set(checkKey(step, condition), {
+      signature: conditionSignature(condition), ok: result.ok, reason: result.reason, hint: result.hint,
+      quote: condition.evidence[0]?.quote, inherited: false,
+    });
+  });
 }
 
 export const citedValuesOf = steps => steps.flatMap(step => (step.conditions || [])

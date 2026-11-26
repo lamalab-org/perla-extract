@@ -1,7 +1,8 @@
 import { relationshipChoices } from "./review-state.js";
 import { createStepCard, resetStepCardState } from "./process-step-card.js";
 import {
-  STEP_PRESETS, applyStepCheck, citedValuesOf, copySteps, recordInheritedChecks, splitPerTarget, stepCheckRequest, stepStatus,
+  STEP_PRESETS, applyStepCheck, citedValuesOf, copyMissingLayers, copySteps, recordConditionChecks, recordInheritedChecks,
+  renewFamilyIdentifiers, splitPerTarget, stepCheckRequest, stepStatus, uncheckedConditions,
 } from "./process-templates.js";
 import { SUGGESTION_LISTS } from "./material-suggestions.js";
 
@@ -179,6 +180,16 @@ export function createRecordEditor({
     return `${prefix}-${suffix}`;
   }
 
+  /** Identifiers unused in the paper and in `values`, never handed out twice. */
+  function identifierMaker(...values) {
+    const used = usedIdentifiers(context().bundle?.ground_truth, ...values);
+    return (prefix) => {
+      const id = freshIdentifier(prefix, used);
+      used.add(id);
+      return id;
+    };
+  }
+
   function newRecordDraft(kind) {
     const value = draftFromSchema(context().studySchema.properties[kind].items);
     const identifier = context().bundle?.summary?.record_identifiers?.[kind];
@@ -221,6 +232,7 @@ export function createRecordEditor({
     let suffix = 2;
     while (used.has(candidate)) candidate = `${stem}-${suffix++}`;
     draft[identifier] = candidate;
+    if (kind === "device_families") renewFamilyIdentifiers(draft, identifierMaker(draft));
     return draft;
   }
 
@@ -237,6 +249,9 @@ export function createRecordEditor({
     resetStepCardState();
     stepChecks = new Map();
     editedSteps = new Set();
+    clearTimeout(recheck.timer);
+    recheck = { timer: null, running: false, failed: false, opening: kind === "device_families" };
+    statusViews.clear();
     const opened = ++openedAt;
     $("record-kind").textContent = COLLECTIONS[kind];
     $("record-title").textContent = index == null
@@ -655,6 +670,30 @@ export function createRecordEditor({
     const added = ["processing_steps", position];
     expand(["processing_steps"], added);
     replaceArrayItems(["processing_steps"], steps);
+    defaultToPreviousStepEvidence(steps, position);
+  }
+
+  /** A new step usually continues the sentence or paragraph of the step before it: offer that
+   * step's citation, unless the reviewer has already selected new evidence in the paper (the
+   * fields then hold a citation this family does not use yet).
+   */
+  function defaultToPreviousStepEvidence(steps, position) {
+    const previous = steps.slice(0, position).reverse().find(item => item.evidence?.length)?.evidence[0];
+    if (!previous?.block_id) return;
+    const current = selectedCitation();
+    if (current && !citationKeys(edit.value).has(`${current.block_id}\u0000${current.quote}`)) return;
+    $("citation-block").value = previous.block_id;
+    $("citation-quote").value = previous.quote;
+    focusCitation(previous, false, false);
+  }
+
+  function citationKeys(value, keys = new Set()) {
+    if (Array.isArray(value)) value.forEach(item => citationKeys(item, keys));
+    else if (value && typeof value === "object") {
+      if (typeof value.block_id === "string" && typeof value.quote === "string") keys.add(`${value.block_id}\u0000${value.quote.trim()}`);
+      Object.values(value).forEach(item => citationKeys(item, keys));
+    }
+    return keys;
   }
 
   /** Append another family's steps, retargeted to this family's layers by material, then function. */
@@ -668,25 +707,37 @@ export function createRecordEditor({
       properties: { value: family[identifier] },
     })));
     source.id = "record-copy-steps-source";
+    const withLayers = element("input", { properties: { type: "checkbox", checked: true } });
+    withLayers.id = "record-copy-steps-layers";
     const copy = () => {
       if (finishStepFirst()) return;
       const family = others.find(item => item[identifier] === source.value) || others[0];
-      const used = usedIdentifiers(context().bundle?.ground_truth, edit.value);
-      const { steps, skipped } = copySteps(family, edit.value, () => {
-        const id = freshIdentifier("step", used);
-        used.add(id);
-        return id;
-      });
+      const name = family.label || family[identifier];
+      const freshId = identifierMaker(edit.value);
+      let added = [];
+      if (withLayers.checked) {
+        const result = copyMissingLayers(family, edit.value, freshId);
+        added = result.added;
+        if (added.length) {
+          draft.replace(["layers"], result.layers);
+          draft.replace(["absorbers"], result.absorbers);
+          expand(["layers"]);
+        }
+      }
+      const { steps, skipped, present } = copySteps(family, edit.value, () => freshId("step"));
       const current = edit.value.processing_steps || [];
       steps.forEach((_step, offset) => expand(["processing_steps", current.length + offset]));
       expand(["processing_steps"]);
       replaceArrayItems(["processing_steps"], [...current, ...steps]);
-      say(`Copied ${steps.length} step${steps.length === 1 ? "" : "s"} from ${family.label || family[identifier]}. `
+      say(`Copied ${steps.length} step${steps.length === 1 ? "" : "s"} from ${name}. `
+        + (added.length ? `Added ${added.length} layer${added.length === 1 ? "" : "s"} this family was missing, with their citations: ${added.join(", ")}. Remove any layer this family does not have. ` : "")
+        + (present.length ? `Not copied, because this family already has ${present.length === 1 ? "this step" : "these steps"}: ${present.join("; ")}. ` : "")
         + (skipped.length ? `Not copied, because this family has no matching layer: ${skipped.join("; ")}. ` : "")
         + "Change what differs, remove what this family did not get, and check the target layers.", "info");
     };
     return element("div", { className: "process-copy" }, [
       element("label", {}, [element("span", { text: "Copy steps from" }), source]),
+      element("label", { className: "process-copy-layers" }, [withLayers, element("span", { text: "Also add the layers this family is missing" })]),
       element("button", { text: "Copy steps", properties: { type: "button" }, events: { click: copy } }),
     ]);
   }
@@ -749,13 +800,47 @@ export function createRecordEditor({
   async function checkOpenedSteps(opened) {
     const steps = edit.value.processing_steps || [];
     const values = citedValuesOf(steps);
-    if (!checkGrounding || !values.length) return;
     try {
+      if (!checkGrounding || !values.length) return;
       const results = await checkGrounding(values);
       if (opened !== openedAt) return; // another record was opened meanwhile
       recordInheritedChecks(steps, results, stepChecks);
       renderStructuredEditor();
-    } catch { /* the check is a help; saving still validates */ }
+    } catch { recheck.failed = true; /* the check is a help; saving still validates */ }
+    finally {
+      // Values cited when the record opened are checked here first, so their old problems
+      // stay warnings; only then are later changes checked (scheduleRecheck).
+      if (opened === openedAt) { recheck.opening = false; statusViews.forEach(show => show()); }
+    }
+  }
+
+  /** Check cited values that have no current result (copied steps, a changed unit), so that
+   * "Checking evidence" always ends. Badges are refreshed in place, keeping the focus. If the
+   * check cannot be reached, it is tried again after the next edit.
+   */
+  let recheck = { timer: null, running: false, failed: false, opening: false };
+  const statusViews = new Map();
+  function scheduleRecheck() {
+    if (!checkGrounding || recheck.opening || recheck.timer || recheck.running || recheck.failed) return;
+    recheck.timer = setTimeout(async () => {
+      recheck.timer = null;
+      const opened = openedAt;
+      const entries = uncheckedConditions(edit?.value?.processing_steps || [], stepChecks);
+      if (!entries.length) return;
+      recheck.running = true;
+      try {
+        const results = await checkGrounding(entries.map(({ condition }) => ({
+          raw_value: condition.raw_value, unit: condition.unit, evidence: condition.evidence,
+        })));
+        if (opened !== openedAt) return;
+        recordConditionChecks(entries, results, stepChecks);
+        $("record-json").value = JSON.stringify(edit.value, null, 2);
+        // Never repeat a check that recorded nothing; the next edit tries again.
+        if (uncheckedConditions(edit.value.processing_steps || [], stepChecks).length >= entries.length) recheck.failed = true;
+      } catch { recheck.failed = true; }
+      finally { recheck.running = false; }
+      if (opened === openedAt) statusViews.forEach(show => show());
+    }, 300);
   }
 
   /** The only way to confirm a step: cite its new values with the selected sentence after the
@@ -811,7 +896,9 @@ export function createRecordEditor({
     const problemList = element("ul", { className: "process-step-problems" });
     const showStatus = () => {
       const status = statusOf(step);
-      badge.textContent = STATUS_LABELS[status.state];
+      if (status.state === "checking") scheduleRecheck();
+      badge.textContent = status.state === "checking" && recheck.failed
+        ? "? Evidence not checked yet" : STATUS_LABELS[status.state];
       badge.dataset.state = status.state;
       details.dataset.evidence = status.state;
       problemList.replaceChildren(...[...status.problems, ...status.warnings].map(problem => element("li", {}, [
@@ -825,7 +912,8 @@ export function createRecordEditor({
       $("record-json").value = JSON.stringify(edit.value, null, 2);
       if (rerender) { expand(path); renderStructuredEditor(); } else showStatus();
     };
-    const edited = (rerender) => { editedSteps.add(stepKey(step)); sync(rerender); };
+    const edited = (rerender) => { editedSteps.add(stepKey(step)); recheck.failed = false; sync(rerender); };
+    statusViews.set(stepKey(step), showStatus);
     const layers = edit.value.layers || [];
     const targets = (step.target_layer_ids || [])
       .map(id => layers.find(layer => layer.layer_id === id)?.material || id).join(", ");

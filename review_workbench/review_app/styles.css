@@ -426,6 +426,7 @@ button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
 .process-material > input { flex:1; }
 .process-material > button { flex:none; }
 .process-copy label { display:grid; gap:4px; font-size:.78rem; }
+.process-copy label.process-copy-layers { display:flex; align-items:center; gap:6px; padding-bottom:6px; }
 .process-quenching { display:grid; gap:6px; padding:8px; border:1px dashed #cbd9d3; border-radius:8px; }
 .process-quenching > summary { cursor:pointer; font-weight:600; font-size:.8rem; }
 .process-quenching > .muted { font-size:.7rem; }
