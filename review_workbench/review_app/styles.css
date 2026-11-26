@@ -429,3 +429,21 @@ button:disabled,select:disabled { cursor:not-allowed; opacity:.55; }
 .process-quenching > .muted { font-size:.7rem; }
 .process-quenching-type { display:grid; gap:4px; }
 .process-quenching-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.process-solution { display:grid; gap:6px; padding:8px; border:1px solid #cbd9d3; border-radius:8px; }
+.process-solution > summary { cursor:pointer; font-weight:600; font-size:.8rem; }
+.process-solution > .muted { font-size:.7rem; }
+.process-solution-group { display:grid; gap:4px; }
+/* Evidence state of a processing step: green done, amber needs evidence, red value not in quote. */
+.process-step { border-left:5px solid var(--line); }
+.process-step[data-evidence="done"] { border-left-color:#2f8f5b; }
+.process-step[data-evidence="pending"] { border-left-color:#c98a12; background:#fffaf0; }
+.process-step[data-evidence="error"] { border-left-color:var(--danger); background:#fdf3f2; }
+.process-step[data-evidence="warning"] { border-left-color:#d06a1a; }
+.process-step-status { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:.72rem; font-weight:600; background:var(--wash); color:var(--muted); }
+.process-step-status[data-state="done"] { background:#e3f4ea; color:#1f6b42; }
+.process-step-status[data-state="pending"] { background:#fbefd4; color:#7a5208; }
+.process-step-status[data-state="error"] { background:#f8dedb; color:var(--danger); }
+.process-step-status[data-state="warning"] { background:#fbe5d3; color:#8a4410; }
+.process-step-problems { margin:0; padding:8px 8px 8px 26px; border-radius:8px; background:#ffffffb0; font-size:.8rem; line-height:1.45; }
+.process-step-problems li + li { margin-top:4px; }
+.process-step-quote { color:var(--muted); }

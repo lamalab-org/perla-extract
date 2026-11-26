@@ -42,6 +42,7 @@ scientific record. Production operation and imports are described in the
 | Quick entry of J-V, stabilized, certified and EQE results as one row per performance observation | `review_workbench/review_app/jv-table.js` | Rows need other metrics, units or measurement types |
 | Processing-step categories, their methods and parameters (names the scorer and NOMAD export recognize), copying steps between families | `review_workbench/review_app/process-templates.js` | A category, method or parameter is added or renamed, or layer matching for copies changes |
 | The typed card of one processing step in the family editor | `review_workbench/review_app/process-step-card.js` | Step editing behaves differently |
+| A step's solution (solvents, solutes, ratios as printed) stored as materials plus `<A:B> volume/molar ratio` conditions | `review_workbench/review_app/process-solution.js` | How a solution is written to or read from a step changes |
 | Material spellings as papers write them, as separate lists for layer materials, constituents and step materials (solvents only in steps) | `review_workbench/review_app/material-suggestions.js` | A common spelling or material is missing, or appears in the wrong field |
 | Values, treatment context, measurement conditions and statistics shown on review cards | `review_workbench/review_app/record-details.js` | A stored scientific field must be visible before acceptance |
 | Pure relationship choices and review calculations | `review_workbench/review_app/review-state.js` | Owner options or review calculations change |
@@ -93,9 +94,21 @@ stay intact. Check that this passage supports each added value before saving.
 
 In the family editor, each processing step is a card: its category (recognized from
 `operation`, never stored) decides the method suggestions and parameter fields. Filled
-parameters become `conditions`; empty ones are never saved. Annealing is a separate step
-(`+ Annealing after this step`) with `temperature` and `duration`; a step with several
-targets can be split into one step per layer.
+parameters become `conditions`; empty ones are never saved. Annealing is entered in the
+deposition step or as an `+ Annealing` step; a step with several targets can be split into
+one step per layer.
+
+**Evidence per step.** A step is confirmed only with **Use selected evidence & save step**:
+the selected sentence is sent with the step's uncited (or failed) values to
+`POST /api/grounding-checks/{split}/{paper_id}`. That endpoint (`grounding_check.py`) uses
+`reported_value_support`, the function the save validation uses, so a value it accepts is
+accepted on save. Found values get the sentence as evidence; others stay uncited and the
+step lists the value with a hint (printed differently, only inside a longer number, case,
+numbers in the quote). Each step shows its state (done, needs evidence, value not in its
+quote, old problem). New steps, copies and the family save wait until no step needs
+evidence; problems that existed when the record was opened are shown but do not block.
+Save errors that still name JSON paths are rewritten to step and value
+(`readableGroundingError`).
 
 **Copy steps from** appends another family's saved steps. Each copied step targets the
 layer of this family with the same material, otherwise the layer with the same function

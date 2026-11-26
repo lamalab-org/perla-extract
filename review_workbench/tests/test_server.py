@@ -308,3 +308,53 @@ def test_every_browser_module_is_served_without_exposing_backend_files():
     handler.do_GET()
     assert errors == [404]
     assert served == modules
+
+
+def test_grounding_check_answers_like_saving_and_explains_failures(
+    tmp_path, empty_study, document_payload
+):
+    app = ReviewApplication(tmp_path / "pdfs", tmp_path / "review")
+    document_payload["blocks"][0]["text"] = (
+        "SnO2 was spin-coated at 3,000 rpm for 30 s and annealed at 150 °C."
+    )
+    app.import_paper(
+        "calibration", "10.0000--example", pdf_bytes("Main"),
+        json.dumps(empty_study).encode(), document_bytes=json.dumps(document_payload).encode(),
+        reviewer_id="ada",
+    )
+    cite = [{"block_id": "main_p1_text_1", "quote": "spin-coated at 3,000 rpm for 30 s"}]
+    values = [
+        {"raw_value": "3,000", "unit": "rpm", "evidence": cite},
+        {"raw_value": "3000", "unit": "rpm", "evidence": cite},
+        {"raw_value": "0", "unit": "s", "evidence": cite},
+        {"raw_value": "150", "unit": "°C", "evidence": cite},
+        {"raw_value": "30", "evidence": []},
+        {"quote_only": True, "evidence": cite},
+        {"quote_only": True, "evidence": [{"block_id": "main_p1_text_1", "quote": "spun"}]},
+    ]
+    results = app.check_grounding("calibration", "10.0000--example", {"values": values})["results"]
+    assert [result["ok"] for result in results] == [True, False, False, False, False, True, False]
+    assert results[1]["hint"] == 'The paper prints it as "3,000"; type the value exactly as printed.'
+    assert results[2]["hint"].startswith('"0" occurs only inside "3,000", "30"')
+    assert results[3]["hint"] == "Numbers in this quote: 3,000, 30."
+    assert results[4]["reason"] == "This value has no evidence yet."
+    assert results[6]["reason"] == "The quote is not in its evidence block."
+    with pytest.raises(ValueError, match="values must be a list"):
+        app.check_grounding("calibration", "10.0000--example", {"values": "x"})
+
+
+def test_grounding_check_agrees_with_save_validation():
+    from perla_extract.study_extraction.models import EvidenceBlock
+    from perla_extract.study_extraction.validation import reported_value_support
+    from review_workbench.grounding_check import check_values
+
+    block = EvidenceBlock(
+        block_id="b", source="main", page=1, section_path=[], kind="text",
+        text="Films were annealed at 100 °C for 10 min; the ﬁlms were dried at 70°C.",
+    )
+    quotes = ["annealed at 100 °C for 10 min", "Annealed at 100 °C", "the ﬁlms were dried at 70°C"]
+    for quote in quotes:
+        for raw in ["100", "10", "1", "100 °C", "10 min", "70", "0"]:
+            value = {"raw_value": raw, "unit": None, "evidence": [{"block_id": "b", "quote": quote}]}
+            direct, assembled = reported_value_support(value, {"b": block}, True)
+            assert check_values([value], [block])[0]["ok"] == (direct or assembled), (quote, raw)

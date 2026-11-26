@@ -4,7 +4,7 @@ import { createReviewSession } from "./review-session.js";
 import { renderRecordDetails, renderSubjectContext } from "./record-details.js";
 import { createRecordEditor } from "./record-editor.js";
 import { createJvTable } from "./jv-table.js";
-import { conditionsMissingFromQuote, stepProblems } from "./process-templates.js";
+import { readableGroundingError, stepProblems } from "./process-templates.js";
 import { fillMaterialDatalists } from "./material-suggestions.js";
 import { createFinalizationQueue } from "/adjudication.js";
 import { schemaCompatibilityMessage, reviewProgress, recordEvidenceSection } from "/review-state.js";
@@ -2026,6 +2026,8 @@ function cancelPendingAction() {
   setStatus("Pending action cancelled. Any link corrections you already saved remain in the review history.");
 }
 
+const currentRecordValue = () => { try { return recordEditor.value(); } catch { return null; } };
+
 async function saveRecord() {
   try {
     const value = recordEditor.value();
@@ -2038,12 +2040,15 @@ async function saveRecord() {
     const reclassifying = recordEditor.edit.intent === "reclassify";
     if (reclassifying && !note) throw new Error("Explain why the original record type was wrong.");
     if (kind === "device_families") {
-      // Processing values without their own citation are cited by this quote, so they must occur in it.
+      // Each processing step is cited with its own sentence before the family is saved.
       const steps = value.processing_steps || [];
       const problems = steps.flatMap((step, position) => stepProblems(step, `Processing step ${step.sequence ?? position + 1}`));
       if (problems.length) throw new Error(problems.join(" "));
-      const missing = conditionsMissingFromQuote(steps, quote);
-      if (missing.length && !window.confirm(`These processing values are not in the quote: ${missing.join(", ")}. The server will probably reject them. To cite each step with its own sentence, select that sentence and choose \"Cite selected evidence for this step\" in the step. Save anyway?`)) return;
+      const unfinished = recordEditor.unfinishedSteps();
+      if (unfinished.length) {
+        throw new Error(`Not saved: confirm the evidence of every processing step first. ${unfinished.join(" ")} `
+          + 'In each of these steps, select its sentence in the paper and click "Use selected evidence & save step".');
+      }
     }
     await reviewSession.saveRecord({ edit: recordEditor.edit, value, citation, note });
     $("record-dialog").close();
@@ -2053,7 +2058,7 @@ async function saveRecord() {
       : index == null
         ? `Added the missing ${singularCollection(kind).toLowerCase()}. Review the new record, then choose Matches source.`
         : "Correction saved for administrators. Review the updated record, then choose Matches source; undo remains available in My work & undo.");
-  } catch (error) { $("dialog-status").textContent = presentRequestError(error).message; }
+  } catch (error) { $("dialog-status").textContent = readableGroundingError(presentRequestError(error).message, currentRecordValue()); }
 }
 
 async function removeRecord() {
@@ -2662,6 +2667,10 @@ const recordEditor = createRecordEditor({
   document, element, context: () => ({ bundle: state.bundle, studySchema: state.studySchema }),
   collections: COLLECTIONS, humanLabel, singularCollection, recordKey, recordReferences,
   entityTitle, linkedRecordSummary, reviewReferencedRecord, focusCitation,
+  checkGrounding: async values => (await request(
+    `/api/grounding-checks/${encodeURIComponent(state.split)}/${encodeURIComponent(state.paperId)}`,
+    { method: "POST", body: JSON.stringify({ values }) },
+  )).results,
 });
 
 $("split").addEventListener("change", async (event) => { if (!leaveRecordEditor()) { event.target.value = state.split; return; } state.pdfAbortController?.abort(); reviewSession.reset(event.target.value); state.papers = []; state.annotations = null; state.censusDraft = null; state.editingCensus = false; $("workspace").hidden = true; $("empty-title").textContent = "Choose a paper"; $("empty-message").textContent = "Review the extracted records beside the paper, record what is missing, and count information that appears only in main-text figures."; $("empty-state").hidden = false; try { await loadPapers(); } catch (error) { showStartupError(error); } });

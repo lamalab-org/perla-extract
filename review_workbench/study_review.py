@@ -32,6 +32,7 @@ from perla_extract.study_extraction.models import (
 )
 from perla_extract.study_extraction.scoring_coverage import ReferenceCoverage
 from perla_extract.study_extraction.validation import validate_study
+from review_workbench.grounding_check import check_values
 from review_workbench.review_storage import (
     LocalReviewStateStorage,
     ReviewPaperSource,
@@ -1372,6 +1373,26 @@ class StudyReviewStore:
                 raise ValueError(
                     f"quote is not present in evidence block {citation.block_id}"
                 )
+
+    def check_grounding(
+        self, split: str, paper_id: str, payload: Any
+    ) -> dict[str, Any]:
+        """Check reported values against their citations before saving, as saving does."""
+
+        values = payload.get("values") if isinstance(payload, dict) else None
+        if not isinstance(values, list) or len(values) > 2000:
+            raise ValueError("values must be a list of at most 2000 reported values")
+        document = self.load_document(split, paper_id)
+        raw_blocks = document.get("blocks") if isinstance(document, dict) else document
+        blocks = [
+            EvidenceBlock.model_validate(block)
+            for block in (raw_blocks if isinstance(raw_blocks, list) else [])
+        ]
+        return {
+            "results": check_values(
+                [value if isinstance(value, dict) else {} for value in values], blocks
+            )
+        }
 
     def _reject_new_grounding_issues(
         self,

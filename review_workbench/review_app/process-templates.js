@@ -11,7 +11,7 @@
  *     treats them like "temperature"/"duration" under an annealing operation);
  *   - antisolvent values named by the chemical: "chlorobenzene volume", "… drip time".
  */
-import { reportedNumber, standardUnit, valuesMissingFromQuote } from "./jv-table.js";
+import { reportedNumber, standardUnit } from "./jv-table.js";
 import { SOLVENT_NAMES } from "./material-suggestions.js";
 
 const parameter = (name, unit = "", placeholder = "") => ({ name, unit, placeholder });
@@ -384,28 +384,109 @@ export function copySteps(sourceFamily, targetFamily, freshId) {
   return { steps, skipped };
 }
 
-/** New condition values that the save quote does not contain; the server would reject them. */
-export function conditionsMissingFromQuote(steps, quote) {
-  return steps.flatMap((step, index) => valuesMissingFromQuote(
-    [{ metrics: (step.conditions || []).filter(condition => !condition.evidence?.length) }], quote,
-  ).map(problem => problem.replace(/^row 1/, `step ${step.sequence ?? index + 1}`)));
+/* Evidence per step. A step is finished when the step and each of its values are cited
+ * and the server found every new value in its quote (the same check as on save).
+ * Check results are kept per value with a signature of what was checked, so that any
+ * later edit of the value or its evidence makes the result stale.
+ */
+export const checkKey = (step, condition) => `${step.step_id || ""}|${condition.name || ""}`;
+export const conditionSignature = condition => `${condition.raw_value ?? ""}\u0000${condition.unit ?? ""}\u0000${JSON.stringify(condition.evidence || [])}`;
+
+/** The evidence state of a step:
+ *   done      every value and the step are cited, new values were found in their quotes;
+ *   pending   something has no evidence yet, or the step was edited since it was confirmed;
+ *   error     a value was not found in the quote chosen for it;
+ *   warning   a value already failed the check when the record was opened (not blocking);
+ *   checking  cited values whose check has not returned yet.
+ * `blocking` steps must be confirmed before another step is added or the family is saved.
+ */
+export function stepStatus(step, checks = new Map(), edited = false) {
+  const problems = [];
+  const warnings = [];
+  const pending = [];
+  let unchecked = 0;
+  for (const condition of step.conditions || []) {
+    const label = `${condition.name || "unnamed parameter"} "${condition.raw_value ?? ""}"`;
+    const result = checks.get(checkKey(step, condition));
+    const current = result && result.signature === conditionSignature(condition);
+    if (current && !result.ok) (result.inherited ? warnings : problems).push({ label, reason: result.reason, hint: result.hint, quote: result.quote });
+    else if (!condition.evidence?.length) pending.push(`${label} has no evidence yet`);
+    else if (!current) unchecked += 1;
+  }
+  if (!step.evidence?.length) pending.push("the step itself has no evidence yet");
+  else if (edited && !pending.length) pending.push("edited since it was last confirmed");
+  const state = problems.length ? "error" : pending.length ? "pending" : warnings.length ? "warning" : unchecked ? "checking" : "done";
+  return { state, blocking: state === "error" || state === "pending", problems, warnings, pending };
 }
 
-/** Cite a step's uncited values with one quote, e.g. the sentence that describes this step.
- * Only values that occur in the quote are cited; the step itself is cited if it has no evidence.
- * Returns the names cited and the values still missing (cited later by the save quote).
+/** What to send to the grounding check when a step is confirmed with `citation`: every value
+ * (uncited and failed ones tried with the citation, cited ones as they are) and, last, the
+ * citation's quote on its own.
  */
-export function citeStep(step, citation) {
+export function stepCheckRequest(step, checks, citation) {
+  const entries = (step.conditions || []).map((condition) => {
+    const result = checks.get(checkKey(step, condition));
+    const failed = result && !result.ok && result.signature === conditionSignature(condition);
+    const candidate = !condition.evidence?.length || Boolean(failed);
+    return { condition, candidate, evidence: candidate ? [{ ...citation }] : condition.evidence };
+  });
+  const values = entries.map(({ condition, evidence }) => ({ raw_value: condition.raw_value, unit: condition.unit, evidence }));
+  values.push({ quote_only: true, evidence: [{ ...citation }] });
+  return { entries, values };
+}
+
+/** Apply the check results: found values get the citation, others keep no evidence and
+ * record why. The step is cited too when it has no evidence. Returns what happened.
+ */
+export function applyStepCheck(step, request, results, checks, citation) {
+  const quote = results[request.entries.length] || { ok: false, reason: "No answer from the check.", hint: "" };
   const cited = [];
-  const missing = [];
-  for (const condition of step.conditions || []) {
-    if (condition.evidence?.length) continue;
-    const absent = valuesMissingFromQuote([{ metrics: [condition] }], citation.quote).length;
-    if (absent) missing.push(`${condition.name} "${condition.raw_value}"`);
-    else { condition.evidence = [{ ...citation }]; cited.push(condition.name); }
-  }
+  const failed = [];
+  if (!quote.ok) return { cited, failed, quoteProblem: quote };
+  request.entries.forEach(({ condition, candidate }, index) => {
+    const result = results[index] || { ok: false, reason: "No answer from the check.", hint: "" };
+    if (candidate) condition.evidence = result.ok ? [{ ...citation }] : [];
+    if (candidate && result.ok) cited.push(condition.name);
+    if (!result.ok) failed.push({ label: `${condition.name} "${condition.raw_value ?? ""}"`, reason: result.reason, hint: result.hint });
+    checks.set(checkKey(step, condition), {
+      signature: conditionSignature(condition), ok: result.ok, reason: result.reason, hint: result.hint,
+      quote: candidate ? citation.quote : condition.evidence?.[0]?.quote, inherited: false,
+    });
+  });
   if (!step.evidence?.length) step.evidence = [{ ...citation }];
-  return { cited, missing };
+  return { cited, failed, quoteProblem: null };
+}
+
+/** Record the check of a just-opened record's cited values; failures there are inherited. */
+export function recordInheritedChecks(steps, results, checks) {
+  let index = 0;
+  for (const step of steps) for (const condition of step.conditions || []) {
+    if (!condition.evidence?.length) continue;
+    const result = results[index++];
+    if (result) checks.set(checkKey(step, condition), {
+      signature: conditionSignature(condition), ok: result.ok, reason: result.reason, hint: result.hint,
+      quote: condition.evidence[0]?.quote, inherited: true,
+    });
+  }
+}
+
+export const citedValuesOf = steps => steps.flatMap(step => (step.conditions || [])
+  .filter(condition => condition.evidence?.length)
+  .map(condition => ({ raw_value: condition.raw_value, unit: condition.unit, evidence: condition.evidence })));
+
+/** Replace JSON paths in a save error by the step and value they point to. */
+export function readableGroundingError(message, value) {
+  return String(message).replace(/\$\.device_families\[\d+\]((?:\.[a-z_]+\[\d+\])+)(?::\s*raw_value not found in cited evidence)?/g, (match, rest) => {
+    const parts = [...rest.matchAll(/\.([a-z_]+)\[(\d+)\]/g)].map(([, key, index]) => [key, Number(index)]);
+    if (parts[0]?.[0] !== "processing_steps" || !value) return match;
+    const step = value.processing_steps?.[parts[0][1]];
+    if (!step) return match;
+    const condition = parts[1]?.[0] === "conditions" ? step.conditions?.[parts[1][1]] : null;
+    const where = `step ${parts[0][1] + 1} (${step.operation || "no method"})`;
+    return condition
+      ? `${where}: ${condition.name} "${condition.raw_value}" is not in its quote "${condition.evidence?.[0]?.quote ?? "(none)"}"`
+      : where;
+  });
 }
 
 /** Problems that the schema would reject: an empty operation, unnamed parameters, empty materials. */

@@ -170,16 +170,46 @@ assert.equal(T.antisolventOf({conditions:[{name:'antisolvent volume'}]}), 'antis
 assert.equal(T.antisolventOf({conditions:[{name:'spin volume'}]}), 'antisolvent', 'only antisolvent or solvent names count');
 const split = T.splitPerTarget({...step, step_id:'s1', target_layer_ids:['a','b','c']}, (() => { let n = 1; return () => `s${++n}`; })());
 assert.deepEqual(split.map(item => [item.step_id, item.target_layer_ids]), [['s1',['a']],['s2',['b']],['s3',['c']]]);
-assert.deepEqual(T.conditionsMissingFromQuote([{sequence:3, conditions:[{name:'spin speed', raw_value:'4000', evidence:[]}]}], 'at 3000 rpm'),
-  ['step 3 spin speed "4000"']);
-// Each step can be cited with its own sentence; only values in that sentence are cited.
-const own = {conditions:[{name:'spin speed', raw_value:'3000', unit:'rpm', evidence:[]}, {name:'annealing temperature', raw_value:'150', unit:'°C', evidence:[]},
-  {name:'treatment duration', raw_value:'15', unit:'min', evidence:[{block_id:'b0', quote:'15 min'}]}], evidence:[]};
-const sentence = {block_id:'b1', quote:'SnO2 was spin-coated at 3,000 rpm... at 3000 r.p.m. for 30 s'};
-assert.deepEqual(T.citeStep(own, sentence), {cited:['spin speed'], missing:['annealing temperature "150"']});
-assert.deepEqual(own.conditions.map(item => item.evidence[0]?.block_id ?? null), ['b1', null, 'b0'], 'cited values keep their own quote');
-assert.equal(own.evidence[0].block_id, 'b1');
-assert.deepEqual(T.conditionsMissingFromQuote([own], 'annealed at 150 °C'), [], 'the save quote only has to cover the rest');
+// Evidence per step: a step is finished only when the server found each new value in its quote.
+const own = {step_id:'s9', operation:'spin coating', evidence:[], conditions:[
+  {name:'spin speed', raw_value:'3000', unit:'rpm', evidence:[]}, {name:'spin duration', raw_value:'30', unit:'s', evidence:[]},
+  {name:'treatment duration', raw_value:'15', unit:'min', evidence:[{block_id:'b0', quote:'for 15 min'}]}]};
+const checks = new Map();
+assert.equal(T.stepStatus(own, checks).state, 'pending');
+assert.ok(T.stepStatus(own, checks).blocking);
+const sentence = {block_id:'b1', quote:'spin-coated at 3,000 rpm for 30 s'};
+const request = T.stepCheckRequest(own, checks, sentence);
+assert.deepEqual(request.values.map(item => item.evidence[0].block_id), ['b1', 'b1', 'b0', 'b1'], 'uncited values are tried with the sentence');
+assert.equal(request.values.at(-1).quote_only, true);
+const answer = [{ok:false, reason:'"3000" is not in the quote.', hint:'The paper prints it as "3,000"'}, {ok:true}, {ok:true}, {ok:true}];
+const outcome = T.applyStepCheck(own, request, answer, checks, sentence);
+assert.deepEqual(outcome.cited, ['spin duration']);
+assert.deepEqual(own.conditions.map(item => item.evidence[0]?.block_id ?? null), [null, 'b1', 'b0'], 'a value not found stays uncited');
+let status = T.stepStatus(own, checks);
+assert.equal(status.state, 'error');
+assert.match(status.problems[0].label + status.problems[0].hint, /spin speed "3000".*3,000/);
+assert.equal(own.evidence[0].block_id, 'b1', 'the step is cited with its sentence');
+// Correcting the value makes the old result stale; confirming again finishes the step.
+own.conditions[0].raw_value = '3,000';
+assert.equal(T.stepStatus(own, checks).state, 'pending');
+const again = T.stepCheckRequest(own, checks, sentence);
+T.applyStepCheck(own, again, again.values.map(() => ({ok:true})), checks, sentence);
+assert.equal(T.stepStatus(own, checks).state, 'done');
+assert.equal(T.stepStatus(own, checks, true).state, 'pending', 'an edit since confirming needs a new confirmation');
+// A wrong quote changes nothing.
+const fresh = {step_id:'s10', operation:'annealing', evidence:[], conditions:[{name:'annealing temperature', raw_value:'100', evidence:[]}]};
+const wrong = T.stepCheckRequest(fresh, checks, {block_id:'b1', quote:'typo'});
+assert.ok(T.applyStepCheck(fresh, wrong, [{ok:true}, {ok:false, reason:'The quote is not in its evidence block.'}], checks, {block_id:'b1', quote:'typo'}).quoteProblem);
+assert.deepEqual([fresh.evidence, fresh.conditions[0].evidence], [[], []]);
+// Problems found when a record is opened are shown but do not block.
+const old = {step_id:'s11', operation:'annealing', evidence:[{block_id:'b2', quote:'q'}], conditions:[{name:'annealing temperature', raw_value:'99', evidence:[{block_id:'b2', quote:'q'}]}]};
+T.recordInheritedChecks([old], [{ok:false, reason:'not found'}], checks);
+assert.deepEqual([T.stepStatus(old, checks).state, T.stepStatus(old, checks).blocking], ['warning', false]);
+assert.equal(T.citedValuesOf([own, fresh, old]).length, 4);
+// Save errors name the step and value instead of JSON indices.
+const family = {processing_steps:[{operation:'cleaning'}, {operation:'spin coating', conditions:[{name:'spin speed', raw_value:'3000', evidence:[{quote:'at 3,000 rpm'}]}]}]};
+assert.equal(T.readableGroundingError('problem: $.device_families[0].processing_steps[1].conditions[0]: raw_value not found in cited evidence', family),
+  'problem: step 2 (spin coating): spin speed "3000" is not in its quote "at 3,000 rpm"');
 assert.match(T.stepProblems({operation:' ', materials:[''], conditions:[{name:'', raw_value:'1'}]}).join(' '), /method.*no name.*empty material/);
 """)
 
@@ -440,10 +470,24 @@ const bundle = {revision:1, ground_truth:{device_families:[family]}, summary:{re
 const editor = createRecordEditor({document, element, context:() => ({bundle, studySchema:schema}),
   collections:{device_families:'Device families'}, humanLabel:value => value, singularCollection:() => 'Device family',
   recordKey:() => 'device_families:control', recordReferences:() => [], entityTitle:(_kind, item) => item.label,
-  linkedRecordSummary:() => '', reviewReferencedRecord:() => {}, focusCitation:() => {}});
+  linkedRecordSummary:() => '', reviewReferencedRecord:() => {}, focusCitation:() => {},
+  checkGrounding: async values => { checked.push(values); return values.map(groundingAnswer); }});
+// The grounding check is the server's; here every value is found unless a test says otherwise.
+const checked = [];
+let groundingAnswer = () => ({ok:true, reason:'', hint:''});
 const all = () => descendants(document.getElementById('structured-editor'));
 const field = (id, value) => { const node = document.getElementById(id); node.value = value; node.fire('input'); return node; };
 const click = label => all().find(node => node.textContent === label).fire('click');
+const settle = () => new Promise(resolve => setTimeout(resolve, 0));
+const status = () => document.getElementById('dialog-status').textContent;
+const badges = () => all().filter(node => node.className === 'process-step-status').map(node => node.dataset.state);
+/** Select a sentence and confirm step `index` with it. */
+const confirmStep = async (index, quote = 'q') => {
+  document.getElementById('citation-block').value = 'main-1';
+  document.getElementById('citation-quote').value = quote;
+  all().filter(node => node.textContent === 'Use selected evidence & save step')[index].fire('click');
+  await settle();
+};
 """
 
 
@@ -482,19 +526,47 @@ assert.deepEqual(editor.value().processing_steps.map(item => [item.step_id, item
   [['step-1',1,['a']],['step-2',2,['b']]]);
 assert.deepEqual(editor.value().processing_steps[1].conditions[0].raw_value, '4000');
 assert.ok(!all().some(node => node.textContent === '+ Annealing after this step'));
+// A new step waits until the edited steps are confirmed with their evidence.
+assert.deepEqual(badges(), ['pending', 'pending']);
+click('+ Annealing');
+assert.equal(editor.value().processing_steps.length, 2);
+assert.match(status(), /Finish this step first\. Step 1 \(spin-coat SnO2\): spin speed "4000" has no evidence yet.*Use selected evidence & save step/);
+await confirmStep(0, 'spin-coated at 4000 rpm');
+assert.deepEqual(editor.value().processing_steps[0].conditions[0].evidence, [{block_id:'main-1', quote:'spin-coated at 4000 rpm'}]);
+assert.equal(checked.at(-1).at(-1).quote_only, true);
+assert.match(status(), /Step 1 \(spin-coat SnO2\) saved with "spin-coated at 4000 rpm": cited spin speed, annealing temperature/);
+await confirmStep(1);
+assert.deepEqual(badges(), ['done', 'done']);
+assert.deepEqual(editor.unfinishedSteps(), []);
 click('+ Annealing');
 assert.equal(editor.value().processing_steps[2].operation, 'annealing');
 field('record-step-2-param-annealing-temperature', '100');
 assert.deepEqual(editor.value().processing_steps[2].conditions[0], {name:'annealing temperature', raw_value:'100', value_number:100, unit:'°C', evidence:[]});
+// A value not found stays uncited, and the step says which value and why.
+groundingAnswer = value => value.raw_value === '100'
+  ? {ok:false, reason:'"100" is not in the quote.', hint:'Numbers in this quote: 10.'} : {ok:true, reason:'', hint:''};
+await confirmStep(2, 'annealed for 10 min');
+assert.deepEqual(editor.value().processing_steps[2].conditions[0].evidence, []);
+assert.equal(badges()[2], 'error');
+assert.match(status(), /Not found in "annealed for 10 min": annealing temperature "100": Numbers in this quote: 10\./);
+assert.ok(all().some(node => node.textContent === 'annealing temperature "100": '), 'the problem is listed in the step');
+assert.match(editor.unfinishedSteps()[0], /Step 3 \(annealing\): annealing temperature "100": "100" is not in the quote\. Numbers in this quote: 10\./);
+click('+ Blade coating');
+assert.equal(editor.value().processing_steps.length, 3, 'blocked while a value is not in its quote');
+groundingAnswer = () => ({ok:true, reason:'', hint:''});
+await confirmStep(2, 'annealed at 100 °C');
+assert.equal(badges()[2], 'done');
 click('+ Blade coating');
 assert.equal(editor.value().processing_steps[3].operation, 'blade coating');
 assert.ok(document.getElementById('record-step-3-param-blade-gap'));
 assert.ok(!all().some(node => node.id === 'record-step-3-param-spin-speed'), 'no spin parameters for blade coating');
 field('record-step-3-param-blade-gap', '150');
+assert.equal(badges()[3], 'pending', 'a typed value changes the state without a re-render');
 // Switching the method changes the parameter list; values already entered stay in the record.
 field('record-step-3-operation', 'slot-die coating').fire('change');
 assert.ok(all().some(node => node.id === 'record-step-3-param-shim-thickness'));
 assert.deepEqual(editor.value().processing_steps[3].conditions.map(item => item.name), ['blade gap']);
+await confirmStep(3);
 click('+ Evaporation');
 
 assert.equal(editor.value().processing_steps[4].operation, 'thermal evaporation');

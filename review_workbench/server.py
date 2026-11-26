@@ -541,6 +541,11 @@ class ReviewApplication:
             self.pdf_path(paper_id, "supplement", split).write_bytes(supplement_bytes)
         return self._with_sources(bundle)
 
+    def check_grounding(
+        self, split: str, paper_id: str, payload: object
+    ) -> dict[str, Any]:
+        return self.store.check_grounding(split, paper_id, payload)
+
     def mutate(
         self, split: str, paper_id: str, payload: object, reviewer_id: str
     ) -> dict[str, Any]:
@@ -1351,6 +1356,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     "record-editor.js",
                     "jv-table.js",
                     "process-templates.js",
+                    "process-solution.js",
                     "process-step-card.js",
                     "material-suggestions.js",
                     "record-details.js",
@@ -1530,6 +1536,13 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             parts[2], user["id"], self.read_json()
                         ),
                         HTTPStatus.CREATED,
+                    )
+                    return
+                if len(parts) == 4 and parts[:2] == ["api", "grounding-checks"]:
+                    self.send_json(
+                        application.check_grounding(
+                            parts[2], parts[3], self.read_json()
+                        )
                     )
                     return
                 if len(parts) == 4 and parts[:2] == ["api", "mutations"]:

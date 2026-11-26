@@ -124,6 +124,40 @@ def _report_exact_duplicates(
             )
 
 
+def reported_value_support(
+    value: dict, block_by_id: dict[str, EvidenceBlock], evidence_ok: bool
+) -> tuple[bool, bool]:
+    """Whether a reported value's raw_value is grounded in its own citations.
+
+    Returns (found directly in one quote, assembled from quotes or a shared unit).
+    Every quote must also occur exactly (case and notation kept) in its block.
+    """
+
+    references = value.get("evidence") or []
+    scientific_evidence_ok = evidence_ok and all(
+        (block := block_by_id.get(reference.get("block_id"))) is not None
+        and source_contains_scientific_text(block.text, reference.get("quote"))
+        for reference in references
+    )
+    if not scientific_evidence_ok:
+        return False, False
+    raw_direct = any(
+        source_contains_scientific_text(reference.get("quote"), value["raw_value"])
+        for reference in references
+    )
+    unit_sources = [
+        block.text
+        for reference in references
+        if (block := block_by_id.get(reference.get("block_id"))) is not None
+    ]
+    assembled = assembled_from_quotes(
+        value["raw_value"], references
+    ) or assembled_with_shared_unit(
+        value["raw_value"], value.get("unit"), references, unit_sources
+    )
+    return raw_direct, assembled
+
+
 def validate_study_details(
     extraction: StudyExtraction, blocks: list[EvidenceBlock]
 ) -> StudyValidation:
@@ -167,41 +201,15 @@ def validate_study_details(
             if {"name", "raw_value", "evidence"} <= value.keys():
                 total_reported_values += 1
                 evidence_ok = evidence_supported(value["evidence"], location)
-                scientific_evidence_ok = evidence_ok and all(
-                    (block := block_by_id.get(reference.get("block_id"))) is not None
-                    and source_contains_scientific_text(
-                        block.text, reference.get("quote")
-                    )
-                    for reference in value["evidence"]
+                raw_direct, raw_assembled_any = reported_value_support(
+                    value, block_by_id, evidence_ok
                 )
-                raw_direct = scientific_evidence_ok and any(
-                    source_contains_scientific_text(
-                        reference.get("quote"), value["raw_value"]
-                    )
-                    for reference in value["evidence"]
-                )
-                raw_assembled = scientific_evidence_ok and assembled_from_quotes(
-                    value["raw_value"], value["evidence"]
-                )
-                unit_sources = [
-                    block.text
-                    for reference in value["evidence"]
-                    if (block := block_by_id.get(reference.get("block_id"))) is not None
-                ]
-                raw_shared_unit = scientific_evidence_ok and assembled_with_shared_unit(
-                    value["raw_value"],
-                    value.get("unit"),
-                    value["evidence"],
-                    unit_sources,
-                )
-                raw_ok = raw_direct or raw_assembled or raw_shared_unit
+                raw_ok = raw_direct or raw_assembled_any
                 if not raw_ok:
                     citation(location, "raw_value not found in cited evidence")
                 if evidence_ok and raw_ok:
                     source_verified_values += 1
-                    source_assembled_values += int(
-                        (raw_assembled or raw_shared_unit) and not raw_direct
-                    )
+                    source_assembled_values += int(raw_assembled_any and not raw_direct)
                     verified_values.append({"path": _json_path(location), **value})
             elif "material_form_raw" in value and isinstance(
                 value.get("evidence"), list

@@ -1,6 +1,8 @@
 import { relationshipChoices } from "./review-state.js";
 import { createStepCard, resetStepCardState } from "./process-step-card.js";
-import { STEP_PRESETS, citeStep, copySteps, splitPerTarget } from "./process-templates.js";
+import {
+  STEP_PRESETS, applyStepCheck, citedValuesOf, copySteps, recordInheritedChecks, splitPerTarget, stepCheckRequest, stepStatus,
+} from "./process-templates.js";
 import { SUGGESTION_LISTS } from "./material-suggestions.js";
 
 /** One record draft shared by the field controls and the raw JSON editing mode.
@@ -50,6 +52,7 @@ export function createDraftState(initial) {
 export function createRecordEditor({
   document, element, context, collections: COLLECTIONS, humanLabel, singularCollection,
   recordKey, recordReferences, entityTitle, linkedRecordSummary, reviewReferencedRecord, focusCitation,
+  checkGrounding = null,
 }) {
   const $ = id => document.getElementById(id);
   const pointerPart = value => String(value).replaceAll("~", "~0").replaceAll("/", "~1");
@@ -60,6 +63,10 @@ export function createRecordEditor({
   let groups = new Map();
   let focusPath = null;
   let initialJson = null;
+  // Evidence per processing step: check results per value, and steps edited since confirmed.
+  let stepChecks = new Map();
+  let editedSteps = new Set();
+  let openedAt = 0;
   const RECORD_ID_PREFIXES = {
     device_families: "family", individual_devices: "device",
     performance_observations: "observation", population_statistics: "population",
@@ -216,6 +223,9 @@ export function createRecordEditor({
     groups = new Map();
     focusPath = null;
     resetStepCardState();
+    stepChecks = new Map();
+    editedSteps = new Set();
+    const opened = ++openedAt;
     $("record-kind").textContent = COLLECTIONS[kind];
     $("record-title").textContent = index == null
       ? `Add missing ${singularCollection(kind).toLowerCase()}`
@@ -255,6 +265,7 @@ export function createRecordEditor({
     $("citation-quote").value = citation?.quote || "";
     $("mutation-note").value = "";
     document.querySelector(".evidence-search").open = adding || !citation;
+    if (kind === "device_families") checkOpenedSteps(opened);
     $("record-save-help").replaceChildren(
       document.createTextNode("Your change is saved with your name. Administrators can retrieve it. If no later edit changes the same record, you can undo it from "),
       element("strong", { text: "My work & undo" }),
@@ -646,6 +657,7 @@ export function createRecordEditor({
     })));
     source.id = "record-copy-steps-source";
     const copy = () => {
+      if (finishStepFirst()) return;
       const family = others.find(item => item[identifier] === source.value) || others[0];
       const used = usedIdentifiers(context().bundle?.ground_truth, edit.value);
       const { steps, skipped } = copySteps(family, edit.value, () => {
@@ -681,48 +693,144 @@ export function createRecordEditor({
     $("dialog-status").textContent = `Split into ${parts.length} steps, one per target layer. Check each copy's values against the paper.`;
   }
 
-  /** Cite this step's values with the quote in the evidence fields, so that each step can
-   * have its own sentence; values not in that quote stay uncited.
-   */
-  function citeThisStep(step, sync) {
-    const blockId = $("citation-block").value.trim();
+  const isStepList = path => edit?.kind === "device_families" && path.length === 1 && path[0] === "processing_steps";
+  const stepKey = step => step.step_id || "";
+  const statusOf = step => stepStatus(step, stepChecks, editedSteps.has(stepKey(step)));
+  const stepName = (step, index) => `Step ${index + 1} (${step.operation || "no method yet"})`;
+
+  /** Steps that must be confirmed with their evidence before the family is saved. */
+  function unfinishedSteps() {
+    if (edit?.kind !== "device_families") return [];
+    return (edit.value.processing_steps || [])
+      .map((step, index) => ({ step, index, status: statusOf(step) }))
+      .filter(item => item.status.blocking);
+  }
+
+  /** What is still missing in a step, in words the reviewer can act on. */
+  function unfinishedText({ step, index, status }) {
+    const issues = [
+      ...status.problems.map(problem => `${problem.label}: ${problem.reason} ${problem.hint || ""}`.trim()),
+      ...status.pending,
+    ];
+    return `${stepName(step, index)}: ${issues.join("; ")}.`;
+  }
+
+  /** Block adding steps while a step still needs its evidence; open and point to that step. */
+  function finishStepFirst() {
+    const open = unfinishedSteps();
+    if (!open.length) return false;
+    const first = open[0];
+    expand(["processing_steps"], ["processing_steps", first.index]);
+    renderStructuredEditor();
+    $("dialog-status").textContent = `Finish this step first. ${unfinishedText(first)} Select the sentence that describes it in the paper, then click "Use selected evidence & save step" in that step.`;
+    document.querySelector(`[data-step-index="${first.index}"]`)?.scrollIntoView?.({ block: "nearest" });
+    return true;
+  }
+
+  const selectedCitation = () => {
+    const block_id = $("citation-block").value.trim();
     const quote = $("citation-quote").value.trim();
-    if (!blockId || !quote) {
-      $("dialog-status").textContent = "Select the sentence about this step in the paper first; it fills the evidence block and quote.";
+    return block_id && quote ? { block_id, quote } : null;
+  };
+
+  /** Check the values a just-opened family already cites, so that old problems are visible. */
+  async function checkOpenedSteps(opened) {
+    const steps = edit.value.processing_steps || [];
+    const values = citedValuesOf(steps);
+    if (!checkGrounding || !values.length) return;
+    try {
+      const results = await checkGrounding(values);
+      if (opened !== openedAt) return; // another record was opened meanwhile
+      recordInheritedChecks(steps, results, stepChecks);
+      renderStructuredEditor();
+    } catch { /* the check is a help; saving still validates */ }
+  }
+
+  /** The only way to confirm a step: cite its new values with the selected sentence after the
+   * server found each of them there; values not found stay uncited and say why.
+   */
+  async function confirmStep(step, index, sync, button) {
+    const citation = selectedCitation();
+    if (!citation) {
+      $("dialog-status").textContent = "Select the sentence about this step in the paper first; it fills the evidence block and quote below.";
       return;
     }
-    const { cited, missing } = citeStep(step, { block_id: blockId, quote });
+    if (!checkGrounding) return;
+    const request = stepCheckRequest(step, stepChecks, citation);
+    button.disabled = true;
+    button.textContent = "Checking…";
+    let results;
+    try { results = await checkGrounding(request.values); }
+    catch (error) {
+      button.disabled = false;
+      button.textContent = "Use selected evidence & save step";
+      $("dialog-status").textContent = `Could not check the evidence: ${error.message}`;
+      return;
+    }
+    const outcome = applyStepCheck(step, request, results, stepChecks, citation);
+    const shortQuote = citation.quote.length > 90 ? `${citation.quote.slice(0, 90)}…` : citation.quote;
+    if (outcome.quoteProblem) {
+      $("dialog-status").textContent = `${stepName(step, index)} not saved: ${outcome.quoteProblem.reason} ${outcome.quoteProblem.hint || ""}`;
+    } else {
+      if (!statusOf(step).blocking || !outcome.failed.length) editedSteps.delete(stepKey(step));
+      const status = statusOf(step);
+      $("dialog-status").textContent = !status.blocking
+        ? `${stepName(step, index)} saved with "${shortQuote}"${outcome.cited.length ? `: cited ${outcome.cited.join(", ")}` : ""}. Save the family when all steps are done.`
+        : `${stepName(step, index)} is not finished. ${outcome.cited.length ? `Cited ${outcome.cited.join(", ")}. ` : ""}`
+          + (outcome.failed.length ? `Not found in "${shortQuote}": ${outcome.failed.map(item => `${item.label}: ${item.hint || item.reason}`).join("; ")}. Correct the value, or select the sentence that contains it and click again.` : status.pending.join("; "));
+    }
     sync(true);
-    $("dialog-status").textContent = [
-      cited.length ? `Cited ${cited.join(", ")} with the selected quote.` : "No uncited value of this step is in the selected quote.",
-      missing.length ? `Not in this quote: ${missing.join(", ")}. Select the sentence that contains them and cite again.` : "",
-    ].filter(Boolean).join(" ");
   }
+
+  const STATUS_LABELS = {
+    done: "✓ Evidence saved", pending: "● Needs evidence", error: "✕ Value not in its quote",
+    warning: "! Old evidence problem", checking: "… Checking evidence",
+  };
 
   /** One processing step as a typed card: category decides methods and parameters. */
   function renderProcessStep(step, index) {
     const path = ["processing_steps", index];
+    const badge = element("span", { className: "process-step-status" });
+    const problemList = element("ul", { className: "process-step-problems" });
+    const showStatus = () => {
+      const status = statusOf(step);
+      badge.textContent = STATUS_LABELS[status.state];
+      badge.dataset.state = status.state;
+      details.dataset.evidence = status.state;
+      problemList.replaceChildren(...[...status.problems, ...status.warnings].map(problem => element("li", {}, [
+        element("strong", { text: `${problem.label}: ` }),
+        document.createTextNode(`${problem.reason} ${problem.hint || ""}`.trim()),
+        problem.quote ? element("span", { className: "process-step-quote", text: ` Quote: "${problem.quote.length > 140 ? `${problem.quote.slice(0, 140)}…` : problem.quote}"` }) : null,
+      ].filter(Boolean))), ...status.pending.map(text => element("li", { text })));
+      problemList.hidden = !problemList.children.length;
+    };
     const sync = (rerender) => {
       $("record-json").value = JSON.stringify(edit.value, null, 2);
-      if (rerender) { expand(path); renderStructuredEditor(); }
+      if (rerender) { expand(path); renderStructuredEditor(); } else showStatus();
     };
+    const edited = (rerender) => { editedSteps.add(stepKey(step)); sync(rerender); };
     const layers = edit.value.layers || [];
     const targets = (step.target_layer_ids || [])
       .map(id => layers.find(layer => layer.layer_id === id)?.material || id).join(", ");
-    const action = (text, click) => element("button", { text, properties: { type: "button" }, events: { click } });
+    const action = (text, click, className = "") => element("button", { text, className, properties: { type: "button" }, events: { click } });
+    const confirm = action("Use selected evidence & save step", () => confirmStep(step, index, sync, confirm), "primary process-step-confirm");
     const actions = [
-      action("Cite selected evidence for this step", () => citeThisStep(step, sync)),
+      confirm,
       (step.target_layer_ids || []).length > 1 ? action("Split per target layer", () => splitStep(index)) : null,
     ].filter(Boolean);
-    return rememberedDetails(path, false, "editor-group process-step", [
-      element("summary", { text: `${step.operation || "New step"}${targets ? ` → ${targets}` : ""}` }),
+    const details = rememberedDetails(path, false, "editor-group process-step", [
+      element("summary", {}, [document.createTextNode(`${step.operation || "New step"}${targets ? ` → ${targets}` : ""} `), badge]),
       element("div", { className: "editor-fields" }, [
-        createStepCard({ element, step, idPrefix: `record-step-${index}`, onChange: sync, materialList: SUGGESTION_LISTS.process.id }),
+        problemList,
+        createStepCard({ element, step, idPrefix: `record-step-${index}`, onChange: edited, materialList: SUGGESTION_LISTS.process.id }),
         layerTargets([...path, "target_layer_ids"], step.target_layer_ids || []),
-        actions.length ? element("div", { className: "process-step-actions" }, actions) : null,
+        element("div", { className: "process-step-actions" }, actions),
         technicalFields([["step_id", step.step_id], ["sequence", step.sequence]], path),
       ].filter(Boolean)),
     ]);
+    details.dataset.stepIndex = String(index);
+    showStatus();
+    return details;
   }
 
   function isOrderedArray(value) {
@@ -776,6 +884,7 @@ export function createRecordEditor({
       children.push(element("div", { className: "process-presets" }, STEP_PRESETS.map(preset => element("button", {
         text: preset.label, properties: { type: "button", disabled: value.length >= (schema.maxItems ?? Infinity) },
         events: { click: () => {
+          if (finishStepFirst()) return;
           const step = newArrayItem(path, schema.items, label);
           step.operation = preset.operation;
           insertStep(value.length, step);
@@ -789,6 +898,7 @@ export function createRecordEditor({
         text: `Add item to ${humanLabel(label)}`,
         properties: { type: "button", disabled: value.length >= (schema.maxItems ?? Infinity) },
         events: { click: () => {
+          if (isStepList(path) && finishStepFirst()) return;
           const added = [...path, value.length];
           expand(path, added);
           focusPath = added;
@@ -870,6 +980,8 @@ export function createRecordEditor({
       return JSON.stringify(draft.value) !== initialJson;
     },
     setSource(source) { edit.source = structuredClone(source); },
+    /** Processing steps still needing their evidence, as sentences for the reviewer. */
+    unfinishedSteps: () => unfinishedSteps().map(unfinishedText),
     value() {
       // Programmatic textarea changes and invalid raw input must be checked on save.
       if (!$("json-editor-panel").hidden) draft.replaceJson($("record-json").value);
