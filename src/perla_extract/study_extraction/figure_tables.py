@@ -39,7 +39,6 @@ is the ink colour of the pixels, rounded to a coarse palette, and legends are no
 
 from __future__ import annotations
 
-import math
 import re
 import statistics
 from pathlib import Path
@@ -196,7 +195,7 @@ def _lines(words: list[tuple]) -> list[list[tuple]]:
                 break
         else:
             lines.append([word])
-    return [sorted(line, key=lambda w: w[0]) for line in sorted(lines, key=lambda l: l[0][1])]
+    return [sorted(line, key=lambda w: w[0]) for line in sorted(lines, key=lambda first: first[0][1])]
 
 
 def _chunks(line: list[tuple], height: float) -> list[list[tuple]]:
@@ -302,8 +301,8 @@ def _rows(words: list[tuple]) -> list[dict[str, Any]]:
 
     tables = []
     for run in (r for r in runs if len(r) >= MIN_ROWS):
-        shared = _shared_columns([lines[i] for i in run], tolerance)
-        groups = _column_groups(shared)
+        table_columns = _shared_columns([lines[i] for i in run], tolerance)
+        groups = _column_groups(table_columns)
         columns = max(groups, key=len) if groups else []
         if len(columns) < MIN_COLUMNS:
             continue
@@ -311,7 +310,7 @@ def _rows(words: list[tuple]) -> list[dict[str, Any]]:
         # identical y axes of neighbouring panels share "columns" but are no table
         tick_ids = {i for column in vertical for i in column}
         real = [
-            centre for centre, column_words in shared
+            centre for centre, column_words in table_columns
             if centre in columns and sum(index_of[id(w)] in tick_ids for w in column_words) < 3
         ]
         if len(real) < MIN_COLUMNS:
@@ -319,7 +318,7 @@ def _rows(words: list[tuple]) -> list[dict[str, Any]]:
         # every data row has a value in one of those columns; lines that only continue
         # axis scales (the ticks of two panels side by side) are no rows of the table,
         # and the table spans its real columns only
-        real_words = {id(w) for centre, column_words in shared if centre in real for w in column_words}
+        real_words = {id(w) for centre, column_words in table_columns if centre in real for w in column_words}
         run = [i for i in run if any(id(w) in real_words for w in lines[i])]
         if len(run) < MIN_ROWS:
             continue
@@ -445,7 +444,7 @@ def _pairs(chunk: list[tuple]) -> list[dict[str, Any]] | None:
         ):
             i += 1
             units += 1
-        words = []
+        words: list[Any] = []
         for _, word in tokens[start:i]:
             if not words or words[-1] is not word:
                 words.append(word)
@@ -582,7 +581,11 @@ def _legend(page, rect, height: float) -> list[dict[str, Any]]:
         box = drawing["rect"]
         if not rect.intersects(box) or box.width > 8 * height or box.height > 2 * height:
             continue
-        colours = {_hex(drawing.get("color")), _hex(drawing.get("fill"))} - {None, "#000000", "#ffffff"}
+        colours = {
+            colour
+            for colour in (_hex(drawing.get("color")), _hex(drawing.get("fill")))
+            if colour is not None and colour not in {"#000000", "#ffffff"}
+        }
         if colours:
             marks.append((box, colours))
     entries = []
@@ -634,7 +637,7 @@ def _ocr_words(engine, page, rect, dpi: int = OCR_DPI) -> tuple[list[tuple], Any
     import pymupdf
 
     pixmap = page.get_pixmap(clip=rect, dpi=dpi, colorspace=pymupdf.csRGB, alpha=False)
-    image = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(pixmap.h, pixmap.w, 3)
+    image: Any = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(pixmap.h, pixmap.w, 3)
     scale = (pixmap.w / rect.width, pixmap.h / rect.height)
     result = engine(image, return_word_box=True)
     words = []
@@ -756,12 +759,12 @@ def figure_tables(
                         if _is_number(word[4]):
                             colour = (
                                 _ink_colour(word, image, rect, scale)
-                                if read_by_ocr
+                                if read_by_ocr and scale is not None
                                 else _colour_of(word, spans)
                             )
                             if colour:
                                 weights[colour] = weights.get(colour, 0) + len(word[4])
-                    row_colours.append(max(weights, key=weights.get) if weights else None)
+                    row_colours.append(max(weights, key=lambda colour: weights[colour]) if weights else None)
                 all_words = [w for row in rows for w in row]
                 metadata: dict[str, Any] = {
                     "derived_from": "docling_figure_region+"

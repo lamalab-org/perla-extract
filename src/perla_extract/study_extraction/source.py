@@ -981,7 +981,7 @@ def parse_pdf(
         ),
         "figure_table_ocr_blocks": sum(
             block.kind == "figure_table"
-            and block.metadata.get("derived_from", "").endswith("rapidocr_words")
+            and str(block.metadata.get("derived_from") or "").endswith("rapidocr_words")
             for block in evidence_blocks
         ),
         "figure_table_blocks": sum(block.kind == "figure_table" for block in evidence_blocks),
