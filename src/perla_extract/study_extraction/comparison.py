@@ -24,6 +24,7 @@ from .figure_data import export_tables
 from .models import StudyExtraction
 from .run_artifacts import (
     COMPLETE_OUTPUT_STATUSES,
+    describe_failed_run,
     file_digest,
     load_run_efficiency,
     verify_run_manifest,
@@ -289,8 +290,13 @@ def summarize(
         if not row["quality_applicable"]:
             continue
         try:
-            verify_run_manifest(directory)
             path = directory / "evaluation.json"
+            if run_accounting.status in {"failed", "interrupted"} and not path.exists():
+                report_path = directory / "report.json"
+                run_report = json.loads(report_path.read_text(encoding="utf-8"))
+                row["issues"].append(describe_failed_run(run_report, report_path))
+                continue
+            verify_run_manifest(directory)
             report = EvaluationReport.model_validate_json(path.read_bytes())
             if report.run_id != manifest.run_id or report.run_manifest_sha256 != digest:
                 raise ValueError(
@@ -494,6 +500,9 @@ def summarize(
             row.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
             for row in arm_paired
         )
+        # Include failed/accounting-only spend in the cost of obtaining completed
+        # outputs. Unknown cost and zero completions cannot produce a unit price.
+        per_complete = known / paired_complete if complete and paired_complete else None
         accounting[arm] = dict(
             planned_runs=len(design.expected_pairs()),
             listed_paired_runs=len(arm_paired),
@@ -512,6 +521,11 @@ def summarize(
             known_cost_usd=known,
             cost_tracking_complete=complete,
             total_cost_usd=known if complete else None,
+            cost_per_completed_extraction_usd=per_complete,
+            projected_cost_usd={
+                str(count): per_complete * count if per_complete is not None else None
+                for count in (10_000, 50_000)
+            },
         )
     control, treatment = (accounting[arm]["total_cost_usd"] for arm in ARMS)
     saving = (

@@ -100,6 +100,7 @@ def test_champion_near_neighbors_do_not_receive_attributed_credit(change):
             )
         )
     elif change == "scan":
+        truth.performance_observations[0].scan_direction = "reverse"
         prediction.performance_observations[0].scan_direction = "forward"
     elif change == "owner":
         prediction.performance_observations[0].device_id = None
@@ -112,14 +113,18 @@ def test_champion_near_neighbors_do_not_receive_attributed_credit(change):
         assert any(m.truth_path == METRIC for m in result.core_facts.recovery.matches)
 
 
-def test_unknown_subject_context_is_required_but_cannot_disambiguate_identity():
+def test_extra_unannotated_subject_context_does_not_veto_paired_pv_value():
     truth, prediction = study(), study()
     prediction.individual_devices[0].subject_context = SubjectContext(
         treatment_stage="completed_device",
         treated_material="Au",
         conditions=[value("unknown", None, None)],
     )
-    assert not credited(evaluate_study(truth, prediction))
+    assert credited(evaluate_study(truth, prediction))
+    # The added preparation claims remain unmatched fields in their own right.
+    assert (
+        evaluate_study(truth, prediction).core_facts.groups["processing"].matched == 0
+    )
 
 
 def test_duplicate_treatment_views_preserve_inventory_and_original_paths():

@@ -274,6 +274,36 @@ def test_litellm_timeout_becomes_retryable_model_error(tmp_path, monkeypatch):
     assert failure["error_type"] == "Timeout"
 
 
+def test_retry_cost_guard_preserves_provider_timeout(tmp_path, monkeypatch):
+    def time_out(**_kwargs):
+        raise litellm.Timeout(
+            "provider timed out", model="test/model", llm_provider="test"
+        )
+
+    monkeypatch.setattr(litellm, "completion", time_out)
+    client = ModelClient(
+        cache_dir=tmp_path / "cache",
+        output_dir=tmp_path / "out",
+        max_cost_usd=5,
+        heartbeat_seconds=0,
+    )
+    monkeypatch.setattr(client, "_retry_delay", lambda: None)
+
+    with pytest.raises(ModelBudgetExceeded, match="provider timed out.*Retry blocked"):
+        client.complete(
+            kind="test",
+            slug="test",
+            model="test/model",
+            system="system",
+            prompt="prompt",
+            response_model=StudyExtraction,
+            max_output_tokens=100,
+        )
+
+    assert client.budget_status()["provider_requests"] == 1
+    assert "provider timed out" in client.calls[0]["error"]
+
+
 def test_pydantic_failure_gets_one_error_aware_repair(tmp_path, monkeypatch):
     """Give semantic validation errors back to the model and account for both calls."""
 

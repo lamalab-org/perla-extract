@@ -15,6 +15,38 @@ from perla_extract.study_extraction.source import (
 FIXTURE = Path(__file__).parents[1] / "test_files" / "nat_comm_7139.pdf"
 
 
+@pytest.mark.parametrize("damaged", [False, True])
+def test_table_adapter_keeps_native_decimals_when_detector_splits_them(
+    tmp_path, monkeypatch, damaged
+):
+    from types import SimpleNamespace
+
+    import pymupdf
+
+    from perla_extract.study_extraction.source import _pymupdf_layout_items
+
+    path = tmp_path / "table.pdf"
+    with pymupdf.open() as document:
+        page = document.new_page()
+        page.insert_text((50, 60), "Control 3.9 0.67")
+        page.insert_text((50, 80), "Treated 19.72 29.7")
+        document.save(path)
+    rows = [["Control", "3.9", "0.67"], ["Treated", "19.72", "29.7"]]
+    if damaged:
+        rows = [["Control", "39\n.", "067\n."], ["Treated", "1972\n.", "297\n."]]
+    table = SimpleNamespace(bbox=(40, 40, 250, 90), extract=lambda: rows)
+    monkeypatch.setattr(
+        pymupdf.Page,
+        "find_tables",
+        lambda *args, **kwargs: SimpleNamespace(tables=[table]),
+    )
+    items = _pymupdf_layout_items(path)
+    text = "\n".join(item["text"] for item in items)
+    for number in ("3.9", "0.67", "19.72", "29.7"):
+        assert number in text
+    assert any(item["kind"] == "table" for item in items) is not damaged
+
+
 def test_pymupdf_parser_preserves_blocks_and_uses_cache(tmp_path):
     blocks, first = parse_pdf(FIXTURE, "main", parser="pymupdf", cache_dir=tmp_path)
     cached, second = parse_pdf(FIXTURE, "main", parser="pymupdf", cache_dir=tmp_path)

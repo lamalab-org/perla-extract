@@ -19,18 +19,23 @@ separate environment when you only want to try scoring.
 
 ```bash
 perla-extract --pdf paper.pdf --supplement paper_si.pdf \
-  --parser pymupdf --output-dir results/paper-check --dry-run
-
-export OPENAI_API_KEY="your-openai-key"
-perla-extract --pdf paper.pdf --supplement paper_si.pdf \
-  --model openai/gpt-5.2 --parser pymupdf --max-model-calls 14 \
-  --output-dir results/paper
+  --model openai/gpt-6.1-sol --parser pymupdf \
+  --no-claims --no-refinement --no-targeted-repair --no-enrichment \
+  --max-model-calls 1 --max-output-tokens 40000 \
+  --output-dir results/paper-check --dry-run
 ```
 
-Omit `--supplement` if there is no SI. The dry run parses the input and estimates
-requests without calling a model. Each attempt needs a new output directory.
+The dry run parses the input and checks the complete request without calling a
+model. Once it passes, set `OPENAI_API_KEY` in your environment and run the same
+command without `--dry-run`, changing the output to `results/paper`.
+Omit `--supplement` if there is no SI. Each attempt needs a new output directory.
 PyMuPDF avoids parser-model downloads; the default Docling parser can download
 layout-model weights on first use.
+
+This baseline makes one direct extraction call. It sends the complete prepared
+paper and SI; an input that exceeds the limit fails before inference. Additional
+reading, refinement, repair and interpretation are separate choices to test, not
+requirements for a first extraction.
 
 For other providers, open-model servers and Langfuse, see
 [models and tracing](workflows/open-models.md). Limits apply per run; inspect planned

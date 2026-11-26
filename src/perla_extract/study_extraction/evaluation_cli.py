@@ -25,6 +25,7 @@ from .run_artifacts import (
     verify_source_hashes,
 )
 from .scoring_explanation import FactSelection
+from .scoring_fields import IMPORTANT_FIELDS
 from .validation import validate_study
 
 INPUT = click.Path(path_type=Path, exists=True, readable=True, resolve_path=True)
@@ -244,8 +245,46 @@ def main(
                 f"Cannot create {destination}; choose a new output path: {exc}"
             ) from exc
         click.echo(str(destination))
+    click.echo("Field  TP  FP  FN  Precision  Recall  F1")
+    for key, label in IMPORTANT_FIELDS.items():
+        score = report.core_facts.fields.get(key)
+        if score is None or not (score.predicted or score.truth):
+            continue
+        rates = "  ".join(
+            f"{v:.1%}" if v is not None else "—"
+            for v in (score.precision, score.recall, score.f1)
+        )
+        click.echo(
+            f"{label}  {score.matched}  {score.predicted - score.matched}  {score.truth - score.matched}  {rates}"
+        )
     for warning in report.input_warnings:
         click.echo(f"Input warning: {warning}", err=True)
+    missing_units = {
+        side: sum(
+            d.unit_source == "missing" and d.rule_id.endswith("-photovoltaic")
+            for d in facts
+        )
+        for side, facts in report.core_facts.diagnostics.facts.items()
+    }
+    if any(missing_units.values()):
+        click.echo(
+            f"PV unit evidence missing: {missing_units['truth']} reference, "
+            f"{missing_units['prediction']} predicted field(s). "
+            "Inspect diagnostics.unit_source.",
+            err=True,
+        )
+    percentage_points = {
+        side: sum(d.unit_source == "percentage_points" for d in facts)
+        for side, facts in report.core_facts.diagnostics.facts.items()
+    }
+    if any(percentage_points.values()):
+        click.echo(
+            "Unitless PCE/FF treated as percentage points: "
+            f"{percentage_points['truth']} reference, "
+            f"{percentage_points['prediction']} predicted field(s). "
+            "Recorded as diagnostics.unit_source=percentage_points.",
+            err=True,
+        )
     if fail_on_scoring_issues and report.core_facts.issues:
         raise click.ClickException(
             f"{len(report.core_facts.issues)} scoring issue(s) require review; diagnostics saved to {output}"

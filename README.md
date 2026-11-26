@@ -18,14 +18,20 @@ python -m pip install -e .
 ```bash
 export OPENAI_API_KEY="your-openai-key"
 perla-extract --pdf paper.pdf --supplement paper_si.pdf \
-  --model openai/gpt-5.2 --parser pymupdf --max-model-calls 14 \
+  --model openai/gpt-6.1-sol --parser pymupdf \
+  --no-claims --no-refinement --no-targeted-repair --no-enrichment \
+  --max-model-calls 1 --max-output-tokens 40000 \
   --output-dir results/paper
 ```
 
 Open `results/paper/extraction.json` for the records and `report.json` for progress,
 usage and issues. Omit `--supplement` when there is no SI. Use a new output directory
 for each attempt. [Open models and other providers](docs/workflows/open-models.md)
-use the same workflow.
+use the same workflow. This starts with one direct extraction call. Add reading,
+refinement or other stages only when a controlled comparison shows they help.
+The complete paper and SI must fit the input limit; the command fails before a
+model call when they do not. [Context limits](docs/workflows/open-models.md#understand-context-and-resource-limits)
+explain how to configure larger sources.
 
 ## Compare two extraction choices
 

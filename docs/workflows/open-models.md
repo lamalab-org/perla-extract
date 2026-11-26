@@ -48,6 +48,15 @@ default, including repair. A stage table containing only limits or generation
 controls adjusts the default deployment. For example, `[stages.read]` with just
 `max_output_tokens = 16000` keeps the shared model and connection.
 
+For OpenAI workloads that can tolerate slower service, add `service_tier = "flex"`
+to the same deployment table. [Flex processing](https://developers.openai.com/api/docs/guides/flex-processing)
+uses discounted processing rates and may return capacity errors. PERLA sends the
+requested tier, records the tier actually served in `report.json` under
+`usage.service_tiers`, and keeps separate cache identities for different tiers.
+It never silently upgrades a Flex request to a more expensive tier. Timeouts and
+failed attempts remain visible; missing usage is not a zero charge. Use a timeout
+appropriate to the workload, and compare completion as well as price.
+
 **Specifying `model` selects a separate deployment.** Supply its endpoint and key
 variable alongside it when needed; settings from the default model are not carried
 across. An endpoint or key override without a model is rejected. The same rule

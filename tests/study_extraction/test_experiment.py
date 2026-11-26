@@ -52,6 +52,7 @@ reference = {json.dumps(str(reference.relative_to(tmp_path)))}
         output.mkdir(parents=True)
         report = {
             "status": "failed" if fail else "complete",
+            "errors": ["Provider request timed out"] if fail else [],
             "elapsed_seconds": 1,
             "usage": {
                 "live_calls": 1,
@@ -135,11 +136,31 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
         "claim_recall_passes": {"control": 1, "treatment": 2}
     }
     assert report["accounting"]["control"]["total_cost_usd"] == 2
+    assert report["accounting"]["control"]["cost_per_completed_extraction_usd"] == 1
+    assert report["accounting"]["control"]["projected_cost_usd"]["10000"] == 10000
+    assert (output / "figure-data/cost_projection.csv").is_file()
     assert (output / "figure-data/paired_papers.csv").is_file()
+    field_rows = list(csv.DictReader((output / "figure-data/field_scores.csv").open()))
+    pce = [
+        row
+        for row in field_rows
+        if row["field"] == "measurement:pce" and row["view"] == "attributed"
+    ]
+    assert len(pce) == 4
+    assert all(row["tp"] == "1" and row["fp"] == row["fn"] == "0" for row in pce)
+    assert (output / "figure-data/field_strata.csv").is_file()
+    important = list(
+        csv.DictReader((output / "figure-data/important_fields.csv").open())
+    )
+    assert [row for row in important if row["field"] == "measurement:pce"] == [
+        row for row in field_rows if row["field"] == "measurement:pce"
+    ]
+    assert any(row["field"] == "material:stack" for row in important)
     assert (output / "experiment.toml").read_bytes() == path.read_bytes()
     summary = (output / "summary.md").read_text(encoding="utf-8")
     assert "Treatment − control: +0.0000" in summary
     assert "only one paper" in summary
+    assert "same 2 paper/repetition pairs with completed, scored outputs" in summary
     assert "| control | 2 / 2 | 2 | 2.000000 |" in summary
     assert "Read first:" in result.output
     repeated = CliRunner().invoke(experiment.main, [str(path)])
@@ -160,6 +181,11 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
         (path.parent / "results/comparison.json").read_text(encoding="utf-8")
     )
     assert len(report["runs"]) == 4
+    failed = next(
+        row for row in report["runs"] if row["accounting"]["status"] == "failed"
+    )
+    assert "Provider request timed out" in failed["issues"][0]
+    assert "evaluation.json" not in failed["issues"][0]
     assert report["quality"] is None
     assert sum(arm["known_cost_usd"] for arm in report["accounting"].values()) == 4
     assert (
@@ -174,6 +200,9 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
     assert "Reviewed-scope conclusion unavailable" in summary
     assert "Treatment − control:" not in summary
     assert "| control | 1 / 2 | 2 | 2.000000 |" in summary
+    counts = report["accounting"][failed["arm"]]
+    assert counts["cost_per_completed_extraction_usd"] == 2
+    assert counts["projected_cost_usd"]["50000"] == 100000
 
 
 def test_all_failed_attempts_have_no_automatic_effect_estimate(setup, monkeypatch):
@@ -188,6 +217,10 @@ def test_all_failed_attempts_have_no_automatic_effect_estimate(setup, monkeypatc
     assert "Comparison unavailable" in summary
     assert "Automatic reference-agreement difference" not in summary
     assert "Treatment − control:" not in summary
+    report = json.loads((path.parent / "results/comparison.json").read_text())
+    for counts in report["accounting"].values():
+        assert counts["cost_per_completed_extraction_usd"] is None
+        assert counts["projected_cost_usd"] == {"10000": None, "50000": None}
 
 
 def test_source_mismatch_is_rejected_before_any_output_or_paid_work(setup):

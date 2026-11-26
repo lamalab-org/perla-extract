@@ -28,7 +28,7 @@ from .figure_data import export_tables
 from .logging import configure_logging
 from .models import StrictModel
 from .reference_io import load_reference
-from .run_artifacts import file_digest
+from .run_artifacts import describe_failed_run, file_digest
 from .workflow import run_extraction
 
 _MANAGED = {
@@ -286,7 +286,9 @@ def execute(experiment: Experiment) -> dict:
                 click.echo(f"  Extraction status: {report['status']}")
                 if report["status"] in {"failed", "interrupted"}:
                     raise ValueError(
-                        f"Extraction {report['status']}; inspect {attempt.config.output_dir / 'report.json'}"
+                        describe_failed_run(
+                            report, attempt.config.output_dir / "report.json"
+                        )
                     )
                 evaluate.main(
                     args=[

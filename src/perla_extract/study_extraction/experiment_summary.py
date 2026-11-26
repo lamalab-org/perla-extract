@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 
 from .artifacts import write_bytes_exclusive
+from .run_artifacts import COMPLETE_OUTPUT_STATUSES
+from .scoring_fields import IMPORTANT_FIELDS
 
 
 def write_summary(result: dict, path: Path) -> None:
@@ -31,6 +33,89 @@ def write_summary(result: dict, path: Path) -> None:
             for arm in ("control", "treatment")
         )
         lines.append(f"- `{name}`: control `{control}` → treatment `{treatment}`.")
+    scored_pairs = set.intersection(
+        *(
+            {
+                (r["paper_id"], r["repeat"])
+                for r in result["runs"]
+                if r["arm"] == arm
+                and r.get("scientific_scores")
+                and r.get("accounting", {}).get("status") in COMPLETE_OUTPUT_STATUSES
+            }
+            for arm in ("control", "treatment")
+        )
+    )
+    lines.extend(
+        [
+            "",
+            "## Important scientific fields",
+            "",
+            f"Counts pooled over the same {len(scored_pairs)} paper/repetition pairs with completed, scored outputs in both arms. Failed or unscored runs remain in the completion table; these conditional scores do not measure their missing values. Interpret these as reference agreement unless the annotation scope is complete.",
+            "",
+            "| Arm | Field | TP | FP | FN | Precision | Recall | F1 |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for arm in ("control", "treatment"):
+        scores = [
+            r["scientific_scores"]
+            for r in result["runs"]
+            if r["arm"] == arm
+            and (r["paper_id"], r["repeat"]) in scored_pairs
+            and r.get("scientific_scores")
+        ]
+        for key, label in IMPORTANT_FIELDS.items():
+            # Reuse existing strata: an aggregate must not enter an individual
+            # measurement's headline denominator merely because both report PCE.
+            levels = (
+                ("individual", "population")
+                if key
+                in {
+                    "measurement:pce",
+                    "measurement:ff",
+                    "measurement:voc",
+                    "measurement:jsc",
+                }
+                else (None,)
+            )
+            for level in levels:
+                counts = (
+                    [
+                        count
+                        for score in scores
+                        for name, count in score["strata"].items()
+                        if name.startswith(f"{key}|{level}|")
+                    ]
+                    if level
+                    else [
+                        score["fields"][key]
+                        for score in scores
+                        if key in score["fields"]
+                    ]
+                )
+                truth, predicted, matched = (
+                    sum(c[k] for c in counts) for k in ("truth", "predicted", "matched")
+                )
+                if not (truth or predicted):
+                    continue
+                rates = [
+                    matched / predicted if predicted else None,
+                    matched / truth if truth else None,
+                    2 * matched / (truth + predicted) if truth + predicted else None,
+                ]
+                formatted = " | ".join(
+                    f"{v:.1%}" if v is not None else "—" for v in rates
+                )
+                display = f"{label} ({level})" if level else label
+                lines.append(
+                    f"| {arm} | {display} | {matched} | {predicted - matched} | {truth - matched} | {formatted} |"
+                )
+    lines.extend(
+        [
+            "",
+            "[field_scores.csv](figure-data/field_scores.csv) retains every scored output, including those outside this shared cohort. [field_strata.csv](figure-data/field_strata.csv) separates measurement types and population statistics. This table is conditional on shared scored outputs, not a full-roster model ranking.",
+        ]
+    )
     lines.extend(
         [
             "",
@@ -141,6 +226,27 @@ def write_summary(result: dict, path: Path) -> None:
             f"| {arm} | {counts['paired_scored_runs']} / {counts['planned_runs']} "
             f"| {counts['listed_attempts']} | {cost} | {counts['known_cost_usd']:.6f} |"
         )
+    lines.extend(
+        [
+            "",
+            "## Cost at corpus scale",
+            "",
+            "All listed spend, including failures, divided by completed paired extractions. Completion does not establish scientific correctness. Projections assume the same paper mix, provider rates and failure rate; they exclude parsing infrastructure, storage and unreported GPU charges. Unknown cost or no completed outputs leaves the rate unavailable.",
+            "",
+            "| Arm | Completed extractions | USD / completed extraction | Projected USD / 10,000 | Projected USD / 50,000 |",
+            "| --- | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for arm in ("control", "treatment"):
+        counts = result["accounting"][arm]
+        values = [
+            counts["cost_per_completed_extraction_usd"],
+            *(counts["projected_cost_usd"][str(size)] for size in (10_000, 50_000)),
+        ]
+        formatted = " | ".join(
+            "unavailable" if value is None else f"{value:,.4f}" for value in values
+        )
+        lines.append(f"| {arm} | {counts['paired_complete_runs']} | {formatted} |")
     validation = result["validation_coverage"]
     lines.extend(
         [

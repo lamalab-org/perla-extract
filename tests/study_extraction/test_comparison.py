@@ -300,6 +300,8 @@ def test_incomplete_accounting_is_not_free_or_a_complete_total(roster):
     result = summarize(roster, study=roster.with_suffix(".study.json"))
     assert result["accounting"]["control"]["known_cost_usd"] == 8
     assert result["accounting"]["control"]["total_cost_usd"] is None
+    assert result["accounting"]["control"]["cost_per_completed_extraction_usd"] is None
+    assert result["accounting"]["control"]["projected_cost_usd"]["10000"] is None
     assert result["recorded_cost_saving_fraction"] is None
 
 

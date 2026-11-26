@@ -11,6 +11,7 @@ import csv
 from pathlib import Path
 
 from .artifacts import write_json_exclusive
+from .scoring_fields import IMPORTANT_FIELDS
 
 
 def _write(path: Path, columns: list[str], rows: list[dict]) -> None:
@@ -26,6 +27,8 @@ def export_tables(result: dict, directory: Path) -> None:
     runs: list[dict] = []
     groups: list[dict] = []
     subfields: list[dict] = []
+    fields: list[dict] = []
+    strata: list[dict] = []
     diagnostics: list[dict] = []
     for run in result["runs"]:
         identity = {name: run[name] for name in ("paper_id", "arm", "repeat")}
@@ -98,7 +101,12 @@ def export_tables(result: dict, directory: Path) -> None:
             ("attributed", score),
             ("recovery", score["recovery"]),
         ):
-            for category, rows in (("groups", groups), ("subfields", subfields)):
+            for category, key, rows in (
+                ("groups", "group", groups),
+                ("subfields", "subfield", subfields),
+                ("fields", "field", fields),
+                ("strata", "stratum", strata),
+            ):
                 for name, counts in scores[category].items():
                     rows.append(
                         {
@@ -106,7 +114,10 @@ def export_tables(result: dict, directory: Path) -> None:
                             "quality_available": run["quality_available"],
                             "interpretation": run.get("interpretation", "unavailable"),
                             "view": view,
-                            "group" if category == "groups" else "subfield": name,
+                            key: name,
+                            "tp": counts["matched"],
+                            "fp": counts["predicted"] - counts["matched"],
+                            "fn": counts["truth"] - counts["matched"],
                             **{
                                 key: counts[key]
                                 for key in (
@@ -121,6 +132,22 @@ def export_tables(result: dict, directory: Path) -> None:
                         }
                     )
     _write(directory / "runs.csv", list(runs[0]), runs)
+    scale = [
+        {
+            "arm": arm,
+            "planned_runs": counts["planned_runs"],
+            "completed_runs": counts["paired_complete_runs"],
+            "known_cost_usd": counts["known_cost_usd"],
+            "total_cost_usd": counts["total_cost_usd"],
+            "cost_per_completed_extraction_usd": counts[
+                "cost_per_completed_extraction_usd"
+            ],
+            "projected_10000_usd": counts["projected_cost_usd"]["10000"],
+            "projected_50000_usd": counts["projected_cost_usd"]["50000"],
+        }
+        for arm, counts in result["accounting"].items()
+    ]
+    _write(directory / "cost_projection.csv", list(scale[0]), scale)
     _write(
         directory / "scoring_diagnostics.csv",
         [
@@ -132,6 +159,7 @@ def export_tables(result: dict, directory: Path) -> None:
             "rule_id",
             "statistical_level",
             "value_interpretation",
+            "unit_source",
             "unsupported_condition_name",
             "candidate_count",
             "owner_paired",
@@ -146,6 +174,13 @@ def export_tables(result: dict, directory: Path) -> None:
     for filename, category, rows in (
         ("group_scores.csv", "group", groups),
         ("subfield_scores.csv", "subfield", subfields),
+        ("field_scores.csv", "field", fields),
+        (
+            "important_fields.csv",
+            "field",
+            [row for row in fields if row["field"] in IMPORTANT_FIELDS],
+        ),
+        ("field_strata.csv", "stratum", strata),
     ):
         _write(
             directory / filename,
@@ -157,6 +192,9 @@ def export_tables(result: dict, directory: Path) -> None:
                 "interpretation",
                 "view",
                 category,
+                "tp",
+                "fp",
+                "fn",
                 "truth",
                 "predicted",
                 "matched",

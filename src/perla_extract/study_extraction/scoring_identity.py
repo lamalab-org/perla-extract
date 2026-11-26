@@ -16,6 +16,7 @@ from .models import (
     PerformanceObservation,
     PopulationStatistic,
     StabilityTest,
+    StudyExtraction,
 )
 from .scoring_claims import scientific_text
 from .scoring_context import (
@@ -29,6 +30,89 @@ from .scoring_context import (
 from .scoring_layers import ordered_layers, stack_similarity
 from .scoring_protocol import canonical_conditions
 from .scoring_vocabulary import material_name, material_stage, property_name
+
+
+def sample_code(
+    record: DeviceFamily | IndividualDevice | PopulationStatistic,
+) -> str | None:
+    """Read an explicitly named compact sample code, preserving case and punctuation.
+
+    Device A and Device A, Table 1 identify the same named sample. Only a single
+    letter sequence or a token containing digits qualifies. Prose such as 'control device'
+    and generated JSON identifiers supply no code. Multiple codes stay unresolved.
+    """
+    codes = set()
+    token = r"[A-Za-z0-9]+(?:[-_/][A-Za-z0-9]+)*"
+    for text in (record.label, getattr(record, "variant", None) or ""):
+        candidates = re.findall(
+            rf"\b(?:device|sample|cell|specimen|film)\s+({token})\b",
+            text,
+            re.I,
+        )
+        if re.fullmatch(token, text):
+            candidates.append(text)
+        for code in candidates:
+            if re.fullmatch(r"[A-Za-z](?:[-_/][A-Za-z])*", code) or any(
+                c.isdigit() for c in code
+            ):
+                codes.add(code)
+    return next(iter(codes)) if len(codes) == 1 else None
+
+
+MeasurementUse = tuple[str, str | None]
+
+
+def device_measurements(
+    study: StudyExtraction,
+) -> dict[str, frozenset[MeasurementUse]]:
+    """Describe specimen use through explicit measurement kind and scan direction.
+
+    Multiplicity, values, metric names and annotation length have no weight. An
+    unreported or generic 'other' method supplies no identity evidence. Missing or
+    inapplicable scan direction supplies no direction evidence.
+    """
+    uses: dict[str, set[MeasurementUse]] = {}
+    for observation in study.performance_observations:
+        if observation.measurement_type not in {"not_reported", "other"}:
+            direction = (
+                observation.scan_direction
+                if observation.scan_direction in {"forward", "reverse"}
+                else None
+            )
+            uses.setdefault(observation.device_id, set()).add(
+                (observation.measurement_type, direction)
+            )
+    return {key: frozenset(value) for key, value in uses.items()}
+
+
+def measurement_use_similarity(
+    reference: frozenset[MeasurementUse], prediction: frozenset[MeasurementUse]
+) -> float:
+    """Corroborate a specimen using reference-reported measurement metadata.
+
+    Method sets use Jaccard overlap. If the reference reports scan directions,
+    average that overlap with direction overlap for those methods. Unreported
+    prediction directions add no corroboration; they never exclude a candidate.
+    Extra directions for methods without reference scan metadata are ignored.
+    Outcome values and the number of repeated observations cannot affect this.
+    """
+    methods = ({kind for kind, _ in reference}, {kind for kind, _ in prediction})
+    overlap = (
+        len(methods[0] & methods[1]) / len(methods[0] | methods[1])
+        if all(methods)
+        else 0.0
+    )
+    known = {(kind, scan) for kind, scan in reference if scan is not None}
+    if not known:
+        return overlap
+    measured = {kind for kind, _ in known}
+    stated = {
+        (kind, scan)
+        for kind, scan in prediction
+        if kind in measured and scan is not None
+    }
+    directions = len(known & stated) / len(known | stated)
+    return (overlap + directions) / 2
 
 
 def measurement_subject(record: object) -> tuple[str, str] | None:
@@ -188,6 +272,11 @@ def family_pair_evidence(
     left: DeviceFamily, right: DeviceFamily
 ) -> dict[str, list[str]]:
     """Expose the ordered materials, or fallback features, used to pair a family."""
+    left_code, right_code = sample_code(left), sample_code(right)
+    codes = {
+        "truth_sample_code": [left_code] if left_code else [],
+        "prediction_sample_code": [right_code] if right_code else [],
+    }
     left_order, right_order = ordered_layers(left), ordered_layers(right)
     if left_order is not None and right_order is not None:
         return {
@@ -199,9 +288,11 @@ def family_pair_evidence(
             "prediction_variant": [scientific_text(right.variant)]
             if right.variant
             else [],
+            **codes,
         }
     a, b = _family_features(left), _family_features(right)
     return {
+        **codes,
         "shared": sorted(a & b),
         "truth_only": sorted(a - b),
         "prediction_only": sorted(b - a),

@@ -405,6 +405,23 @@ class ModelClient:
             cost_source = (
                 "adapter_reported_unspecified" if cost is not None else "unknown"
             )
+            served_tier = payload.get("service_tier") or usage.get("service_tier")
+            if (
+                cost is not None
+                and served_tier
+                and body.get("service_tier")
+                and served_tier != body["service_tier"]
+            ):
+                # Older adapters price the requested tier even when the provider
+                # serves another. Re-estimate with the actual tier; an unavailable
+                # estimate must not become a known, incorrectly discounted cost.
+                try:
+                    cost = litellm.completion_cost(
+                        completion_response=response, service_tier=served_tier
+                    )
+                    cost_source = "adapter_estimated_served_tier"
+                except Exception:
+                    cost, cost_source = None, "unknown"
         # The native OpenRouter adapter moves this field into hidden metadata;
         # the generic OpenAI-compatible adapter retains it on the response body.
         upstream_provider = hidden.get("upstream_provider") or payload.get("provider")
@@ -413,6 +430,8 @@ class ModelClient:
                 "response_received": True,
                 "response_id": payload.get("id"),
                 "response_model": payload.get("model"),
+                "service_tier": payload.get("service_tier")
+                or usage.get("service_tier"),
                 "provider": hidden.get("custom_llm_provider"),
                 "upstream_provider": upstream_provider
                 if isinstance(upstream_provider, str)
@@ -509,6 +528,8 @@ class ModelClient:
             body["temperature"] = policy.temperature
         if deployment.top_p is not None:
             body["top_p"] = deployment.top_p
+        if deployment.service_tier is not None:
+            body["service_tier"] = deployment.service_tier
         extra: dict[str, object] = {}
         if policy.model.startswith("openrouter/") or (
             urlsplit(deployment.base_url or "").hostname == "openrouter.ai"
@@ -893,7 +914,12 @@ class ModelClient:
                     prompt_components=prompt_components,
                 )
             except ModelBudgetExceeded as error:
-                last_error = error
+                if last_error is None:
+                    last_error = error
+                else:
+                    last_error = ModelBudgetExceeded(
+                        f"{last_error} Retry blocked: {error}"
+                    )
                 break
             outcome = self._execute_attempt(
                 call, attempt, response_model, decode, validate

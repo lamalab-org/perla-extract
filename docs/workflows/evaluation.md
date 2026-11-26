@@ -95,8 +95,19 @@ candidate blockers. Experiment exports include `scoring_diagnostics.csv` with th
 same decisions and original source paths. Read it alongside both score views;
 context availability is not an estimate of extraction correctness.
 
-Reports use format 12, matcher `rich-study-hungarian-v17` and fact profile
-`core-scientific-facts-v14`. Regenerate older reports from saved predictions before
+`unit_source` distinguishes units in a separate field, the raw value or a PV
+field name (`PCE [%]`), plus missing/unsupported units and unparsed claims.
+The CLI reports missing PV units and applications of the fixed convention on
+each side. Unitless absolute PCE/FF are percentage points (`20` means `20%`;
+`0.2` means `0.2%`). Explicit units take precedence, including a raw suffix or
+dimensionless fraction. The convention is recorded as `unit_source=percentage_points`.
+It applies symmetrically to references and predictions; input files are unchanged.
+For PV values, an unreported reference method/scan does not contradict extra
+prediction detail. Explicit contradictions and missing known reference conditions
+still prevent credit. See the [exact context rules](../methods/scientific-scoring.md#treatment-identity-and-context).
+
+Reports use format 17, matcher `rich-study-hungarian-v22` and fact profile
+`core-scientific-facts-v19`. Regenerate older reports from saved predictions before
 combining scores. Outputs must use fresh filenames; previous scores are retained. Each report hashes both parsed studies, including IDs and array
 order, so you can locate the inputs behind its field paths. These are hashes of
 normalized JSON content, not the original file bytes.
@@ -111,6 +122,76 @@ edit their metadata to use a newer scorer. Generate new evaluation reports inste
 the reference stays fixed while the new report records the new scoring rules.
 
 ## What is scored
+
+### Start with individual fields
+
+`core_facts.fields` reports precision, recall and F1 for each scientific quantity,
+using the current rich reference and schema. The CLI prints PCE, FF, Voc and Jsc;
+their keys are `measurement:pce`, `measurement:ff`, `measurement:voc`, and
+`measurement:jsc`. Other named fields use the same `namespace:quantity` convention.
+`matched` is TP, `predicted - matched` is FP, and `truth - matched` is FN. A wrong
+substitution contributes both FP and FN. Null placeholders earn no credit.
+
+Each field uses the existing one-to-one fact ledger. Correct PCE can earn credit
+when FF or an unrelated processing field is wrong. Its specimen/family must still
+be paired without using the measured numbers, and its measurement type, scan and
+statistical meaning must agree. Ambiguous ownership remains unresolved.
+
+Bounded name normalization recognizes `PCE extracted from the J–V curve` and
+population `average PCE`, preserving the method and statistic. Contradictions
+between such a name and the structured record block credit. Relative improvement,
+retention, population means and individual results are not interchangeable.
+
+For these four PV quantities, the reference's stated protocol is required. Extra
+prediction conditions are scored separately; an unannotated scan rate does not
+invalidate an otherwise matched PCE. Free-text device variants and selection prose
+are used for record pairing but do not veto an established correspondence again.
+A reported reference champion status and preparation context remain requirements;
+when the reference omits them, extra prediction details are not certified by the PV
+score. Explicit AM 1.5G notation is normalized, including the word “irradiation.”
+
+The CLI and experiment summary show the following default fields when present.
+`important_fields.csv` selects the same entries from the full field ledger.
+
+| Domain | Fields |
+| --- | --- |
+| PV performance | PCE, FF, Voc, Jsc |
+| Device dimensions | Active area and masked active area, evaluated separately |
+| Device/material identity | Absorber formula, constituents, layer materials, polarity, fallback raw stack |
+| Material properties | Bandgap and layer thickness |
+| Measurement | Irradiance and illumination spectrum |
+| Processing | Operation, temperature, duration and spin-coating speed |
+
+The exact keys and labels live in `scoring_fields.IMPORTANT_FIELDS`. This list
+selects results for display. Linked duplicate formula/material assertions can merge
+into one canonical material fact. Raw stack text is used only when structured
+layers are absent. Process conditions retain their family, target and ordered
+step, even when several operations share a field key such as `processing:duration`.
+Unknown names remain visible in `field_scores.csv`.
+
+Specimen pairing also reads explicit compact sample codes from labels/variants.
+`Device A` agrees with `Device A, Figure 4/Table 1`, while A/B and B/A remain
+different. Conflicting codes exclude a specimen pair. Within an established
+family, linked measurement kinds provide additional evidence for a specimen's use.
+A J–V specimen can therefore be distinguished from a specimen used for stabilized
+power output. Repeating a measurement or changing its results adds no identity
+evidence. `matches[].identity_evidence` records the sample codes and measurement
+kinds used for each selected specimen pair. Equally plausible same-method
+specimens remain ambiguous.
+
+`core_facts.strata` separates measurement fields by individual/population level,
+statistic and measurement type. Credited predictions are assigned to the reference
+stratum; unmatched predictions retain their declared stratum. This distinction is
+especially relevant to recovery, which can match across otherwise incompatible strata.
+Dataset `core_fields_micro` sums field counts before calculating rates. It does not
+average paper precisions. Experiment plotting tables include `field_scores.csv`
+and `field_strata.csv` with paper, arm and repetition, including TP/FP/FN.
+
+Always show completion and reference coverage alongside field scores. Missing
+evaluations do not represent zero precision, and incomplete reference scope does
+not establish that every unannotated prediction is false. Use the same paper roster,
+reference hashes and score contract when comparing models. The current references
+remain authoritative; reproducing an older benchmark is not required.
 
 ### Primary score: correct scientific facts
 

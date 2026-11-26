@@ -4,9 +4,10 @@ PERLA reads a paper and its supplement, builds records for the reported study, a
 checks those records against the parsed source. The result is `extraction.json`.
 Database interpretation and export happen afterward and do not rewrite that result.
 
-The default includes two source readings and a second review of the complete draft.
-These are configurable attempts to improve recovery and attribution. More passes do
-not establish better accuracy; compare configurations against reviewed references.
+The [quick start](../getting-started.md) uses one direct extraction call. The Python
+API's defaults include two source readings and a second review of the complete
+draft. Extra stages are configurable attempts to improve recovery and attribution;
+compare them against the direct baseline rather than assuming more passes help.
 
 ```text
 source = parse(main_paper, supplement)

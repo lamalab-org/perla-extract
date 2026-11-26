@@ -555,14 +555,17 @@ def test_direct_and_empty_reading_send_full_source_at_provider_boundary(
     for body in study_calls:
         for block in blocks:
             assert block.text in body["messages"][1]["content"]
-        assert (
-            set(
-                body["response_format"]["json_schema"]["schema"]["$defs"][
-                    "EvidenceCitation"
-                ]["enum"]
-            )
-            == span_ids
+        citation_schema = body["response_format"]["json_schema"]["schema"]["$defs"][
+            "EvidenceCitation"
+        ]
+        assert citation_schema["type"] == "integer"
+        assert "enum" not in citation_schema
+        assert citation_schema["minimum"] == min(span_ids)
+        assert citation_schema["maximum"] == max(span_ids)
+        payload, _ = json.JSONDecoder().raw_decode(
+            body["messages"][1]["content"].split("COMPLETE SOURCE EVIDENCE:\n", 1)[1]
         )
+        assert {int(key) for block in payload for key in block["spans"]} == span_ids
     manifest, _ = verify_run_manifest(output)
     assert manifest.run_id == report["run_id"]
     events = [

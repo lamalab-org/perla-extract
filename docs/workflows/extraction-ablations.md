@@ -5,33 +5,48 @@ and saves the comparison and plotting tables.
 
 ## 1. Set the question and papers
 
-From an [installed checkout](../getting-started.md#install), open `experiment.toml`.
-It already lists the 30 included development references. Set the model and PDF/SI
-paths; keep only the paper blocks you intend to include before starting. The
-single-paper template in `examples/experiment.toml` uses the same structure:
+From an [installed checkout](../getting-started.md#install), copy the one-paper
+example to the repository root and set its PDF/SI paths:
+
+```bash
+cp examples/experiment.toml my-experiment.toml
+```
+
+It tests whether one refinement call helps a direct extraction. The control makes
+one assembly call; treatment may make one additional refinement call. Reading,
+targeted repair and enrichment are disabled, so the starting comparison has two
+stages to understand. Add stages only when experiments show they help.
 
 ```toml
-output = "results/readings"
+output = "results/refinement"
 repeats = 1
 
 [stages.default]
-model = "openai/gpt-5.2"
+model = "openai/gpt-6.1-sol"
+reasoning_effort = "medium"
+max_output_tokens = 40000
 
 [extraction]
 parser = "pymupdf"
-max_model_calls = 14
+use_claim_ledger = false
+use_targeted_repair = false
+use_enrichment = false
+max_model_calls = 2
 
 [control]
-claim_recall_passes = 1
+use_refinement = false
 
 [treatment]
-claim_recall_passes = 2
+use_refinement = true
 
 [[papers]]
 pdf = "papers/10.1002--adfm.201904856.pdf"
 supplement = "papers/10.1002--adfm.201904856-SI.pdf"
 reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"
 ```
+
+The root `experiment.toml` lists all 30 included development references when you
+are ready for a larger study. Keep only the paper blocks you intend to run.
 
 `[stages.default]` selects the shared deployment. `[extraction]` applies to both arms; `[control]` and `[treatment]` change only the
 settings written there.
@@ -56,8 +71,8 @@ re-saved copy, and do not change the reference hashes to bypass a mismatch.
 With your [provider credentials configured](open-models.md):
 
 ```bash
-perla-experiment experiment.toml --check
-perla-experiment experiment.toml
+perla-experiment my-experiment.toml --check
+perla-experiment my-experiment.toml
 ```
 
 The check shows every paper → SI → ground-truth mapping, the exact changes and total run count. It validates every input
@@ -77,6 +92,7 @@ uncertainty, scored/planned run counts, recorded spend and any blocking issues.
 | `figure-data/group_scores.csv` | Attributed and recovery precision/recall/F1 and fact counts by scientific group |
 | `figure-data/subfield_scores.csv` | The same scores split into measurement, composition, processing and other subfields |
 | `figure-data/runs.csv` | Per-attempt quality, tokens, requests, elapsed time, recorded cost and failures |
+| `figure-data/cost_projection.csv` | All listed spend per completed extraction and simple projections for 10,000/50,000 outputs; unavailable when costs are unknown |
 | `runs/paper-NNN/ARM-REPEAT/evaluation.json` | Trace scores to matched and unmatched fields in that run's `extraction.json` |
 | `errors.json`, per-run `report.json` and `events.jsonl` | Diagnose failed attempts |
 | `comparison.json` | Full machine-readable result and consistency checks |
@@ -97,6 +113,13 @@ reference. Do not interpret these as established extraction accuracy. Retain fai
 attempts rather than interpreting only the successful subset. Empty CSV
 cells and JSON `null` mean unavailable, not zero. Missing cost can coexist with a
 valid quality comparison; a known cost subtotal is not a complete total.
+
+For corpus planning, the summary divides all listed spend, including failed
+attempts, by the number of completed paired extractions. It also projects that
+observed rate to 10,000 and 50,000 completed outputs. These are simple estimates
+assuming the same paper mix, rates and failures; they exclude infrastructure and
+unreported GPU costs. A completed output can still contain scientific errors.
+Unknown costs or no completed outputs leave these estimates unavailable.
 
 Run folders and response caches are separate for every paper, arm and repeat.
 Execution order is shuffled reproducibly. The intended cohort and arm settings are

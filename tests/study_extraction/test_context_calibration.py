@@ -14,6 +14,14 @@ def test_generated_context_contract(case):
     assert result["passed"], result["failures"]
 
 
+def test_synthetic_range_alias_does_not_contradict_an_existing_range():
+    truth = study()
+    value = quantity("scan voltage range", None, "V")
+    value.raw_value = "0.8 to -0.1 V"
+    truth.performance_observations[0].measurement_conditions = [value]
+    assert "voltage_range_alias" not in {case.name for case in calibration_cases(truth)}
+
+
 @pytest.mark.parametrize("extra", [100, 100.5, 50])
 def test_only_roundoff_equal_copies_across_containers_are_redundant(extra):
     truth = study()
@@ -95,6 +103,11 @@ def test_unverified_citation_ids_and_shared_paragraphs_never_supply_identity():
     prediction.individual_devices.append(
         prediction.individual_devices[0].model_copy(
             deep=True, update={"device_id": "second"}
+        )
+    )
+    prediction.performance_observations.append(
+        prediction.performance_observations[0].model_copy(
+            deep=True, update={"observation_id": "second-result", "device_id": "second"}
         )
     )
     score = evaluate_study(truth, prediction).core_facts

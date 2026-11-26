@@ -12,11 +12,13 @@ from perla_extract.study_extraction.scoring_protocol import (
     performance_name,
     protocol_name,
 )
+from perla_extract.study_extraction.units import canonical_quantity
 
 TRANSFORMS = (
     "protocol_relocation",
     "protocol_duplicate",
     "protocol_units",
+    "voltage_range_alias",
     "missing_protocol",
     "conflicting_protocol",
     "measurement_type",
@@ -132,6 +134,14 @@ def calibration_cases(truth: StudyExtraction):
     )
     target_path = f"{prefix}/metrics/{target}"
     for name in TRANSFORMS:
+        if name == "voltage_range_alias" and any(
+            protocol_name(v.name) == "scanvoltagerange"
+            for v in (*original.metrics, *original.measurement_conditions)
+        ):
+            # Adding a different range would make this a contradiction control,
+            # not a pure synonym control. Count it as inapplicable for this paper.
+            continue
+        case_truth = base
         prediction = base.model_copy(deep=True)
         record = prediction.performance_observations[i]
         condition = record.measurement_conditions[index]
@@ -142,6 +152,19 @@ def calibration_cases(truth: StudyExtraction):
             record.metrics.append(condition.model_copy(deep=True))
         if name == "protocol_units":
             condition.raw_value, condition.value_number, condition.unit = "11", 11, "mV"
+        if name == "voltage_range_alias":
+            case_truth = base.model_copy(deep=True)
+            reference = case_truth.performance_observations[i].measurement_conditions[
+                index
+            ]
+            for item in (reference, condition):
+                item.name = "scan voltage range"
+                item.raw_value, item.value_number, item.unit = (
+                    "1.2 to -0.05 V",
+                    None,
+                    "V",
+                )
+            condition.name = "voltage scanning protocol"
         if name == "missing_protocol":
             record.measurement_conditions.pop(index)
             allowed, forbidden = (), (*outcomes, protocol_path)
@@ -168,6 +191,7 @@ def calibration_cases(truth: StudyExtraction):
             "value_plus_relocation",
         }:
             value = record.metrics[target]
+            missing_unit_has_same_meaning = False
             if name in {"wrong_value", "value_plus_relocation"}:
                 # A distant value cannot equal another outcome of this sole
                 # measurement. This precondition avoids accidental false passes.
@@ -178,9 +202,18 @@ def calibration_cases(truth: StudyExtraction):
             elif name == "raw_parsed_conflict":
                 value.raw_value = "1000000000000"
             else:
+                # The oracle is unit arithmetic, independent of the matcher.
+                # Removing % preserves PCE/FF meaning under the fixed convention;
+                # removing a voltage/current-density unit still loses its meaning.
+                missing_unit_has_same_meaning = performance_name(
+                    value.name, record.measurement_type
+                ) in {"pce", "ff"} and canonical_quantity(
+                    value.value_number, value.unit
+                ) == canonical_quantity(value.value_number, "%")
                 value.raw_value, value.unit = str(value.value_number), None
-            allowed = tuple(p for p in allowed if p != target_path)
-            forbidden = (target_path,)
+            if not missing_unit_has_same_meaning:
+                allowed = tuple(p for p in allowed if p != target_path)
+                forbidden = (target_path,)
         if name == "protocol_in_device_properties":
             device = next(
                 d
@@ -203,7 +236,7 @@ def calibration_cases(truth: StudyExtraction):
             record.metrics.append(record.metrics[target].model_copy(deep=True))
         yield CalibrationCase(
             name,
-            base,
+            case_truth,
             prediction,
             allowed,
             forbidden,

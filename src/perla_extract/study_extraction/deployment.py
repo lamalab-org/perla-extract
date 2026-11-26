@@ -43,6 +43,7 @@ class DeploymentSettings:
     max_output_tokens: int | None = None
     temperature: float | None = None
     reasoning_effort: str | None = None
+    service_tier: str | None = None
     tokenizer: str | None = None
     top_p: float | None = None
     top_k: int | None = None
@@ -75,6 +76,7 @@ class DeploymentSettings:
             "chat_template",
             "reasoning_effort",
             "tokenizer",
+            "service_tier",
         ):
             value = getattr(self, name)
             if value is not None and (not isinstance(value, str) or not value.strip()):
@@ -90,6 +92,17 @@ class DeploymentSettings:
         ):
             raise ValueError(
                 "reasoning_effort must be omit, none, minimal, low, medium, high, or xhigh"
+            )
+        if self.service_tier is not None and self.service_tier not in {
+            "auto",
+            "default",
+            "flex",
+            "priority",
+            "fast",
+            "scale",
+        }:
+            raise ValueError(
+                "service_tier must be auto, default, flex, priority, fast or scale"
             )
         if not isinstance(self.chat_template_kwargs, dict) or any(
             not isinstance(key, str) for key in self.chat_template_kwargs
@@ -120,6 +133,9 @@ class DeploymentSettings:
         value = asdict(self)
         # The name is useful for configuration but is not scientific identity.
         value.pop("api_key_env")
+        if self.service_tier is None:
+            # Unspecified service keeps the established cache identity.
+            value.pop("service_tier")
         if self.tokenizer and Path(self.tokenizer).is_file():
             import hashlib
 

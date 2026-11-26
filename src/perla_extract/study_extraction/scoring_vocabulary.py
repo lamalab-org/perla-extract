@@ -38,6 +38,40 @@ def property_name(name: str) -> str:
     return METRIC_ALIASES.get(key, key)
 
 
+# One vocabulary for measurement context. The canonical labels can also appear in
+# extraction guidance; aliases describe the same condition, not related outcomes.
+MEASUREMENT_CONDITIONS = {
+    "illumination intensity": ("irradiance",),
+    "illumination": (),
+    "illumination spectrum": (),
+    "illumination standard": (),
+    "scan rate": ("JV scan rate", "scan speed"),
+    "scan voltage range": (
+        "scan protocol",
+        "voltage scan protocol",
+        "voltage scanning protocol",
+        "voltage sweep",
+        "voltage sweep range",
+    ),
+    "voltage step": (),
+    "measurement temperature": (),
+    "measurement atmosphere": (),
+    "measurement condition": (),
+    "storage before measurement": (),
+    "storage in glovebox": (),
+}
+_PROTOCOL_NAMES = {
+    property_name(label): property_name(canonical)
+    for canonical, aliases in MEASUREMENT_CONDITIONS.items()
+    for label in (canonical, *aliases)
+}
+
+
+def protocol_name(name: str) -> str | None:
+    """Recognize explicitly named measurement context; keep unknown names literal."""
+    return _PROTOCOL_NAMES.get(property_name(name))
+
+
 def error_bar_statistic(value: str) -> str:
     """Recognize named uncertainty statistics without guessing from 'error bars'."""
     key = scientific_text(value).casefold().replace("_", " ")

@@ -208,6 +208,9 @@ def test_specimen_ambiguity_blocks_primary_but_not_value_credit():
     duplicate = prediction.individual_devices[0].model_copy(deep=True)
     duplicate.device_id = "duplicate"
     prediction.individual_devices.append(duplicate)
+    observation = prediction.performance_observations[0].model_copy(deep=True)
+    observation.observation_id, observation.device_id = "duplicate-result", "duplicate"
+    prediction.performance_observations.append(observation)
     _, fact = explain(truth, prediction)
     assert fact.reason == "ambiguity"
     assert fact.candidates[0].ambiguity_blocked

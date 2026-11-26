@@ -40,7 +40,6 @@ from .scoring_context import (
     ContextDifference,
     FactContext,
     RecordReference,
-    compare_context,
     device_identity,
     device_treatment,
     has_subject_identity,
@@ -54,15 +53,17 @@ from .scoring_context import (
     equal_value as equal_value,
 )
 from .scoring_fields import FactGroup, FactSubfield, fact_group, fact_subfield
-from .scoring_identity import measurement_subject
+from .scoring_identity import measurement_subject, sample_code
 from .scoring_process import condition_name, describe_process
 from .scoring_protocol import (
     canonical_conditions,
+    metric_definition,
+    metric_value,
     performance_name,
     protocol_claims,
     protocol_name,
 )
-from .scoring_requirements import requirements_for
+from .scoring_requirements import compare_requirements, requirements_for
 from .scoring_vocabulary import (
     error_bar_statistic,
     known_material,
@@ -99,11 +100,12 @@ def scientific_descriptor(record: object) -> str | None:
     """
 
     if isinstance(record, PopulationStatistic):
-        return (
-            None
-            if record.subjects and all(has_subject_identity(s) for s in record.subjects)
-            else scientific_text(record.label)
-        )
+        code = sample_code(record)
+        if code:
+            return "sample:" + code
+        if record.subjects and all(has_subject_identity(s) for s in record.subjects):
+            return None
+        return scientific_text(record.label)
     if isinstance(record, StabilityTest) and record.device_id is None:
         return scientific_text(record.specimen_label)
     return None
@@ -120,6 +122,24 @@ class ScientificFact:
     subfield: FactSubfield
     concept: tuple[str, str]
     source_paths: tuple[str, ...] = ()
+    unit_source: Literal["field_name", "percentage_points"] | None = None
+
+    @property
+    def field_key(self) -> str:
+        """Name the scientific field independently of its JSON container."""
+        return ":".join(self.concept)
+
+    @property
+    def stratum(self) -> str:
+        """Keep individual measurements and population statistics distinguishable."""
+        values = {c.name: c.value for c in self.context.components}
+        return "|".join(
+            [self.field_key]
+            + [
+                str(values.get(k) or "not_reported")
+                for k in ("statistical_level", "statistic_type", "measurement_type")
+            ]
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,9 +172,10 @@ def compare_facts(
 ) -> FactComparison:
     # One decision path serves scoring and explanation. Explanation only controls
     # retention of the detailed differences, never eligibility.
-    differences = compare_context(
-        requirements_for(left.concept, left.context).context(left.context),
-        requirements_for(right.concept, right.context).context(right.context),
+    differences = compare_requirements(
+        left.concept,
+        left.context,
+        right.context,
         relative,
         absolute,
     )
@@ -209,7 +230,7 @@ class FactProjection:
     facts: list[ScientificFact]
     scopes: list[ScientificScope]
     linked_containers: list[tuple[str, str]] = field(default_factory=list)
-    conflicts: list[tuple[str, str]] = field(default_factory=list)
+    conflicts: list[tuple[str, ...]] = field(default_factory=list)
 
     def merge_material_identities(self, aliases: list[tuple[str, str]]) -> None:
         """Attach explicitly redundant whole-material fields to their layer identity.
@@ -355,7 +376,7 @@ class _FactProjector:
         self.scopes: list[ScientificScope] = []
         self.linked_containers: list[tuple[str, str]] = []
         self.material_aliases: list[tuple[str, str]] = []
-        self.material_conflicts: list[tuple[str, str]] = []
+        self.material_conflicts: list[tuple[str, ...]] = []
         self.devices = {item.device_id: item for item in study.individual_devices}
         self.device_paths = {
             item.device_id: f"/individual_devices/{i}"
@@ -440,6 +461,12 @@ class _FactProjector:
             )
             if "/measurement_conditions/" in path and protocol_name(name) is None:
                 concept = ("measurement_condition", name)
+            unit_source: Literal["field_name", "percentage_points"] | None = None
+            if isinstance(value, ReportedValue) and (
+                concept[0] == "measurement"
+                or (concept[0] == "aging_outcome" and concept[1] in {"pce", "ff"})
+            ):
+                value, unit_source = metric_value(value, concept[1])
             self.facts.append(
                 ScientificFact(
                     group=fact_group(concept),
@@ -451,6 +478,7 @@ class _FactProjector:
                     source_paths=source_paths or (path,),
                     subfield=fact_subfield(group, name, path, stage, value),
                     concept=concept,
+                    unit_source=unit_source,
                 )
             )
 
@@ -951,15 +979,44 @@ class _FactProjector:
         for j, metric in enumerate(record.metrics):
             if protocol_name(metric.name):
                 continue
+            metric_context = self.metric_context(
+                record, metric, context.extend(protocol), f"{path}/metrics/{j}"
+            )
             self.add(
                 "performance",
                 f"{path}/metrics/{j}",
                 owner,
                 performance_name(metric.name, record.measurement_type),
                 metric,
-                context.extend(protocol),
+                metric_context,
             )
         self.measurement_conditions("performance", record, path, owner, context)
+
+    def metric_context(
+        self,
+        record: PerformanceObservation | PopulationStatistic,
+        metric: ReportedValue,
+        context: FactContext,
+        path: str,
+    ) -> FactContext:
+        """Preserve label qualifiers and reject contradictions with structured fields."""
+        _, statistic, method, _ = metric_definition(metric.name)
+        updates = {}
+        for name, qualifier in (
+            ("statistic_type", statistic),
+            ("measurement_type", method),
+        ):
+            if qualifier is None:
+                continue
+            stated = getattr(record, name, None)
+            if stated not in (None, "not_reported", qualifier) or (
+                statistic is not None and isinstance(record, PerformanceObservation)
+            ):
+                self.material_conflicts.append((path,))
+            updates[name] = qualifier
+        return FactContext(
+            tuple(c for c in context.components if c.name not in updates)
+        ).extend(FactContext.of(path, **updates))
 
     def population(
         self, record: PopulationStatistic, path: str, owner: RecordReference
@@ -1015,7 +1072,9 @@ class _FactProjector:
                 metric,
                 context
                 if property_name(metric.name) in {"errorbarstatistic", "sample_size"}
-                else outcome_context,
+                else self.metric_context(
+                    record, metric, outcome_context, f"{path}/metrics/{j}"
+                ),
             )
         self.measurement_conditions("population", record, path, owner, context)
 

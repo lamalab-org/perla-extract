@@ -81,3 +81,44 @@ A useful next human check is to ask a new student to run the offline example, ex
 one wrong-scan score, prepare one paper/SI/reference block, and locate the code that
 selects a performance field. Record where they need help. Passing automated tests
 alone cannot establish that this journey is easy for them.
+
+## Scoring and cost check, 18 November 2026
+
+The current scorer (evaluation 17, matcher v22, facts v19) passes all 602 applicable
+automatic controls. Replaying 182 saved outputs across 22 development papers gains
+124 attributed facts and loses one; no inference or reference editing is involved.
+Numeric tolerance remains 1% relative with zero absolute allowance.
+
+Integer citation transport expands identically on all 23 audited saved responses.
+The same visible compact JSON uses 25.3% fewer tokens with a fixed local tokenizer;
+this excludes input/reasoning and is not a measured percentage reduction in billing.
+The quick start now explicitly uses one direct call; the starter experiment tests
+one additional refinement call. Existing Python API defaults remain unchanged.
+
+Live checks retain all 33 attempts, including failed responses. Neither the cheaper
+model screen nor Flex processing established a scalable replacement. The intended
+eight-paper, two-arm, two-repeat comparison stops at six attempted slots: one
+scored output, two HTTP 500 errors and three timeouts. No complete new-paper pair
+exists, and 26 planned slots remain unattempted. Experimental source-scope and
+device-attribution prompt changes were therefore not promoted.
+
+Known paid cost is $5.38075149. Six requests have no usable billing data and retain
+a combined $16.80 conservative reservation; reservations are not charges. This
+leaves insufficient space for another request under the study's $25 admission
+rule. Three additional Flex capacity rejections are documented as no-charge, while
+their native reports preserve missing accounting. Blablador costs are unpriced.
+
+The final software suite passes 1,404 tests (three skipped) on Python 3.10 and 3.12.
+Ruff, mypy and strict
+documentation checks pass. Langfuse read-back matches 32 attempts exactly; the
+remaining attempt preserves one large integer as identical decimal text. Local
+scientific outputs retain their original numeric types. These checks establish
+software behavior and trace preservation; corpus-scale quality and cost remain
+unvalidated.
+
+CI exposed an older LiteLLM version pricing a requested Flex tier even when the
+response reported Standard. The client now re-estimates that mismatch using the
+served tier, preserving explicit provider amounts, including zero. Pricing tests
+supply a local catalog and exercise both supported adapter generations. The live
+study used the newer adapter and had no mismatched-tier responses; its saved costs
+and scientific outputs remain unchanged.

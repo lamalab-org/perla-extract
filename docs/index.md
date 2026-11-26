@@ -38,11 +38,13 @@ The [evaluation method](methods/benchmark.md) explains the scientific contract.
 
 ## How extraction works
 
-By default, models collect source-linked notes before building records. Long documents can be split at
-structural boundaries and read more than once; one global call assembles the cited
-claims. Disable reading to build directly from the complete source. An optional later
-pass checks the draft against the evidence. Saved drafts and change
-reports let you inspect what each pass changed.
+The quick start builds records directly from the complete prepared paper and SI.
+An optional source reader first collects cited notes; it can split long documents
+at structural boundaries and read them more than once. One global call then
+assembles the study. An optional later pass checks the draft against the evidence.
+Saved drafts and change reports show what each pass changed. The Python API's
+defaults enable these extra stages; the quick start disables them explicitly so
+their cost and benefit can be tested separately.
 
 Claims distinguish device designs, processing variants, specimens and measurements.
 Layers and processing steps use `ReportedValue` for individual quantities, with

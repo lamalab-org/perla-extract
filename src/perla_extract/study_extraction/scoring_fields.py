@@ -37,6 +37,30 @@ FactSubfield = Literal[
 ]
 FACT_SUBFIELDS: tuple[FactSubfield, ...] = get_args(FactSubfield)
 
+# A short default results table. These keys select existing ledger entries and
+# never alter candidates, attribution requirements, or the reference inventory.
+IMPORTANT_FIELDS = {
+    "measurement:pce": "PCE",
+    "measurement:ff": "FF",
+    "measurement:voc": "Voc",
+    "measurement:jsc": "Jsc",
+    "processing:activearea": "Active area",
+    "processing:maskedactivearea": "Masked active area",
+    "material:formula": "Absorber formula",
+    "material:constituent": "Material constituents",
+    "material:material": "Layer materials",
+    "material:polarity": "Device polarity",
+    "material:stack": "Reported device stack",
+    "material:bandgap": "Bandgap",
+    "material:thickness": "Layer thickness",
+    "measurement:illuminationintensity": "Irradiance",
+    "measurement:illuminationspectrum": "Illumination spectrum",
+    "processing:operation": "Processing operation",
+    "processing:temperature": "Process temperature",
+    "processing:duration": "Process duration",
+    "processing:speed": "Spin-coating speed",
+}
+
 
 def fact_subfield(
     group: str, name: str, path: str, stage: str | None, value: object = None
