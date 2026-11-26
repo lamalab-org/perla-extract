@@ -1,0 +1,1378 @@
+{
+  "attempts": 410,
+  "canonical_fact_changes": {
+    "attributed": {
+      "matched": 39,
+      "predicted": 0,
+      "truth": 0
+    },
+    "recovery": {
+      "matched": 172,
+      "predicted": 0,
+      "truth": 0
+    }
+  },
+  "code_sha256": {
+    "after": "3a73b3ae8a31bd9e3e88d61958549c217071dcbaa9c568f175a8613e075ea9ea",
+    "before": "fde6fcc45d6854ec349f86001387033d5c787f468380c2c2f0d70084d359a61b",
+    "refactor": "ea8c3b7cb9e5968dfa4abd55dd9db18bfd415035acf3f05cfb2c7956d57a85b5"
+  },
+  "completed_attempts": 221,
+  "config": {
+    "descriptor_equivalences": [],
+    "minimum_record_similarity": 0.35,
+    "numeric_absolute_tolerance": 0.0,
+    "numeric_relative_tolerance": 0.01,
+    "operation_aliases": {
+      "spin-coating": "spin coating",
+      "spin_coating": "spin coating",
+      "spincoating": "spin coating",
+      "thermal annealing": "annealing"
+    }
+  },
+  "environment": {
+    "pint": "0.26.2",
+    "pydantic": "2.14.3",
+    "python": "3.12.14"
+  },
+  "field_summary_selection": {
+    "additional_fields": [
+      "aging_protocol:relativehumidity"
+    ],
+    "all_fields_in_local_audit": 3653,
+    "all_fields_in_micro_and_groups": true,
+    "fields": [
+      "aging_protocol:relativehumidity",
+      "material:bandgap",
+      "material:constituent",
+      "material:formula",
+      "material:material",
+      "material:polarity",
+      "material:stack",
+      "material:thickness",
+      "measurement:ff",
+      "measurement:illuminationintensity",
+      "measurement:illuminationspectrum",
+      "measurement:jsc",
+      "measurement:pce",
+      "measurement:voc",
+      "processing:activearea",
+      "processing:duration",
+      "processing:maskedactivearea",
+      "processing:operation",
+      "processing:speed",
+      "processing:temperature"
+    ],
+    "source": "perla_extract.study_extraction.scoring_fields.IMPORTANT_FIELDS"
+  },
+  "groups": [
+    {
+      "f1": 0.1829977334691062,
+      "group": "material_device_identity",
+      "matched": 5571,
+      "precision": 0.3679170519085986,
+      "predicted": 15142,
+      "recall": 0.12178646379853096,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 45744,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.06773068987596936,
+      "group": "performance",
+      "matched": 1428,
+      "precision": 0.11552463392929374,
+      "predicted": 12361,
+      "recall": 0.04790981681540629,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 29806,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.014564589255091734,
+      "group": "processing",
+      "matched": 620,
+      "precision": 0.027106195077165218,
+      "predicted": 22873,
+      "recall": 0.009957439974303381,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 62265,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0009432055514383885,
+      "group": "stability",
+      "matched": 7,
+      "precision": 0.0020278099652375433,
+      "predicted": 3452,
+      "recall": 0.0006145202352734615,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 11391,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.26419866636008277,
+      "group": "material_device_identity",
+      "matched": 8043,
+      "precision": 0.5311715757495707,
+      "predicted": 15142,
+      "recall": 0.17582633788037774,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 45744,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.2169469016055209,
+      "group": "performance",
+      "matched": 4574,
+      "precision": 0.37003478682954455,
+      "predicted": 12361,
+      "recall": 0.1534590350936053,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 29806,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.1696539735488266,
+      "group": "processing",
+      "matched": 7222,
+      "precision": 0.31574345297949546,
+      "predicted": 22873,
+      "recall": 0.11598811531357905,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 62265,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.0972849154483595,
+      "group": "stability",
+      "matched": 722,
+      "precision": 0.20915411355735805,
+      "predicted": 3452,
+      "recall": 0.0633833728382056,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 11391,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.18188089215911704,
+      "group": "material_device_identity",
+      "matched": 5537,
+      "precision": 0.3656716417910448,
+      "predicted": 15142,
+      "recall": 0.1210431969220007,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 45744,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.06758839851068371,
+      "group": "performance",
+      "matched": 1425,
+      "precision": 0.11528193511851792,
+      "predicted": 12361,
+      "recall": 0.04780916593974367,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 29806,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.014517606709107567,
+      "group": "processing",
+      "matched": 618,
+      "precision": 0.02701875573820662,
+      "predicted": 22873,
+      "recall": 0.009925319200192725,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 62265,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0009432055514383885,
+      "group": "stability",
+      "matched": 7,
+      "precision": 0.0020278099652375433,
+      "predicted": 3452,
+      "recall": 0.0006145202352734615,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 11391,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.2627861905856847,
+      "group": "material_device_identity",
+      "matched": 8000,
+      "precision": 0.5283317923656056,
+      "predicted": 15142,
+      "recall": 0.17488632388947184,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 45744,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.21623544477909265,
+      "group": "performance",
+      "matched": 4559,
+      "precision": 0.3688212927756654,
+      "predicted": 12361,
+      "recall": 0.15295578071529223,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 29806,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.1683854448072541,
+      "group": "processing",
+      "matched": 7168,
+      "precision": 0.3133825908276133,
+      "predicted": 22873,
+      "recall": 0.11512085441259134,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 62265,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.08920029643603045,
+      "group": "stability",
+      "matched": 662,
+      "precision": 0.19177288528389339,
+      "predicted": 3452,
+      "recall": 0.058116056535861646,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 11391,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3021360147557565,
+      "group": "material_device_identity",
+      "matched": 5078,
+      "precision": 0.37360211889346673,
+      "predicted": 13592,
+      "recall": 0.2536210168814304,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 20022,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.11605431635607388,
+      "group": "performance",
+      "matched": 1423,
+      "precision": 0.12301175656984785,
+      "predicted": 11568,
+      "recall": 0.10984175993824778,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 12955,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.02338071470593817,
+      "group": "processing",
+      "matched": 616,
+      "precision": 0.028260769830710648,
+      "predicted": 21797,
+      "recall": 0.01993785603314345,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 30896,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0019236053860950811,
+      "group": "stability",
+      "matched": 7,
+      "precision": 0.002158495220474869,
+      "predicted": 3243,
+      "recall": 0.001734820322180917,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 4035,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.43261736181353005,
+      "group": "material_device_identity",
+      "matched": 7271,
+      "precision": 0.5349470276633314,
+      "predicted": 13592,
+      "recall": 0.3631505344121466,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 20022,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.34057823267952536,
+      "group": "performance",
+      "matched": 4176,
+      "precision": 0.36099585062240663,
+      "predicted": 11568,
+      "recall": 0.3223465843303744,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 12955,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.2660315411914296,
+      "group": "processing",
+      "matched": 7009,
+      "precision": 0.32155801257053723,
+      "predicted": 21797,
+      "recall": 0.22685784567581563,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 30896,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.17862050013740038,
+      "group": "stability",
+      "matched": 650,
+      "precision": 0.20043169904409497,
+      "predicted": 3243,
+      "recall": 0.161090458488228,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 4035,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3001130481347058,
+      "group": "material_device_identity",
+      "matched": 5044,
+      "precision": 0.3711006474396704,
+      "predicted": 13592,
+      "recall": 0.2519228848266906,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 20022,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.11580964808547078,
+      "group": "performance",
+      "matched": 1420,
+      "precision": 0.12275242047026279,
+      "predicted": 11568,
+      "recall": 0.10961018911617136,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 12955,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.023304803294555254,
+      "group": "processing",
+      "matched": 614,
+      "precision": 0.028169014084507043,
+      "predicted": 21797,
+      "recall": 0.01987312273433454,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 30896,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0019236053860950811,
+      "group": "stability",
+      "matched": 7,
+      "precision": 0.002158495220474869,
+      "predicted": 3243,
+      "recall": 0.001734820322180917,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 4035,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.43005890402808356,
+      "group": "material_device_identity",
+      "matched": 7228,
+      "precision": 0.5317834020011771,
+      "predicted": 13592,
+      "recall": 0.36100289681350517,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 20022,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3393548913265098,
+      "group": "performance",
+      "matched": 4161,
+      "precision": 0.3596991701244813,
+      "predicted": 11568,
+      "recall": 0.3211887302199923,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 12955,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.26398193308409085,
+      "group": "processing",
+      "matched": 6955,
+      "precision": 0.31908060742303984,
+      "predicted": 21797,
+      "recall": 0.22511004660797515,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 30896,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.16213245397087112,
+      "group": "stability",
+      "matched": 590,
+      "precision": 0.18193031144002467,
+      "predicted": 3243,
+      "recall": 0.14622057001239158,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 4035,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.5727069351230425,
+      "group": "material_device_identity",
+      "matched": 128,
+      "precision": 0.6183574879227053,
+      "predicted": 207,
+      "recall": 0.5333333333333333,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 240,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0392156862745098,
+      "group": "performance",
+      "matched": 12,
+      "precision": 0.03592814371257485,
+      "predicted": 334,
+      "recall": 0.04316546762589928,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 278,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.004889975550122249,
+      "group": "processing",
+      "matched": 3,
+      "precision": 0.004830917874396135,
+      "predicted": 621,
+      "recall": 0.0049504950495049506,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 606,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "stability",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 58,
+      "recall": 0.0,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 61,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.6263982102908278,
+      "group": "material_device_identity",
+      "matched": 140,
+      "precision": 0.6763285024154589,
+      "predicted": 207,
+      "recall": 0.5833333333333334,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 240,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.369281045751634,
+      "group": "performance",
+      "matched": 113,
+      "precision": 0.3383233532934132,
+      "predicted": 334,
+      "recall": 0.4064748201438849,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 278,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.43031784841075793,
+      "group": "processing",
+      "matched": 264,
+      "precision": 0.4251207729468599,
+      "predicted": 621,
+      "recall": 0.43564356435643564,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 606,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3865546218487395,
+      "group": "stability",
+      "matched": 23,
+      "precision": 0.39655172413793105,
+      "predicted": 58,
+      "recall": 0.3770491803278688,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 61,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.5727069351230425,
+      "group": "material_device_identity",
+      "matched": 128,
+      "precision": 0.6183574879227053,
+      "predicted": 207,
+      "recall": 0.5333333333333333,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 240,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0392156862745098,
+      "group": "performance",
+      "matched": 12,
+      "precision": 0.03592814371257485,
+      "predicted": 334,
+      "recall": 0.04316546762589928,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 278,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.004889975550122249,
+      "group": "processing",
+      "matched": 3,
+      "precision": 0.004830917874396135,
+      "predicted": 621,
+      "recall": 0.0049504950495049506,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 606,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "stability",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 58,
+      "recall": 0.0,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 61,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.6263982102908278,
+      "group": "material_device_identity",
+      "matched": 140,
+      "precision": 0.6763285024154589,
+      "predicted": 207,
+      "recall": 0.5833333333333334,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 240,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.369281045751634,
+      "group": "performance",
+      "matched": 113,
+      "precision": 0.3383233532934132,
+      "predicted": 334,
+      "recall": 0.4064748201438849,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 278,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.4254278728606357,
+      "group": "processing",
+      "matched": 261,
+      "precision": 0.42028985507246375,
+      "predicted": 621,
+      "recall": 0.4306930693069307,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 606,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3697478991596639,
+      "group": "stability",
+      "matched": 22,
+      "precision": 0.3793103448275862,
+      "predicted": 58,
+      "recall": 0.36065573770491804,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 61,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.5281173594132029,
+      "group": "material_device_identity",
+      "matched": 108,
+      "precision": 0.6390532544378699,
+      "predicted": 169,
+      "recall": 0.45,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 240,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.058287795992714025,
+      "group": "performance",
+      "matched": 16,
+      "precision": 0.05904059040590406,
+      "predicted": 271,
+      "recall": 0.05755395683453238,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 278,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "processing",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 430,
+      "recall": 0.0,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 606,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "stability",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 62,
+      "recall": 0.0,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 61,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.6210268948655256,
+      "group": "material_device_identity",
+      "matched": 127,
+      "precision": 0.7514792899408284,
+      "predicted": 169,
+      "recall": 0.5291666666666667,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 240,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.39344262295081966,
+      "group": "performance",
+      "matched": 108,
+      "precision": 0.3985239852398524,
+      "predicted": 271,
+      "recall": 0.38848920863309355,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 278,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3223938223938224,
+      "group": "processing",
+      "matched": 167,
+      "precision": 0.3883720930232558,
+      "predicted": 430,
+      "recall": 0.2755775577557756,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 606,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.37398373983739835,
+      "group": "stability",
+      "matched": 23,
+      "precision": 0.3709677419354839,
+      "predicted": 62,
+      "recall": 0.3770491803278688,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 61,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.5281173594132029,
+      "group": "material_device_identity",
+      "matched": 108,
+      "precision": 0.6390532544378699,
+      "predicted": 169,
+      "recall": 0.45,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 240,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.058287795992714025,
+      "group": "performance",
+      "matched": 16,
+      "precision": 0.05904059040590406,
+      "predicted": 271,
+      "recall": 0.05755395683453238,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 278,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "processing",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 430,
+      "recall": 0.0,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 606,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "stability",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 62,
+      "recall": 0.0,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 61,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.6210268948655256,
+      "group": "material_device_identity",
+      "matched": 127,
+      "precision": 0.7514792899408284,
+      "predicted": 169,
+      "recall": 0.5291666666666667,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 240,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.39344262295081966,
+      "group": "performance",
+      "matched": 108,
+      "precision": 0.3985239852398524,
+      "predicted": 271,
+      "recall": 0.38848920863309355,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 278,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3204633204633205,
+      "group": "processing",
+      "matched": 166,
+      "precision": 0.386046511627907,
+      "predicted": 430,
+      "recall": 0.2739273927392739,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 606,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3252032520325203,
+      "group": "stability",
+      "matched": 20,
+      "precision": 0.3225806451612903,
+      "predicted": 62,
+      "recall": 0.32786885245901637,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 61,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.4534412955465587,
+      "group": "material_device_identity",
+      "matched": 112,
+      "precision": 0.4409448818897638,
+      "predicted": 254,
+      "recall": 0.4666666666666667,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 240,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0633147113594041,
+      "group": "performance",
+      "matched": 17,
+      "precision": 0.06563706563706563,
+      "predicted": 259,
+      "recall": 0.06115107913669065,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 278,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.04678362573099415,
+      "group": "processing",
+      "matched": 24,
+      "precision": 0.05714285714285714,
+      "predicted": 420,
+      "recall": 0.039603960396039604,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 606,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "stability",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 68,
+      "recall": 0.0,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 61,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.5344129554655871,
+      "group": "material_device_identity",
+      "matched": 132,
+      "precision": 0.5196850393700787,
+      "predicted": 254,
+      "recall": 0.55,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 240,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3761638733705773,
+      "group": "performance",
+      "matched": 101,
+      "precision": 0.38996138996138996,
+      "predicted": 259,
+      "recall": 0.36330935251798563,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 278,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3313840155945419,
+      "group": "processing",
+      "matched": 170,
+      "precision": 0.40476190476190477,
+      "predicted": 420,
+      "recall": 0.28052805280528054,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 606,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.29457364341085274,
+      "group": "stability",
+      "matched": 19,
+      "precision": 0.27941176470588236,
+      "predicted": 68,
+      "recall": 0.3114754098360656,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 61,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.4534412955465587,
+      "group": "material_device_identity",
+      "matched": 112,
+      "precision": 0.4409448818897638,
+      "predicted": 254,
+      "recall": 0.4666666666666667,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 240,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0633147113594041,
+      "group": "performance",
+      "matched": 17,
+      "precision": 0.06563706563706563,
+      "predicted": 259,
+      "recall": 0.06115107913669065,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 278,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.04678362573099415,
+      "group": "processing",
+      "matched": 24,
+      "precision": 0.05714285714285714,
+      "predicted": 420,
+      "recall": 0.039603960396039604,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 606,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.0,
+      "group": "stability",
+      "matched": 0,
+      "precision": 0.0,
+      "predicted": 68,
+      "recall": 0.0,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 61,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.5344129554655871,
+      "group": "material_device_identity",
+      "matched": 132,
+      "precision": 0.5196850393700787,
+      "predicted": 254,
+      "recall": 0.55,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 240,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.3761638733705773,
+      "group": "performance",
+      "matched": 101,
+      "precision": 0.38996138996138996,
+      "predicted": 259,
+      "recall": 0.36330935251798563,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 278,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.32943469785575047,
+      "group": "processing",
+      "matched": 169,
+      "precision": 0.4023809523809524,
+      "predicted": 420,
+      "recall": 0.27887788778877887,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 606,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.24806201550387597,
+      "group": "stability",
+      "matched": 16,
+      "precision": 0.23529411764705882,
+      "predicted": 68,
+      "recall": 0.26229508196721313,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 61,
+      "view": "recovery"
+    }
+  ],
+  "integrity": {
+    "all_inputs_rehashed": true,
+    "all_seals_verified": true,
+    "duplicate_run_ids": 0,
+    "reference_source_hashes_equal": true,
+    "unavailable": 0
+  },
+  "interpretation": "Paired rescore of unchanged saved extractions across mixed historical settings; no new inference. Repeated papers and attempts are not independent replicates or a model ranking.",
+  "micro": [
+    {
+      "f1": 0.07512042318035403,
+      "matched": 7626,
+      "precision": 0.14167347848703277,
+      "predicted": 53828,
+      "recall": 0.05111054515233972,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 149206,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.20253750603347223,
+      "matched": 20561,
+      "precision": 0.3819759233112878,
+      "predicted": 53828,
+      "recall": 0.13780276932563035,
+      "scope": "all_saved_attempts",
+      "scorer": "after",
+      "truth": 149206,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.07473625107124915,
+      "matched": 7587,
+      "precision": 0.14094894850263803,
+      "predicted": 53828,
+      "recall": 0.05084916156186749,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 149206,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.20084320852665072,
+      "matched": 20389,
+      "precision": 0.3787805603031879,
+      "predicted": 53828,
+      "recall": 0.13665000067021432,
+      "scope": "all_saved_attempts",
+      "scorer": "before",
+      "truth": 149206,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.12063535069597317,
+      "matched": 7124,
+      "precision": 0.14191235059760957,
+      "predicted": 50200,
+      "recall": 0.1049066383931201,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 67908,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.32353439225115993,
+      "matched": 19106,
+      "precision": 0.380597609561753,
+      "predicted": 50200,
+      "recall": 0.28135123991282324,
+      "scope": "completed_attempts",
+      "scorer": "after",
+      "truth": 67908,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.11997493819216311,
+      "matched": 7085,
+      "precision": 0.14113545816733067,
+      "predicted": 50200,
+      "recall": 0.10433233197855923,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 67908,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.3206218037728181,
+      "matched": 18934,
+      "precision": 0.3771713147410359,
+      "predicted": 50200,
+      "recall": 0.2788184013665547,
+      "scope": "completed_attempts",
+      "scorer": "before",
+      "truth": 67908,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.11891891891891893,
+      "matched": 143,
+      "precision": 0.11721311475409836,
+      "predicted": 1220,
+      "recall": 0.12067510548523207,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 1185,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.4490644490644491,
+      "matched": 540,
+      "precision": 0.4426229508196721,
+      "predicted": 1220,
+      "recall": 0.45569620253164556,
+      "scope": "recent_pilot_baseline",
+      "scorer": "after",
+      "truth": 1185,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.11891891891891893,
+      "matched": 143,
+      "precision": 0.11721311475409836,
+      "predicted": 1220,
+      "recall": 0.12067510548523207,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 1185,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.44573804573804576,
+      "matched": 536,
+      "precision": 0.43934426229508194,
+      "predicted": 1220,
+      "recall": 0.45232067510548524,
+      "scope": "recent_pilot_baseline",
+      "scorer": "before",
+      "truth": 1185,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.11714690599905526,
+      "matched": 124,
+      "precision": 0.13304721030042918,
+      "predicted": 932,
+      "recall": 0.10464135021097046,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 1185,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.40151157298063295,
+      "matched": 425,
+      "precision": 0.4560085836909871,
+      "predicted": 932,
+      "recall": 0.35864978902953587,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "after",
+      "truth": 1185,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.11714690599905526,
+      "matched": 124,
+      "precision": 0.13304721030042918,
+      "predicted": 932,
+      "recall": 0.10464135021097046,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 1185,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.39773264052905055,
+      "matched": 421,
+      "precision": 0.4517167381974249,
+      "predicted": 932,
+      "recall": 0.35527426160337555,
+      "scope": "recent_pilot_less_reasoning",
+      "scorer": "before",
+      "truth": 1185,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.13998170173833485,
+      "matched": 153,
+      "precision": 0.15284715284715283,
+      "predicted": 1001,
+      "recall": 0.1291139240506329,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 1185,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.38609332113449224,
+      "matched": 422,
+      "precision": 0.42157842157842157,
+      "predicted": 1001,
+      "recall": 0.3561181434599156,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "after",
+      "truth": 1185,
+      "view": "recovery"
+    },
+    {
+      "f1": 0.13998170173833485,
+      "matched": 153,
+      "precision": 0.15284715284715283,
+      "predicted": 1001,
+      "recall": 0.1291139240506329,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 1185,
+      "view": "attributed"
+    },
+    {
+      "f1": 0.38243366880146384,
+      "matched": 418,
+      "precision": 0.4175824175824176,
+      "predicted": 1001,
+      "recall": 0.3527426160337553,
+      "scope": "recent_pilot_smaller_model",
+      "scorer": "before",
+      "truth": 1185,
+      "view": "recovery"
+    }
+  ],
+  "original_path_decision_changes": {
+    "prediction": {
+      "attributed": {
+        "gained_credit": 39
+      },
+      "recovery": {
+        "gained_credit": 173
+      }
+    },
+    "truth": {
+      "attributed": {
+        "gained_credit": 42
+      },
+      "recovery": {
+        "gained_credit": 176
+      }
+    }
+  },
+  "original_status_counts": {
+    "complete": 58,
+    "complete_needs_review": 163,
+    "failed": 154,
+    "partial": 35
+  },
+  "papers": 30,
+  "refactor_parity": {
+    "decision_changes": 0,
+    "identical_reports": 410,
+    "same_environment": true,
+    "same_inputs": true
+  },
+  "reference_quantity_issues": {
+    "10.1002--solr.201900370": [
+      "/individual_devices/0/reported_properties/6",
+      "/individual_devices/1/reported_properties/6",
+      "/individual_devices/2/reported_properties/6",
+      "/individual_devices/3/reported_properties/6"
+    ]
+  },
+  "report_versions": {
+    "after": {
+      "fact_profile": "core-scientific-facts-v24",
+      "format_version": 17,
+      "matcher_version": "rich-study-hungarian-v27",
+      "study_schema_sha256": "8c907b376309579bbb73d5137453107abdd508a12185c936bba9cbc678534364"
+    },
+    "before": {
+      "fact_profile": "core-scientific-facts-v23",
+      "format_version": 17,
+      "matcher_version": "rich-study-hungarian-v26",
+      "study_schema_sha256": "8c907b376309579bbb73d5137453107abdd508a12185c936bba9cbc678534364"
+    }
+  },
+  "roster_sha256": "ad510f112dcd6ed95b1f556d2be6dca23df6aae139a9dfe9c6c0da07778f6c6c",
+  "scientific_delta_audit": {
+    "conflict_interpretation": "Saved raw strings and parsed fields disagree. Other source evidence can support some parsed values; these conflicts do not prove that physical values in the papers are wrong. No repair is inferred from the paired reference.",
+    "corrected_replay_regression": "Unitless specimen designations before metric names remain identity codes; no longer removed as outcome quantities.",
+    "inventory_changes": 0,
+    "lost_credits": 0,
+    "prediction_quantity_conflict_occurrences": {
+      "decimal_or_scaling": 37,
+      "inverse_area": 30,
+      "ml_vs_microL": 15,
+      "mm_vs_mM": 20,
+      "split_concentration_unit": 2,
+      "split_current_density_superscript": 1,
+      "uC_vs_degreeC": 62
+    },
+    "truth_original_path_gain_causes": {
+      "approximation_or_optional_parsed_number": 172,
+      "relative_humidity_range_unit_alias": 2,
+      "relative_humidity_scalar_unit_alias": 6,
+      "split_micro_prefix": 38
+    },
+    "unexplained_deltas": 0
+  },
+  "scope_counts": {
+    "all_saved_attempts": 410,
+    "completed_attempts": 221,
+    "recent_pilot_baseline": 4,
+    "recent_pilot_less_reasoning": 4,
+    "recent_pilot_smaller_model": 4
+  },
+  "scope_papers": {
+    "all_saved_attempts": 30,
+    "completed_attempts": 24,
+    "recent_pilot_baseline": 4,
+    "recent_pilot_less_reasoning": 4,
+    "recent_pilot_smaller_model": 4
+  },
+  "scope_status_counts": {
+    "all_saved_attempts": {
+      "complete": 58,
+      "complete_needs_review": 163,
+      "failed": 154,
+      "partial": 35
+    },
+    "completed_attempts": {
+      "complete": 58,
+      "complete_needs_review": 163
+    },
+    "recent_pilot_baseline": {
+      "complete": 2,
+      "complete_needs_review": 2
+    },
+    "recent_pilot_less_reasoning": {
+      "complete": 3,
+      "complete_needs_review": 1
+    },
+    "recent_pilot_smaller_model": {
+      "complete": 2,
+      "complete_needs_review": 2
+    }
+  },
+  "scoring_commits": {
+    "after": "76ab46964df192af54b3aa290798bfb11586009b",
+    "before": "8a2d73c704da6cc1190ae91da82e0813de86f901"
+  }
+}

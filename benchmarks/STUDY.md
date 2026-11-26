@@ -53,7 +53,8 @@ every attempt an independent response cache. Freeze sources, references, methods
 code and order; shuffle paper blocks/arms with seed 20261122. Never truncate or
 remove a difficult paper after seeing scores.
 
-Keep matcher v26 / fact profile v23 unless revised and frozen during development.
+Freeze the [current scoring contract](../docs/methods/scientific-scoring.md) and
+its code/dependency hashes before the paired development comparison.
 Use 1% relative / zero absolute numeric tolerance and percentage points for
 unitless PCE/FF. Report PCE, FF, Voc, Jsc, identity, processing and stability, with
 precision/recall/F1 and raw counts. Separate retrieval from strict attribution;

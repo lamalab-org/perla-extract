@@ -6,6 +6,13 @@ selection, corrections, quantity interpretation, identity/field scoring, exports
 and their tests. The implementation changes production code while preserving
 scientific inputs; no paid experiments have been run.
 
+The saved-output replay covers 410 distinct attempts over all 30 available human
+reference papers, including failed/partial attempts. The repository retains its
+compact input hashes, field tables and audit summary under
+`benchmarks/test/replays/2026-11-26/`. The pure module move produced 410 identical
+reports; scientific behavior changes were then checked separately. Real native
+and OCR parsing and installed export/deployment integrations were exercised.
+
 The baseline remains parsed evidence → one structured extraction → deterministic
 checks → scoring/export. Preserve the current study schema, public commands and
 human references. Implement the changes below in separate commits within the
