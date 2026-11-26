@@ -37,6 +37,16 @@ export function reportedNumber(raw) {
   return Number(text.replace(",", "."));
 }
 
+/** Store a value as the paper prints it with its unit ("1.45M"), when the grounding check
+ * found only that spelling. The number stays saved; the unit field is kept.
+ */
+export function adoptPrintedSpelling(value, printed) {
+  if (!printed || printed === value.raw_value) return false;
+  if (value.value_number == null) value.value_number = reportedNumber(value.raw_value);
+  value.raw_value = printed;
+  return true;
+}
+
 // Unit spellings the scorer's unit library does not know, mapped to ones it does. The unit
 // field is not checked against the quote (the number is), so a standard spelling is safe.
 const UNIT_SPELLINGS = new Map([

@@ -1,6 +1,26 @@
+import { adoptPrintedSpelling } from "./jv-table.js";
 import { pendingRecordAction, resolvePendingAction } from "./review-state.js";
 
 const pointerPart = value => String(value).replaceAll("~", "~0").replaceAll("/", "~1");
+
+/** Every cited value with a separate unit, in any form, is stored as the paper prints it
+ * when only the number with its unit attached ("1.45M") is in its quote. The check is a
+ * help: when it fails, the save runs unchanged and validates as before.
+ */
+async function adoptPrintedSpellings(value, check) {
+  const withUnit = [];
+  (function collect(item) {
+    if (Array.isArray(item)) return item.forEach(collect);
+    if (!item || typeof item !== "object") return;
+    if (typeof item.raw_value === "string" && String(item.unit ?? "").trim() && item.evidence?.length) withUnit.push(item);
+    Object.values(item).forEach(collect);
+  })(value);
+  if (!withUnit.length) return;
+  let results;
+  try { results = await check(withUnit.map(({ raw_value, unit, evidence }) => ({ raw_value, unit, evidence }))); }
+  catch { return; }
+  withUnit.forEach((item, index) => { if (results?.[index]?.ok) adoptPrintedSpelling(item, results[index].raw_value); });
+}
 
 function attachMissingEvidence(value, citation) {
   if (Array.isArray(value)) return value.forEach(item => attachMissingEvidence(item, citation));
@@ -32,6 +52,7 @@ export function createReviewSession(api, initialSplit = "dev") {
     const base_revision = edit.baseRevision ?? bundle.revision;
     const preparedValue = structuredClone(value);
     attachMissingEvidence(preparedValue, citation);
+    if (api.checkGrounding) await adoptPrintedSpellings(preparedValue, values => api.checkGrounding(split, paperId, values));
     const shared = { value: preparedValue, evidence: [citation], note, base_revision };
     const reclassifying = edit.intent === "reclassify";
     const next = reclassifying

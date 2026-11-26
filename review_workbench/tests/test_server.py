@@ -358,3 +358,33 @@ def test_grounding_check_agrees_with_save_validation():
             value = {"raw_value": raw, "unit": None, "evidence": [{"block_id": "b", "quote": quote}]}
             direct, assembled = reported_value_support(value, {"b": block}, True)
             assert check_values([value], [block])[0]["ok"] == (direct or assembled), (quote, raw)
+
+
+def test_grounding_check_attaches_the_unit_when_the_paper_prints_them_together():
+    from perla_extract.study_extraction.models import EvidenceBlock
+    from perla_extract.study_extraction.validation import reported_value_support
+    from review_workbench.grounding_check import check_values
+
+    text = "A 1.45M precursor in 10.5M stock, spun at 3000rpm and dried at 100 °C."
+    block = EvidenceBlock(
+        block_id="b", source="main", page=1, section_path=[], kind="text", text=text
+    )
+
+    def check(raw, unit):
+        value = {"raw_value": raw, "unit": unit, "evidence": [{"block_id": "b", "quote": text}]}
+        return check_values([value], [block])[0]
+
+    assert check("1.45", "M") == {"ok": True, "reason": "", "hint": "", "raw_value": "1.45M"}
+    assert check("3000", "rpm")["raw_value"] == "3000rpm"
+    assert "raw_value" not in check("100", "°C"), "a number printed on its own keeps its spelling"
+    assert not check("0.5", "M")["ok"], "a number inside another one is still not found"
+    assert not check("1.45", None)["ok"]
+    assert not check("1.45", "mM")["ok"]
+    spaced = EvidenceBlock(
+        block_id="b", source="main", page=1, section_path=[], kind="text", text="dried 2h at 1.45 M"
+    )
+    value = {"raw_value": "2", "unit": "h", "evidence": [{"block_id": "b", "quote": "dried 2h"}]}
+    assert check_values([value], [spaced])[0]["raw_value"] == "2h"
+    # The spelling returned is accepted by the save validation.
+    saved = {"raw_value": "1.45M", "unit": "M", "evidence": [{"block_id": "b", "quote": text}]}
+    assert any(reported_value_support(saved, {"b": block}, True))

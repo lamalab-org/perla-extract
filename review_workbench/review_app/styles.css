@@ -292,6 +292,8 @@ th,td { padding:.55rem; border-bottom:1px solid var(--line); text-align:left; } 
 .status-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .status-actions p { flex:1; min-width:220px; }
 #status,.success { color:var(--brand); }.error,#dialog-status,#import-status { color:var(--danger); }
+#dialog-status[data-tone="success"] { color:var(--brand); }
+#dialog-status[data-tone="info"] { color:var(--ink); }
 dialog { border:0; border-radius:18px; padding:0; box-shadow:0 24px 80px #0005; width:min(760px,92vw); }
 dialog::backdrop { background:#16201d99; backdrop-filter:blur(4px); }
 .dialog-card { display:grid; gap:12px; padding:20px; max-height:90vh; overflow:auto; }

@@ -58,6 +58,7 @@ export function createApiClient({ fetch: fetcher = globalThis.fetch, getToken = 
     reclassify: (split, paperId, payload) => post("record-reclassifications", split, paperId, payload),
     merge: (split, paperId, payload) => post("record-merges", split, paperId, payload),
     decide: (split, paperId, payload) => post("record-decisions", split, paperId, payload),
+    checkGrounding: async (split, paperId, values) => (await post("grounding-checks", split, paperId, { values })).results,
     download: url => request(url, { responseType: "blob" }),
   };
 }

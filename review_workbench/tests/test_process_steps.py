@@ -196,6 +196,13 @@ const again = T.stepCheckRequest(own, checks, sentence);
 T.applyStepCheck(own, again, again.values.map(() => ({ok:true})), checks, sentence);
 assert.equal(T.stepStatus(own, checks).state, 'done');
 assert.equal(T.stepStatus(own, checks, true).state, 'pending', 'an edit since confirming needs a new confirmation');
+// A number the paper prints with its unit attached is saved in that spelling, keeping the number.
+const glued = {step_id:'s12', operation:'spin coating', evidence:[], conditions:[{name:'concentration', raw_value:'1.45', value_number:1.45, unit:'M', evidence:[]}]};
+const gluedRequest = T.stepCheckRequest(glued, checks, sentence);
+const gluedOutcome = T.applyStepCheck(glued, gluedRequest, [{ok:true, raw_value:'1.45M'}, {ok:true}], checks, sentence);
+assert.deepEqual([glued.conditions[0].raw_value, glued.conditions[0].value_number, glued.conditions[0].unit], ['1.45M', 1.45, 'M']);
+assert.deepEqual(gluedOutcome.respelled, ['concentration "1.45M"']);
+assert.equal(T.stepStatus(glued, checks).state, 'done');
 // A wrong quote changes nothing.
 const fresh = {step_id:'s10', operation:'annealing', evidence:[], conditions:[{name:'annealing temperature', raw_value:'100', evidence:[]}]};
 const wrong = T.stepCheckRequest(fresh, checks, {block_id:'b1', quote:'typo'});

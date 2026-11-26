@@ -11,7 +11,7 @@
  *     treats them like "temperature"/"duration" under an annealing operation);
  *   - antisolvent values named by the chemical: "chlorobenzene volume", "… drip time".
  */
-import { reportedNumber, standardUnit } from "./jv-table.js";
+import { adoptPrintedSpelling, reportedNumber, standardUnit } from "./jv-table.js";
 import { SOLVENT_NAMES } from "./material-suggestions.js";
 
 const parameter = (name, unit = "", placeholder = "") => ({ name, unit, placeholder });
@@ -442,9 +442,11 @@ export function applyStepCheck(step, request, results, checks, citation) {
   const quote = results[request.entries.length] || { ok: false, reason: "No answer from the check.", hint: "" };
   const cited = [];
   const failed = [];
-  if (!quote.ok) return { cited, failed, quoteProblem: quote };
+  const respelled = [];
+  if (!quote.ok) return { cited, failed, respelled, quoteProblem: quote };
   request.entries.forEach(({ condition, candidate }, index) => {
     const result = results[index] || { ok: false, reason: "No answer from the check.", hint: "" };
+    if (result.ok && adoptPrintedSpelling(condition, result.raw_value)) respelled.push(`${condition.name} "${condition.raw_value}"`);
     if (candidate) condition.evidence = result.ok ? [{ ...citation }] : [];
     if (candidate && result.ok) cited.push(condition.name);
     if (!result.ok) failed.push({ label: `${condition.name} "${condition.raw_value ?? ""}"`, reason: result.reason, hint: result.hint });
@@ -454,7 +456,7 @@ export function applyStepCheck(step, request, results, checks, citation) {
     });
   });
   if (!step.evidence?.length) step.evidence = [{ ...citation }];
-  return { cited, failed, quoteProblem: null };
+  return { cited, failed, respelled, quoteProblem: null };
 }
 
 /** Record the check of a just-opened record's cited values; failures there are inherited. */

@@ -56,6 +56,18 @@ export function createRecordEditor({
 }) {
   const $ = id => document.getElementById(id);
   const pointerPart = value => String(value).replaceAll("~", "~0").replaceAll("/", "~1");
+  // The dialog message reads as an error unless it was written here with another tone.
+  // Other writers (app.js) only set its text, so the observer resets their messages to "error".
+  const dialogStatus = $("dialog-status");
+  let tonedText = null;
+  const say = (text, tone) => {
+    tonedText = text;
+    if (dialogStatus.dataset) dialogStatus.dataset.tone = tone;
+    dialogStatus.textContent = text;
+  };
+  if (dialogStatus && typeof MutationObserver !== "undefined") new MutationObserver(() => {
+    if (dialogStatus.textContent !== tonedText) { tonedText = null; dialogStatus.dataset.tone = "error"; }
+  }).observe(dialogStatus, { childList: true, characterData: true, subtree: true });
   let draft = null;
   let edit = null;
   // Which collapsible sections the reviewer opened or closed, keyed by field path.
@@ -384,7 +396,7 @@ export function createRecordEditor({
     syncLayerOrder();
     renderStructuredEditor();
     if (detachedAbsorbers || detachedSteps) {
-      $("dialog-status").textContent = `Removed the layer and cleared its link from ${detachedAbsorbers} absorber${detachedAbsorbers === 1 ? "" : "s"} and ${detachedSteps} processing step${detachedSteps === 1 ? "" : "s"}. Their scientific content is preserved.`;
+      say(`Removed the layer and cleared its link from ${detachedAbsorbers} absorber${detachedAbsorbers === 1 ? "" : "s"} and ${detachedSteps} processing step${detachedSteps === 1 ? "" : "s"}. Their scientific content is preserved.`, "info");
     }
   }
 
@@ -669,9 +681,9 @@ export function createRecordEditor({
       steps.forEach((_step, offset) => expand(["processing_steps", current.length + offset]));
       expand(["processing_steps"]);
       replaceArrayItems(["processing_steps"], [...current, ...steps]);
-      $("dialog-status").textContent = `Copied ${steps.length} step${steps.length === 1 ? "" : "s"} from ${family.label || family[identifier]}. `
+      say(`Copied ${steps.length} step${steps.length === 1 ? "" : "s"} from ${family.label || family[identifier]}. `
         + (skipped.length ? `Not copied, because this family has no matching layer: ${skipped.join("; ")}. ` : "")
-        + "Change what differs, remove what this family did not get, and check the target layers.";
+        + "Change what differs, remove what this family did not get, and check the target layers.", "info");
     };
     return element("div", { className: "process-copy" }, [
       element("label", {}, [element("span", { text: "Copy steps from" }), source]),
@@ -690,7 +702,7 @@ export function createRecordEditor({
     steps.splice(index, 1, ...parts);
     parts.forEach((_part, offset) => expand(["processing_steps", index + offset]));
     replaceArrayItems(["processing_steps"], steps);
-    $("dialog-status").textContent = `Split into ${parts.length} steps, one per target layer. Check each copy's values against the paper.`;
+    say(`Split into ${parts.length} steps, one per target layer. Check each copy's values against the paper.`, "info");
   }
 
   const isStepList = path => edit?.kind === "device_families" && path.length === 1 && path[0] === "processing_steps";
@@ -774,10 +786,15 @@ export function createRecordEditor({
     } else {
       if (!statusOf(step).blocking || !outcome.failed.length) editedSteps.delete(stepKey(step));
       const status = statusOf(step);
-      $("dialog-status").textContent = !status.blocking
-        ? `${stepName(step, index)} saved with "${shortQuote}"${outcome.cited.length ? `: cited ${outcome.cited.join(", ")}` : ""}. Save the family when all steps are done.`
-        : `${stepName(step, index)} is not finished. ${outcome.cited.length ? `Cited ${outcome.cited.join(", ")}. ` : ""}`
-          + (outcome.failed.length ? `Not found in "${shortQuote}": ${outcome.failed.map(item => `${item.label}: ${item.hint || item.reason}`).join("; ")}. Correct the value, or select the sentence that contains it and click again.` : status.pending.join("; "));
+      const respelled = outcome.respelled.length
+        ? ` Saved as printed with the unit attached: ${outcome.respelled.join(", ")}.` : "";
+      if (!status.blocking) {
+        say(`${stepName(step, index)} saved with "${shortQuote}"${outcome.cited.length ? `: cited ${outcome.cited.join(", ")}` : ""}.${respelled} Save the family when all steps are done.`, "success");
+      } else {
+        $("dialog-status").textContent = `${stepName(step, index)} is not finished. ${outcome.cited.length ? `Cited ${outcome.cited.join(", ")}. ` : ""}`
+          + (outcome.failed.length ? `Not found in "${shortQuote}": ${outcome.failed.map(item => `${item.label}: ${item.hint || item.reason}`).join("; ")}. Correct the value, or select the sentence that contains it and click again.` : status.pending.join("; "))
+          + respelled;
+      }
     }
     sync(true);
   }

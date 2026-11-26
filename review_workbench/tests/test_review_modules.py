@@ -128,6 +128,36 @@ assert.equal(session.split,'test');
 """)
 
 
+def test_session_saves_values_as_printed_with_their_unit_when_only_that_is_found():
+    run_javascript("""
+const sent = [];
+let checked = null;
+const api = {
+  checkGrounding: async (split, paper, values) => {
+    checked = values;
+    return values.map(value => value.raw_value === '1.45' ? {ok:true, raw_value:'1.45M'} : {ok:true});
+  },
+  mutate: async (split, paper, payload) => { sent.push(payload.value); return {revision:payload.base_revision + 1}; },
+};
+const session = createReviewSession(api);
+session.select('paper', {revision:1});
+const citation = {block_id:'b', quote:'A 1.45M precursor dried at 100 °C.'};
+const value = {family_id:'f', processing_steps:[{conditions:[
+  {name:'concentration', raw_value:'1.45', value_number:1.45, unit:'M', evidence:[]},
+  {name:'temperature', raw_value:'100', value_number:100, unit:'°C', evidence:[]},
+  {name:'atmosphere', raw_value:'air', value_number:null, unit:null, evidence:[]}]}]};
+await session.saveRecord({edit:{kind:'device_families', index:0}, value, citation});
+assert.deepEqual(checked.map(item => item.raw_value), ['1.45', '100'], 'only values with a unit are checked');
+assert.deepEqual(sent[0].processing_steps[0].conditions.map(item => [item.raw_value, item.value_number]),
+  [['1.45M', 1.45], ['100', 100], ['air', null]]);
+assert.equal(value.processing_steps[0].conditions[0].raw_value, '1.45', 'the draft is not changed');
+// A failing check never blocks saving.
+api.checkGrounding = async () => { throw new Error('offline'); };
+await session.saveRecord({edit:{kind:'device_families', index:0}, value, citation});
+assert.equal(sent[1].processing_steps[0].conditions[0].raw_value, '1.45');
+""")
+
+
 EDITOR_SETUP = """
 const {document, element} = editorDocument();
 const citation = {block_id:'main-1',quote:'The cell belongs to Alternative.'};

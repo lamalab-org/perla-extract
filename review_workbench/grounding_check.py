@@ -3,6 +3,11 @@
 The verdict comes from the same function the save validation uses
 (`reported_value_support`), so a value reported as grounded here is accepted on save.
 The explanation only helps the reviewer correct the input; it never changes the verdict.
+
+Forms keep the number and its unit in separate fields, but papers often print them
+together ("1.45M"), where the bare number is not a number of its own. When only the
+spelling with the unit attached is found, the result carries that spelling as
+``raw_value``; the value is accepted on save once it is stored with that spelling.
 """
 
 from __future__ import annotations
@@ -73,6 +78,38 @@ def _value_hint(raw_value: str, quote: str) -> str:
     return "The quote contains no numbers."
 
 
+def printed_with_unit(
+    value: dict[str, Any], block_by_id: dict[str, EvidenceBlock]
+) -> str | None:
+    """The value with its unit attached, as printed, when only that spelling is grounded.
+
+    Tries the spelling that occurs literally in a quote first ("1.45M" or "1.45 M").
+    A number that is part of another one ("0.5" in "10.5M") is still not found.
+    """
+
+    raw, unit = (
+        str(value.get("raw_value") or "").strip(),
+        str(value.get("unit") or "").strip(),
+    )
+    if not raw or not unit or _compact(raw).endswith(_compact(unit)):
+        return None
+    quotes = [
+        unicodedata.normalize("NFC", str(reference.get("quote") or ""))
+        for reference in value.get("evidence") or []
+    ]
+    spellings = sorted(
+        (f"{raw}{unit}", f"{raw} {unit}"),
+        key=lambda spelling: not any(spelling in quote for quote in quotes),
+    )
+    for spelling in spellings:
+        direct, assembled = reported_value_support(
+            {**value, "raw_value": spelling}, block_by_id, True
+        )
+        if direct or assembled:
+            return spelling
+    return None
+
+
 def check_values(
     values: list[dict[str, Any]], blocks: list[EvidenceBlock]
 ) -> list[dict[str, Any]]:
@@ -126,6 +163,12 @@ def check_values(
             direct, assembled = reported_value_support(candidate, block_by_id, True)
             if direct or assembled:
                 results.append({"ok": True, "reason": "", "hint": ""})
+                continue
+            printed = printed_with_unit(candidate, block_by_id)
+            if printed is not None:
+                results.append(
+                    {"ok": True, "reason": "", "hint": "", "raw_value": printed}
+                )
                 continue
             if not all(
                 source_contains_scientific_text(
