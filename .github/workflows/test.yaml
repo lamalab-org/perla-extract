@@ -117,7 +117,7 @@ jobs:
     timeout-minutes: 20
     env:
       LITELLM_LOCAL_MODEL_COST_MAP: "True"
-      HF_HOME: ${{ runner.temp }}/perla-parser-models/huggingface
+      HF_HOME: ${{ github.workspace }}/.parser-models/huggingface
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
