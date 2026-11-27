@@ -28,8 +28,9 @@ from .models import (
     StudyExtraction,
     study_schema_sha256,
 )
-from .quantities import interpret_quantity
+from .quantities import interpret_quantity, scientific_text
 from .reference_release import ReferenceRelease
+from .scoring_context import UnorderedContext, equal_value
 from .scoring_coverage import ReferenceCoverage
 from .scoring_diagnostics import (
     FactDiagnostic,
@@ -48,13 +49,10 @@ from .scoring_facts import (
     FactGroup,
     RecordReference,
     ScientificFact,
-    UnorderedContext,
     compare_facts,
-    equal_value,
     property_name,
     scientific_descriptor,
     scientific_facts,
-    scientific_text,
 )
 from .scoring_fields import FACT_GROUPS, FACT_SUBFIELDS, FactSubfield
 from .scoring_identity import (

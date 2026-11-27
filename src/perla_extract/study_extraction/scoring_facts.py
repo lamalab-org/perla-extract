@@ -23,32 +23,19 @@ from .models import (
     StudyExtraction,
     SubjectContext,
 )
-from .quantities import (
-    is_plain_number as is_plain_number,
-)
-from .quantities import (
-    scientific_text as scientific_text,
-)
-from .quantities import (
-    scientific_value_text as scientific_value_text,
-)
 from .scoring_context import (
     CohortSize,
     ContextComponent,
     ContextDifference,
     FactContext,
     RecordReference,
+    UnorderedContext,
     device_identity,
     device_treatment,
+    equal_value,
     has_subject_identity,
     missing_requirement,
     subject_context,
-)
-from .scoring_context import (
-    UnorderedContext as UnorderedContext,
-)
-from .scoring_context import (
-    equal_value as equal_value,
 )
 from .scoring_fields import FactGroup, FactSubfield, fact_group, fact_subfield
 from .scoring_identity import measurement_subject, sample_code

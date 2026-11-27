@@ -87,8 +87,7 @@ those integer references back to exact public block IDs and quotations. Selected
 catalogs can have gaps, so decoding checks membership as well as numeric bounds.
 Keep this mapping mechanical and reject unknown references.
 `source_reading.py` fits windows and combines repeated notes with provenance.
-`candidate_selection.py` records refinement decisions; `correction_checks.py` owns
-source-claim retention. `quantities.py` interprets complete reported quantities
+`correction_checks.py` owns correction selection and source-claim retention. `quantities.py` interprets complete reported quantities
 for validation, scoring and export; `quantity_specs.py` holds their checked names
 and conventions. `study_outputs.py`
 keeps optional interpretations separate from reported facts. `run_reporting.py`
@@ -193,6 +192,3 @@ Run the full checks in [CONTRIBUTING.md](https://github.com/lamalab-org/perla-ex
 before submitting. Repeat the actual browser journey for UI changes: module tests
 do not establish visual usability. These exercises are an onboarding contract to
 try with new maintainers, not evidence that a human onboarding study has happened.
-
-The [maintainer audit](maintainability-audit.md) records the exercised paths, saved-data
-parity checks and remaining areas of complexity.

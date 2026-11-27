@@ -49,9 +49,10 @@ views' precision, recall and F1 without changing their denominators.
 - `field-summary.csv`: before/after counts, precision, recall and F1 for attribution
   and paper-wide recovery. All attempts, completed attempts and the recent pilot
   are separate scopes.
-- `summary.json`: coverage, policy changes and scientific limitations.
-- `input-manifest.json`: original run IDs, statuses and input hashes. Full saved
-  predictions, paper text and local filesystem paths are not published here.
+- `provenance.csv`: all 410 original run IDs, statuses and input, source and
+  evaluation hashes. Multiple PDF hashes are separated by semicolons. This is
+  provenance, not an experiment input. Full predictions, paper text and local
+  filesystem paths remain outside the repository.
 
 Completed-attempt totals pool mixed historical settings and repeated papers.
 They are diagnostic, not a model ranking or an independent-paper accuracy estimate.
@@ -91,3 +92,70 @@ To repeat the comparison, use the existing
 on the baseline and revised checkouts with the same dependencies. Preserve every
 input row and choose fresh output directories. Review per-path gained/lost credits
 and assignments before interpreting any F1 change.
+
+<details>
+<summary>Reproduction metadata</summary>
+
+```json
+{
+  "code_sha256": {
+    "after": "3a73b3ae8a31bd9e3e88d61958549c217071dcbaa9c568f175a8613e075ea9ea",
+    "before": "fde6fcc45d6854ec349f86001387033d5c787f468380c2c2f0d70084d359a61b",
+    "refactor": "ea8c3b7cb9e5968dfa4abd55dd9db18bfd415035acf3f05cfb2c7956d57a85b5"
+  },
+  "config": {
+    "descriptor_equivalences": [],
+    "minimum_record_similarity": 0.35,
+    "numeric_absolute_tolerance": 0.0,
+    "numeric_relative_tolerance": 0.01,
+    "operation_aliases": {
+      "spin-coating": "spin coating",
+      "spin_coating": "spin coating",
+      "spincoating": "spin coating",
+      "thermal annealing": "annealing"
+    }
+  },
+  "environment": {
+    "pint": "0.26.2",
+    "pydantic": "2.14.3",
+    "python": "3.12.14"
+  },
+  "input_manifest_format_version": 1,
+  "refactor_parity": {
+    "decision_changes": 0,
+    "identical_reports": 410,
+    "same_environment": true,
+    "same_inputs": true
+  },
+  "replay_manifest_sha256": {
+    "after": "3cf19b706889ed7c7cfa934efbfb50b52c829528da1295bd640ac86b75de6193",
+    "before": "2a11a783598f9e88aa706f0f9667bcbac903e7f1c925d3fa42cacc16643e846b",
+    "refactor": "331d68e63e5072b520954d9f9819f998581a63449a25bc2b04647ffd32df8e03"
+  },
+  "report_versions": {
+    "after": {
+      "fact_profile": "core-scientific-facts-v24",
+      "format_version": 17,
+      "matcher_version": "rich-study-hungarian-v27",
+      "study_schema_sha256": "8c907b376309579bbb73d5137453107abdd508a12185c936bba9cbc678534364"
+    },
+    "before": {
+      "fact_profile": "core-scientific-facts-v23",
+      "format_version": 17,
+      "matcher_version": "rich-study-hungarian-v26",
+      "study_schema_sha256": "8c907b376309579bbb73d5137453107abdd508a12185c936bba9cbc678534364"
+    }
+  },
+  "roster_sha256": "ad510f112dcd6ed95b1f556d2be6dca23df6aae139a9dfe9c6c0da07778f6c6c",
+  "scoring_commits": {
+    "after": "76ab46964df192af54b3aa290798bfb11586009b",
+    "before": "8a2d73c704da6cc1190ae91da82e0813de86f901"
+  }
+}
+```
+
+The former JSON provenance is retained in Git history. Every attempt field and
+hash round-trips exactly through the CSV. Full reports and decision ledgers remain
+in the local frozen replay artifacts.
+
+</details>

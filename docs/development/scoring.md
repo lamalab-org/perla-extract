@@ -1,114 +1,56 @@
 # Change and explain scientific scoring
 
-There is one canonical fact inventory and two independently assigned views:
+One fact inventory supplies two independently assigned views:
 
 - `core_facts`: correct values with compatible scientific context and unambiguous attribution.
-- `core_facts.recovery`: compatible concept/value recovered anywhere in the paper, including across individual/population containers.
+- `core_facts.recovery`: compatible concept/value recovered anywhere in the paper.
 
-A recovery match cannot establish specimen identity. One prediction cannot satisfy
-several reference facts in either view. Wrong values remain both a missed reference
-fact and an extra predicted fact. No LLM judges, paper-specific rules or
-prediction-dependent exclusions are part of the default scorer.
+One prediction cannot satisfy several reference facts in either view. A recovery
+match does not establish specimen identity or source support. Wrong and malformed
+claims remain in their declared denominators.
 
 ```text
 project each input independently → align subjects without outcomes
 → compare compatible concepts → assign once per view → summarize the decision ledger
 ```
 
+The [scientific specification](../methods/scientific-scoring.md) owns matching
+rules, numerical tolerances, score definitions and limitations. The
+[evaluation guide](../workflows/evaluation.md) explains public commands and outputs.
+
 ## Where a rule belongs
 
-| Change | Owner | Requirement |
-| --- | --- | --- |
-| Concept/name equivalence | `scoring_vocabulary.py` | Checked positive and negative examples; unknowns stay literal |
-| Measurement protocol | `scoring_protocol.py` | Identity and outcome context use the same definition |
-| Quantity interpretation | `quantities.py`, `quantity_specs.py`, `units.py` | Preserve units, bounds, uncertainty and raw/parsed contradictions |
-| Subject identity | `scoring_identity.py`, `scoring_layers.py` | No scored outcomes or completeness-based tie-breaking |
-| Measurement ownership | `scoring_identity.measurement_subject` | Explicit device links identify subjects; observation IDs only group fields |
-| Context | `scoring_context.py` | Named requirements; preserve missingness, units and multiplicity |
-| Fact inventory | `scoring_facts.py` | Project each input without consulting the other; preserve source paths |
-| Display categories | `scoring_fields.py` | Categories never select candidate matches |
-| Assignment/report invariants | `evaluation.py` | One-to-one, complete inventories, shared denominators |
-| Explanations | `scoring_explanation.py` | Consume actual decisions; never run a second matcher |
-| Reference coverage | `scoring_coverage.py`, review/export | Source review determines completeness before model comparison |
-
-To change which fields count, start at `scientific_facts()` in `scoring_facts.py`.
-It visits the five record collections in schema order. `_FactProjector.family`,
-`.device`, `.performance`, `.population` and `.stability` each select fields from
-one record type. Shared helpers attach context and source paths; `finish()` merges
-explicitly redundant representations. For example, a new individual performance
-field belongs in `.performance`, not in the record matcher or CSV writer. Each
-projection reads one input only; it cannot use the other input to fill missing facts.
-
-The concept key separates recipe versus finished material, static measurement
-versus aging-test scope, and absolute efficiency versus retention. Reporting uses
-four domains: performance, material/device identity, processing and stability.
-Qualitative statements, unparsed measurement claims and statistical metadata stay
-visible separately from parsed quantitative outcomes.
-
-`FactContext` compares fields by name, not insertion order. Names are unique within
-a scope. Differences identify their source paths and distinguish conflicts from
-missing requirements. A missing sample count loses its own point; two conflicting
-counts block the cohort's outcomes. SD error bars are independent of an outcome's
-mean/median/other statistic.
-
-`PopulationStatistic.subjects` and `IndividualDevice.subject_context` store explicit
-treatment conditions, treated material and treatment stage. Structured subject
-identity permits label paraphrases only when both inputs independently supply
-compatible evidence. Otherwise conservative labels remain the fallback. A shared
-subject set is one assertion, not permission to multiply it into several matches.
-Repeated indistinguishable subjects remain ambiguous, even with different outcomes.
-Only the checked treatment-condition names may establish identity. Unknown fields
-remain stored/scored but cannot break a tie; a misplaced PCE cannot become identity.
-
-The same explicit sample-code parser supports families, specimens and cohorts. Known codes
-must agree. Literal family/device label words also support candidate alignment;
-they do not establish chemical or treatment equivalence. Internal separators are
-retained, so `c-NiOx`, `cp-NiOx`, `A/B` and `B/A` stay distinct. Duplicate words add
-no weight; no synonyms are guessed. A same-code family can align despite
-an incomplete stack, but the missing layers remain misses. Words shared by all
-family headings cannot resolve a design tie. Tied parent assignments supply no
-anchor to child pairing. Equal explicit specimen codes support correspondence;
-contradictory codes exclude it. The final specimen similarity must
-meet the cutoff after measurement corroboration, before assignment priority.
-PV context comparison
-distinguishes omitted reference scan/method/subjects from explicit contradictions;
-known reference conditions still need a prediction. Champion-status omission does
-not veto an already aligned specimen's value. See `test_attribution_missingness.py`
-for positive cases and wrong-code, wrong-statistic and conflicting-context controls.
-
-Repeated observations of an independently established device are different from
-ambiguous subjects. Individual performance facts use that device as owner and keep
-their complete measurement context. The fact matcher handles their multiplicity;
-it does not need a unique pairing of observation IDs. Cohorts and stability tests
-retain their own identity. See `test_measurement_attribution.py` for the split/merge,
-duplicate, missing-link and ambiguous-device contracts.
-
-## Identity, required context and description
-
-| Information | Role in scoring |
+| Responsibility | Owner |
 | --- | --- |
-| Ordered layer materials, explicit treatment inputs, exact arm labels when needed | Establish correspondence without measured outcomes |
-| Treatment stage/material, scan, statistic, supplied measurement protocol | Required meaning of an attributed claim |
-| A long variant description already established by explicit treatment inputs | Redundant wording; does not veto the outcome |
-| Missing distinguishing inputs or ambiguous owners | Unresolved; no attributed credit |
-| Explicitly different inputs, materials or protocols | Contradictory; no attributed credit |
-| Source evidence and citation validity | Checked separately; recovery cannot establish support |
+| Complete quantity interpretation and projection | `quantities.py` |
+| Checked quantity names, dimensions and conventions | `quantity_specs.py` |
+| Numerical unit conversion and notation | `units.py` |
+| Scientific concept/name equivalence | `scoring_vocabulary.py` |
+| Outcome-free identity text and subject pairing | `identity_text.py`, `scoring_identity.py`, `scoring_layers.py` |
+| Measurement protocol and ownership | `scoring_protocol.py`, `scoring_identity.measurement_subject` |
+| Required scientific context | `scoring_context.py`, `scoring_requirements.py` |
+| Fact inventory | `scoring_facts.py` |
+| Display categories | `scoring_fields.py` |
+| Assignment and report invariants | `evaluation.py` |
+| Explanations of actual decisions | `scoring_explanation.py`, `scoring_diagnostics.py` |
+| Reference completeness declarations | `scoring_coverage.py`, reference review/export |
 
-Device treatment properties and structured conditions share one independent
-projection. Unknown conditions remain required context but cannot establish
-identity. A label remains a fallback when recognized inputs are absent. Layer
-alignment uses ordered materials and passes the same links to composition and
-recipe targets. It never fills omitted layers. See the [paper methods](../methods/scientific-scoring.md)
-for the exact similarity equation, tolerances, score definitions and limits.
+Start at `scientific_facts()` in `scoring_facts.py` to change which fields count.
+`_FactProjector.family`, `.device`, `.performance`, `.population` and `.stability`
+select fields from their record types. Shared helpers attach context and original
+paths; `finish()` merges explicitly redundant linked representations. Each
+projection reads one input only; it cannot borrow facts from the paired reference.
 
-`scoring_vocabulary.processing_name` equates a separate final fabrication word
-`time` with `duration`. Both compound recipe conditions and device preparation
-properties use it. Every preceding qualifier stays in the key; measurement and
-stability names retain their own meaning. Extend this small normalization with
-positive and contradiction tests in `test_processing_attribution.py`, rather than
-adding paper-specific field aliases or changing numeric tolerances.
+Unit strings such as `W/m2` are machine-readable inputs to the shared converter.
+For example, `100 mW/cm2` and `1000 W/m2` represent the same irradiance. Pint
+handles compatible units; source strings remain intact. Add a special notation
+rule only for a demonstrated parser limitation, with an independent positive and
+negative case. Do not add a scoring branch for every spelling.
 
-## Run and inspect the existing example
+## Follow a missed fact
+
+Run the [five-case offline example](../workflows/scoring-example.md), then explain
+the deliberately wrong scan:
 
 ```bash
 PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-example
@@ -121,138 +63,53 @@ PYTHONPATH=.:src python -m perla_extract.study_extraction.evaluation_cli \
   --explanation-output /tmp/perla-scoring-example/why.json
 ```
 
-The wrong-scan variant contains the correct PCE, so recovery succeeds while
-attribution fails. `why.json` identifies `scan_direction`; changing `--explain-view`
-to `recovery` explains the other assignment. All inputs are synthetic, and no model
-calls or credentials are needed. Use a fresh output path when rerunning.
+Recovery succeeds because the PCE is present; attribution fails because the scan
+is wrong. `why.json` names `scan_direction`. Change `--explain-view` to `recovery`
+to inspect that assignment. All inputs are synthetic; no provider key is needed.
+Use fresh output paths when repeating the exercise.
 
-The explainer accepts up to 25 canonical/source-alias paths and retains original
-input hashes. It bounds candidate displays without changing assignments. A missing
-owner is distinct from a value mismatch; `one_to_one_competition` names the fact
-that consumed an otherwise eligible candidate. `fact_sources` preserves aliases
-when explicitly redundant linked material representations merge.
+Explanations consume the actual decision ledger. `one_to_one_competition` names
+the fact that consumed a compatible candidate; `fact_sources` retains original
+paths when linked redundant assertions merge. Do not implement a second matcher
+in an explanation, plot or export.
 
-## Current contract and migration
+## Check a scoring change
 
-For the local dependency rules, start with `scoring_requirements.py`. It declares
-the subject, defining fields and independent fields for each supported rule.
-`scoring_protocol.py` alone handles explicit/legacy measurement conditions;
-`scoring_diagnostics.py` summarizes the actual decisions without matching again.
-The [methods description](../methods/scientific-scoring.md#fact-local-requirements)
-includes the rule table, pseudocode and limitations.
-
-Run the automatic controls without credentials or new labeling:
+Use the relevant scientific cases, then run the full checks in
+[CONTRIBUTING.md](https://github.com/lamalab-org/perla-extract/blob/main/CONTRIBUTING.md).
+Expected results must come from the stated scientific meaning, not regenerated
+scorer output. Pair equivalent cases with wrong-unit, wrong-owner, wrong-context
+and multiplicity counterexamples.
 
 ```bash
+PYTHONPATH=.:src python -m pytest -q \
+  tests/study_extraction/test_quantities.py \
+  tests/study_extraction/test_quantity_pipeline.py \
+  tests/study_extraction/test_scoring_semantics.py \
+  tests/study_extraction/test_scoring_explanation.py
+PERLA_RUN_REFERENCE_RELEASE_TESTS=1 python -m pytest -q -ra \
+  tests/study_extraction/test_reference_release.py
 PYTHONPATH=.:src python -m examples.scoring.validate \
   --release data/study_extraction/ground_truth/v2/release.json \
   --output /tmp/scoring-controls.json
 ```
 
-Use a new output path. Read `calibration_coverage` for applicable, passed and
-inapplicable cases; the tool exits unsuccessfully if any applicable control fails.
-Synthetic conditions are explicitly marked and never written back into references.
+The control report records applicable, passed and inapplicable cases. It must not
+hide a required scientific case because parsing failed. `reference_audit.py`
+checks release integrity and coverage declarations; `validate.py` applies
+controlled perturbations. They share one reference-self-check policy. Frozen
+references remain unchanged, including any explicitly flagged contradictions.
 
-The current format, matcher and fact profile are recorded in each report and in
-the [scientific specification](../methods/scientific-scoring.md). Study schema
-**8** and ground-truth format **4** are unchanged.
-Archived schema-6/7 inputs load through the additive schema with unknown defaults;
-no treatment/protocol is inferred and no archived file is overwritten. Existing
-hash-scoped reviewed descriptor rules were rebound to the parsed schema-8 content
-without changing their labels or scientific rationale.
-
-Regenerate old reports from saved extractions. There is no legacy scoring engine.
-Experiment comparison now uses equal-paper mean differences in attributed **micro
-F1**, averaging repetitions within each paper. Outputs name this `fact_f1` and
-`mean_paired_fact_f1_delta`; they must not be compared directly with the former
-group-macro scores. Pooled counts and domain breakdowns remain necessary because
-frequent fact types carry more weight within a paper.
-
-Numeric tolerance remains **1% relative, zero absolute**, after unit conversion.
-Counts are exact. Duplicate merging allows conversion roundoff only, independently
-of scoring tolerance. Unknown quantities remain literal. Explicit raw/parsed
-contradictions remain counted but cannot earn numerical-field credit, even against
-an identical bad reference value. Diagnostics distinguish this from unsupported
-notation.
-PV units explicitly written in a metric name can fill a missing unit field in the
-scoring projection. `unit_source` in fact diagnostics records the source or the
-unresolved state. No unit is inferred from another fact, a citation or the paired
-reference. Unitless absolute PCE/FF use percentage points, after checking explicit
-units in the field, label and complete raw claim. The projection records
-`unit_source=percentage_points`; no value-size heuristic is used. See
-`test_scoring_percentage_points.py` for symmetric comparison, fraction-scale,
-raw/parsed contradiction and complete range/uncertainty controls.
-`units.py` accepts unit names and arithmetic after its explicit typography rules.
-Comments, braces and secondary quantities in a unit label remain unparsed; Pint
-versions must not silently remove punctuation and change their interpretation.
-Malformed parser input also remains literal instead of aborting the paper score.
-
-Reference coverage defaults to unreviewed, including for archived exports. A perfect
-self-score does not prove completeness. `reference_agreement` is diagnostic;
-`reviewed_scope` requires explicit coverage/context review. Comparisons preserve
-failed attempts and diagnostics but withhold a verified quality conclusion for
-unreviewed scope. Read the [evaluation contract](../workflows/evaluation.md) for
-field definitions and interpretation limits.
-
-The same comparison emits `reference_agreement` automatically from verified,
-complete pairs. `complete_roster` means all planned pairs contributed;
-`conditional_on_complete_pairs` lists omitted repetitions. It is diagnostic, not
-certified accuracy. Artifact, reference, scorer or design incompatibility blocks
-this contrast too. The CLI succeeds for a complete diagnostic comparison; use
-`--require-reviewed-quality` to require the stricter publication gate. No review
-of individual predictions is part of the ablation loop.
-
-## Acceptance checks
-
-```bash
-PYTHONPATH=.:src python -m pytest -q \
-  tests/study_extraction/test_scoring_semantics.py \
-  tests/study_extraction/test_scoring_protocol.py \
-  tests/study_extraction/test_scoring_structure.py \
-  tests/study_extraction/test_scoring_explanation.py
-```
-
-The semantic counterexamples cover cross-container recovery, duplicates, wrong
-statistical level/treatment/stage, label paraphrases, shared assertions, ambiguous
-identity, category independence and reference completeness. Existing tests retain
-unit, tolerance, material, process, roster and artifact-integrity controls.
-
-Before releasing a scoring change, run `examples.scoring.reference_audit` and
-`examples.scoring.validate` across the frozen 30-reference roster. Retain decision
-level deltas when rescoring saved predictions. Separate code effects from reference
-adjudication and summary-statistic changes. Never update an expected score solely
-to make a test pass.
-
-A new maintainer should be able to explain the wrong-scan example, locate its
-context rule, and add a checked alias with a near-miss test without editing the
-assignment or report code. Independently reviewed cross-paper samples and a
-held-out set remain necessary for scientific calibration. The existing
-`examples.scoring.sample_review` creates blinded blank review sheets and a separate
-analyst key; generating them does not constitute expert validation.
-
-
-To sample a revised score against a retained baseline, without changing the run:
-
-```bash
-PYTHONPATH=.:src python -m examples.scoring.sample_review \
-  --truth path/to/reference --prediction path/to/sealed-run \
-  --score path/to/revised-evaluation.json --baseline path/to/original-evaluation.json \
-  --view both --per-stratum 5 --seed 17 --output path/to/new-review-packet
-```
-
-The review sheet names the score view and leaves decisions blank. The analyst key
-contains inclusion probabilities, credit/change strata and both score contracts.
-Inventory removals remain in the complete replay ledger; a current-score sample
-cannot select a fact no longer in its inventory. Historical JSON is read only by
-the audit comparison helper, not supported as a second runtime scorer.
-
-The [saved-extraction validation report](context-calibration-results.md) records
-what changed in the 117-output replay, the automatic controls and the remaining
-context limitations.
+The current format and policy versions are recorded in reports and the scientific
+specification. Regenerate older reports before combining scores; there is one
+runtime scorer. Archived inputs load with unknown defaults rather than inferred
+context. A perfect self-score does not prove reference completeness or accuracy.
+For independent expert calibration, use the separate
+[validation procedure](../methods/validation-and-scale.md#prepare-a-sample-for-independent-experts).
 
 ## Replay saved extractions
 
-Use the existing results CSV, which supplies `paper_id` and `run_directory`:
+Use the existing results CSV with `paper_id` and `run_directory` columns:
 
 ```bash
 PYTHONPATH=.:src python -m examples.scoring.replay \
@@ -260,16 +117,19 @@ PYTHONPATH=.:src python -m examples.scoring.replay \
   --output /tmp/perla-baseline
 ```
 
-Run that command on the baseline checkout, then run the revised checkout in the
-**same Python/dependency environment**, adding `--baseline /tmp/perla-baseline`
-and choosing a fresh output directory. Input hashes, original run IDs, source
-PDF/SI hashes, roster, settings and dependencies must agree. No extraction runs.
-Do not edit scorer code during a replay.
+Run this on the baseline checkout. Then run the revised checkout in the **same
+Python/dependency environment**, adding `--baseline /tmp/perla-baseline` and
+choosing a fresh output directory. Keep scorer code unchanged during each replay.
+The runner verifies original run IDs, sealed inputs, article/SI bindings, roster,
+settings and dependencies before comparing results.
 
 `manifest.json` accounts for every attempt and unavailable input; unavailable
-inputs cause a failing exit status. `field-deltas.csv` records both views and all
-denominators. `decision-changes.json` includes gained/lost facts and assignments
-by original path, with before/after diagnostics. Preserve failed and partial runs
-in the input roster. A score for a failed extraction is not extraction completion.
-Rescoring cannot measure improvements to evidence parsing or prompt behavior;
-those require a later paired extraction experiment with scoring frozen.
+inputs fail the command. `field-deltas.csv` records both views and all denominators.
+`decision-changes.json` records gained/lost credit and changed assignments by
+original path with before/after diagnostics. Preserve failed and partial rows;
+a score for a failed extraction does not make it complete.
+
+Rescoring cannot measure improvements to parsing or prompts. Those need a paired
+extraction experiment under a frozen scorer. The latest
+[410-attempt replay report](https://github.com/lamalab-org/perla-extract/tree/main/benchmarks/test/replays/2026-11-26)
+records observed changes and remaining limitations.

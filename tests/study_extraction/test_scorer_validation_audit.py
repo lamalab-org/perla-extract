@@ -2,12 +2,12 @@
 
 import pytest
 
-from examples.scoring.equivalence_probe import CASES
+from examples.scoring.calibration import EQUIVALENCE_CASES
 from examples.scoring.run import quantity, seed_study
 from examples.scoring.validate import controls, convert_units, validate_control
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
 from perla_extract.study_extraction.models import StudyExtraction
-from perla_extract.study_extraction.scoring_facts import equal_value
+from perla_extract.study_extraction.scoring_context import equal_value
 
 
 def test_known_dimensional_arithmetic_preserves_values():
@@ -76,7 +76,7 @@ def test_nonunique_protocol_does_not_claim_known_record_identity():
             expected,
             id=name,
         )
-        for name, left, right, expected in CASES
+        for name, left, right, expected in EQUIVALENCE_CASES
     ],
 )
 def test_independently_specified_scientific_equivalences(name, left, right, expected):

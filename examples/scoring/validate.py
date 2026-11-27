@@ -20,18 +20,22 @@ from zipfile import ZipFile
 import click
 from pydantic import BaseModel
 
-from examples.scoring.calibration import TRANSFORMS, calibration_cases, check_case
-from examples.scoring.equivalence_probe import probe
+from examples.scoring.calibration import (
+    TRANSFORMS,
+    calibration_cases,
+    check_case,
+    equivalence_probe,
+)
 from examples.scoring.reference_audit import check_reference_self_score
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
 from perla_extract.study_extraction.models import ReportedValue, StudyExtraction
+from perla_extract.study_extraction.quantities import is_plain_number
 from perla_extract.study_extraction.reference_io import (
     load_reference,
     reference_content_digest,
 )
 from perla_extract.study_extraction.reference_release import ReferenceRelease
-from perla_extract.study_extraction.scoring_facts import is_plain_number
 from perla_extract.study_extraction.scoring_protocol import protocol_name
 
 # Independent dimensional arithmetic for test transformations, not production
@@ -381,7 +385,6 @@ def run(
             for path in [
                 Path(__file__).resolve(),
                 Path(__file__).with_name("reference_audit.py").resolve(),
-                Path(__file__).with_name("equivalence_probe.py"),
                 Path(__file__).with_name("calibration.py"),
                 *[
                     Path(__file__).resolve().parents[2]
@@ -406,7 +409,7 @@ def run(
                 ],
             ]
         },
-        "equivalence_probe": probe(),
+        "equivalence_probe": equivalence_probe(),
         "release_file_sha256": hashlib.sha256(release_path.read_bytes()).hexdigest(),
         "feedback_zip_sha256": hashlib.sha256(feedback_zip.read_bytes()).hexdigest()
         if feedback_zip

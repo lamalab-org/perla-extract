@@ -128,9 +128,31 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     assert same.core_facts.profile == "core-scientific-facts-v24"
     # Repeated observations of the same known device are a fact multiset. Their
     # generated record IDs need no unique pairing; scientific subjects still do.
-    from tests.study_extraction.reference_assertions import assert_reference_self_score
+    # Four archived area annotations carry inverse-area units. They remain
+    # counted and flagged; no other self-comparison loss is acceptable.
+    expected = {
+        f"/individual_devices/{i}/reported_properties/{j}"
+        for i, device in enumerate(truth.individual_devices)
+        for j, value in enumerate(device.reported_properties)
+        if (value.name, value.raw_value, value.value_number, value.unit)
+        == ("active area", "0.06 cm -2", 0.06, "cm -2")
+    }
+    observed = {
+        (issue.side, path)
+        for issue in same.core_facts.issues
+        for path in issue.paths
+        if issue.kind == "quantity_conflict"
+    }
+    assert observed == {
+        (side, path) for side in ("truth", "prediction") for path in expected
+    }
+    assert all(issue.kind == "quantity_conflict" for issue in same.core_facts.issues)
+    for view in (same.core_facts, same.core_facts.recovery):
+        assert set(view.unmatched_truth_paths) == expected
+        assert set(view.unmatched_prediction_paths) == expected
+        assert view.micro.truth == view.micro.predicted
+        assert view.micro.matched == view.micro.truth - len(expected)
 
-    assert_reference_self_score(truth, same)
     reordered = StudyExtraction.model_validate(
         _rename_and_reorder(truth.model_dump(mode="json"))
     )

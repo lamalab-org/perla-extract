@@ -26,8 +26,9 @@ from perla_extract.study_extraction.models import (
     ReportedValue,
     StudyExtraction,
 )
+from perla_extract.study_extraction.quantities import is_plain_number
 from perla_extract.study_extraction.reference_release import ReferenceRelease
-from perla_extract.study_extraction.scoring_facts import equal_value, is_plain_number
+from perla_extract.study_extraction.scoring_context import equal_value
 
 EVIDENCE = [{"block_id": "synthetic", "quote": "synthetic test fixture"}]
 

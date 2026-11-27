@@ -33,11 +33,8 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
-from perla_extract.study_extraction.scoring_facts import (
-    UnorderedContext,
-    equal_value,
-    is_plain_number,
-)
+from perla_extract.study_extraction.quantities import is_plain_number
+from perla_extract.study_extraction.scoring_context import UnorderedContext, equal_value
 
 EVIDENCE = [EvidenceCitation(block_id="b", quote="reported")]
 

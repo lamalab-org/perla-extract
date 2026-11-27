@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-from perla_extract.study_extraction.candidate_selection import (
+from perla_extract.study_extraction.correction_checks import (
     _gate_final_candidate_against_draft,
     _select_refinement_candidate,
 )
@@ -196,7 +196,9 @@ def test_numbered_population_designations_survive_metric_distribution_labels():
 
 
 def test_bare_compact_metric_values_cannot_identify_a_device():
-    fixture = study([observation("a", "control", number=15), observation("b", "treated")])
+    fixture = study(
+        [observation("a", "control", number=15), observation("b", "treated")]
+    )
     for device, number in zip(fixture.individual_devices, (15, 20)):
         device.label = f"PCE{number}"
     score = evaluate_study(fixture, fixture.model_copy(deep=True))

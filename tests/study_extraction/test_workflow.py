@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from perla_extract.study_extraction.candidate_selection import (
+from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
+from perla_extract.study_extraction.configuration import ExtractionConfig
+from perla_extract.study_extraction.correction_checks import (
     _gate_final_candidate_against_draft,
     _select_refinement_candidate,
 )
-from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
-from perla_extract.study_extraction.configuration import ExtractionConfig
 from perla_extract.study_extraction.extraction_prompts import (
     _claim_ledger_prompt,
     prompt_sha256,

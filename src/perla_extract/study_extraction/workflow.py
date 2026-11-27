@@ -7,10 +7,6 @@ from contextlib import nullcontext
 from typing import Any
 
 from .artifacts import write_json_atomic
-from .candidate_selection import (
-    _gate_final_candidate_against_draft,
-    _select_refinement_candidate,
-)
 from .claims import (
     ClaimLedger,
     assembly_blocks,
@@ -21,6 +17,10 @@ from .claims import (
 from .client import ModelCallError, ModelClient, summarize_calls
 from .configuration import (
     ExtractionConfig,
+)
+from .correction_checks import (
+    _gate_final_candidate_against_draft,
+    _select_refinement_candidate,
 )
 from .deployment import (
     estimate_request_input,
