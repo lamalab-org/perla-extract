@@ -254,3 +254,41 @@ def test_public_reference_audit_still_refuses_changed_manifest(one_paper_release
     path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="manifest hash mismatch"):
         audit_release(one_paper_release)
+
+
+def test_public_reference_audit_retains_explicit_quantity_conflicts():
+    from pathlib import Path
+
+    from examples.scoring.reference_audit import inspect_reference
+
+    reference = (
+        Path(__file__).resolve().parents[2]
+        / "data/study_extraction/ground_truth/v2/dev/10.1002--solr.201900370"
+    )
+    score, audit = inspect_reference(reference)
+    expected = {f"/individual_devices/{i}/reported_properties/6" for i in range(4)}
+    assert audit["self_score"]["status"] == "needs_review"
+    for view in (score.core_facts, score.core_facts.recovery):
+        assert set(view.unmatched_truth_paths) == expected
+        assert set(view.unmatched_prediction_paths) == expected
+        assert view.micro.matched == view.micro.truth - 4
+        assert view.micro.truth == view.micro.predicted
+    assert len(audit["self_score"]["issues"]) == 8
+    assert all(i["kind"] == "quantity_conflict" for i in audit["self_score"]["issues"])
+
+
+@pytest.mark.parametrize("side", ["truth", "prediction"])
+def test_quantity_conflicts_do_not_excuse_unexplained_reference_loss(monkeypatch, side):
+    from pathlib import Path
+
+    from examples.scoring import reference_audit
+
+    reference = (
+        Path(__file__).resolve().parents[2]
+        / "data/study_extraction/ground_truth/v2/dev/10.1002--solr.201900370"
+    )
+    score, _ = reference_audit.inspect_reference(reference)
+    getattr(score.core_facts.recovery, f"unmatched_{side}_paths").append("/unexplained")
+    monkeypatch.setattr(reference_audit, "evaluate_study", lambda *a, **kw: score)
+    with pytest.raises(ValueError, match="Unexplained reference self-check failure"):
+        reference_audit.inspect_reference(reference)

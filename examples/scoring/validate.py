@@ -22,6 +22,7 @@ from pydantic import BaseModel
 
 from examples.scoring.calibration import TRANSFORMS, calibration_cases, check_case
 from examples.scoring.equivalence_probe import probe
+from examples.scoring.reference_audit import check_reference_self_score
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
 from perla_extract.study_extraction.models import ReportedValue, StudyExtraction
@@ -313,29 +314,7 @@ def run(
         if reference_content_digest(manifest) != paper["manifest_sha256"]:
             raise ValueError(f"Reference manifest differs from release: {identity}")
         baseline = evaluate_study(truth, truth)
-        quantity_conflicts = {
-            side: {
-                path
-                for issue in baseline.core_facts.issues
-                if issue.kind == "quantity_conflict" and issue.side == side
-                for path in issue.paths
-            }
-            for side in ("truth", "prediction")
-        }
-        # A contradictory reference is a visible data issue, not permission for
-        # the scorer to agree numerically with its invalid convenience fields.
-        # Every other missing recovery match remains an unexplained failure.
-        recovery = baseline.core_facts.recovery
-        explained_recovery = (
-            bool(quantity_conflicts["truth"])
-            and set(recovery.unmatched_truth_paths) <= quantity_conflicts["truth"]
-            and set(recovery.unmatched_prediction_paths)
-            <= quantity_conflicts["prediction"]
-        )
-        if (recovery.micro.f1 != 1 and not explained_recovery) or (
-            baseline.core_facts.micro.f1 != 1 and not baseline.core_facts.issues
-        ):
-            raise ValueError(f"Unexplained baseline self-check failure: {identity}")
+        check_reference_self_score(baseline, identity)
         baselines.append(
             {
                 "paper_id": identity,
@@ -401,6 +380,7 @@ def run(
             ).hexdigest()
             for path in [
                 Path(__file__).resolve(),
+                Path(__file__).with_name("reference_audit.py").resolve(),
                 Path(__file__).with_name("equivalence_probe.py"),
                 Path(__file__).with_name("calibration.py"),
                 *[
