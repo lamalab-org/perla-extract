@@ -225,14 +225,14 @@ def _conditions(
 def canonical_conditions(
     record: PerformanceObservation | PopulationStatistic, path: str = ""
 ) -> tuple[MeasurementCondition, ...]:
-    """Read explicit conditions and registered legacy metrics through one boundary.
+    """Read protocol conditions from metrics and measurement_conditions.
 
     Only an unambiguous, roundoff-equivalent copy across containers is redundant.
     Repeated assertions within a container and conflicting copies remain separate.
     Unknown explicit conditions retain their literal name; treatment and aging
     containers are never inspected. This function does not mutate either input.
     """
-    legacy = [
+    embedded_conditions = [
         item
         for i, value in enumerate(record.metrics)
         if protocol_name(value.name) is not None
@@ -247,12 +247,14 @@ def canonical_conditions(
             protocol_name(value.name) is not None,
         )
     ]
-    result = list(legacy)
+    result = list(embedded_conditions)
     for item in explicit:
-        old = [i for i, other in enumerate(legacy) if other.name == item.name]
+        old = [
+            i for i, other in enumerate(embedded_conditions) if other.name == item.name
+        ]
         new = [other for other in explicit if other.name == item.name]
         if len(old) == len(new) == 1 and equal_claims(
-            normalize_claim(legacy[old[0]].value),
+            normalize_claim(embedded_conditions[old[0]].value),
             normalize_claim(item.value),
             16 * sys.float_info.epsilon,
             0,

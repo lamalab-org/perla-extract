@@ -151,17 +151,17 @@ jobs:
         run: python -m pytest -q -ra tests/study_extraction/test_docling_integration.py
 
   test:
+    name: test (${{ matrix.os }}, 3.12)
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

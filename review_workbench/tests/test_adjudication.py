@@ -504,7 +504,7 @@ def test_completeness_does_not_survive_scientific_edit(queue, monkeypatch):
     assert not queue.load("dev", PAPER, "admin")["completed_reviews"]
 
 
-def test_old_completion_adopted_only_if_nothing_scientific_changed(queue, monkeypatch):
+def test_completion_without_snapshot_cannot_establish_source_review(queue, monkeypatch):
     monkeypatch.setenv("REVIEW_TRUSTED_REVIEWER_IDS", "expert")
     completed_expert_review(queue)
     current = queue.store.storage.load_revision("dev", PAPER)
@@ -512,9 +512,7 @@ def test_old_completion_adopted_only_if_nothing_scientific_changed(queue, monkey
     old = current.model_copy(deep=True)
     old.events[-1]["details"].pop("reviewed_snapshot")
     view = queue.load("dev", PAPER, "admin", current=old)
-    assert (
-        view["completed_reviews"][0]["binding_method"] == "unchanged_since_completion"
-    )
+    assert not view["completed_reviews"]
     trusted_correction(queue)
     changed = queue.store.storage.load_revision("dev", PAPER).model_copy(deep=True)
     changed.events[-2]["details"].pop("reviewed_snapshot")
@@ -939,7 +937,7 @@ def test_legacy_completion_cannot_bypass_pending_proposals(queue):
         "dev",
         PAPER,
         InventoryAuditRequest(
-            base_revision=2, searched_sources=["main"], expected_counts={}
+            base_revision=2, review_scope_sources=["main"], expected_counts={}
         ),
         "expert",
     )

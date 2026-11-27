@@ -13,17 +13,6 @@ export function resolvePendingAction(pending, entries, references) {
   return { ...pending, entry, references: linked, ready: linked.length === 0 };
 }
 
-export function schemaCompatibilityMessage(compatibility) {
-  if (!compatibility || compatibility.exact_match !== false) return '';
-  if (!compatibility.readable_by_current_schema) {
-    return 'This draft cannot be read by the installed study schema. Import a compatible extraction before review.';
-  }
-  if (compatibility.structurally_compatible) {
-    return 'The stored schema identifier differs, but its data contract is compatible with this reviewer. Scientific fields still require source review.';
-  }
-  return 'This draft is readable by the installed study schema. Its stored schema identifier differs; that alone does not identify which scientific fields changed. Check the source and import provenance when reviewing it.';
-}
-
 export function reviewProgress(summary, events, user) {
   const decisions = Object.values(summary.record_decisions?.[user.id] || {});
   const reviewed = decisions.filter(value => ['verified', 'uncertain'].includes(value)).length;

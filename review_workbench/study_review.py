@@ -2,8 +2,8 @@
 
 The model output is an immutable seed. Human edits are guarded JSON-pointer operations
 that atomically commit a validated ``StudyExtraction`` with its audit event. Immutable
-revision snapshots make the benchmark reproducible while derived flat exports remain
-pleasant to inspect and consume.
+revision snapshots bind each correction to its source evidence and preserve the
+history needed to reproduce a reference.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.evidence import source_contains_text
@@ -27,7 +27,6 @@ from perla_extract.study_extraction.models import (
     STUDY_SCHEMA_VERSION,
     EvidenceBlock,
     StudyExtraction,
-    compatible_study_schema,
     study_schema_sha256,
 )
 from perla_extract.study_extraction.scoring_coverage import ReferenceCoverage
@@ -182,9 +181,7 @@ class FigurePanelCensus(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     proposal_panel_id: str | None = Field(default=None, min_length=1, max_length=200)
-    review_status: Literal[
-        "unreviewed", "confirmed", "corrected", "legacy_unspecified"
-    ] = "legacy_unspecified"
+    review_status: Literal["unreviewed", "confirmed", "corrected"] = "unreviewed"
     figure_number: str = Field(min_length=1, max_length=40)
     panel_label: str = Field(default="", max_length=20)
     page: int | None = Field(default=None, ge=1)
@@ -244,9 +241,8 @@ class FigurePanelCensus(BaseModel):
 class MainTextFigureCensus(BaseModel):
     """Measure schema content lost when main-text figures are not extracted.
 
-    New reviews enumerate panels; the four totals are derived so arithmetic cannot
-    drift from the underlying annotations. Aggregate fields remain readable only for
-    review events saved before panel-level annotation was introduced.
+    The four totals are derived from panels so arithmetic cannot drift from the
+    underlying annotations. An empty census explicitly reports no reviewed panels.
     """
 
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -284,14 +280,16 @@ class MainTextFigureCensus(BaseModel):
                 panel.figure_only_atomic_values for panel in self.panels
             )
 
-        if self.schema_relevant_figures > self.figures_reviewed:
-            raise ValueError("schema-relevant figures cannot exceed figures reviewed")
-        if (
-            self.figure_only_records or self.figure_only_atomic_values
-        ) and not self.schema_relevant_figures:
-            raise ValueError(
-                "figure-only records or values require a schema-relevant figure"
+        elif any(
+            (
+                self.figures_reviewed,
+                self.schema_relevant_figures,
+                self.figure_only_records,
+                self.figure_only_atomic_values,
             )
+        ):
+            raise ValueError("figure totals require panel annotations")
+
         return self
 
 
@@ -303,7 +301,6 @@ class InventoryAuditRequest(BaseModel):
     base_revision: int = Field(ge=0)
     review_scope_sources: list[Literal["main", "supplement"]] = Field(
         min_length=1,
-        validation_alias=AliasChoices("review_scope_sources", "searched_sources"),
     )
     expected_counts: dict[str, int]
     main_text_figure_census: MainTextFigureCensus = Field(
@@ -316,9 +313,8 @@ class InventoryAuditRequest(BaseModel):
     def validate_counts(self) -> "InventoryAuditRequest":
         """Reject invalid counts and unchecked model suggestions.
 
-        A proposal becomes ground truth only after the reviewer explicitly confirms or
-        corrects every panel. Historical panel censuses predate this state and remain
-        readable, but must be checked before they can be submitted again.
+        A proposal becomes ground truth only after the reviewer explicitly confirms
+        or corrects every panel.
         """
 
         if any(
@@ -892,14 +888,7 @@ class StudyReviewStore:
         source = self.storage.load_source(split, paper_id)
         revision = self.storage.load_revision(split, paper_id)
         self._materialize(split, paper_id, source, revision)
-        current_schema_hash = study_schema_sha256()
-        seed_schema_version = source.manifest.get("schema_version")
-        seed_schema_hash = source.manifest.get("schema_sha256")
-        try:
-            StudyExtraction.model_validate(revision.ground_truth)
-            readable_by_current_schema = True
-        except ValueError:
-            readable_by_current_schema = False
+        StudyExtraction.model_validate(revision.ground_truth)
         return {
             "paper_id": paper_id,
             "split": split,
@@ -908,18 +897,6 @@ class StudyReviewStore:
             "seed_extraction": source.seed_extraction,
             "events": revision.events,
             "manifest": source.manifest,
-            "schema_compatibility": {
-                "seed_schema_version": seed_schema_version,
-                "current_schema_version": STUDY_SCHEMA_VERSION,
-                "seed_schema_sha256": seed_schema_hash,
-                "current_schema_sha256": current_schema_hash,
-                "exact_match": (
-                    seed_schema_version == STUDY_SCHEMA_VERSION
-                    and seed_schema_hash == current_schema_hash
-                ),
-                "structurally_compatible": compatible_study_schema(seed_schema_hash),
-                "readable_by_current_schema": readable_by_current_schema,
-            },
             "summary": self.summary(revision.ground_truth, revision.events),
         }
 
@@ -1142,11 +1119,6 @@ class StudyReviewStore:
                         )
             elif event["kind"] == "inventory_audit":
                 details = copy.deepcopy(event["details"])
-                if (
-                    "review_scope_sources" not in details
-                    and "searched_sources" in details
-                ):
-                    details["review_scope_sources"] = details.pop("searched_sources")
                 audits[event["reviewer_id"]] = details
             elif event["kind"] == "record_decision":
                 details = event["details"]

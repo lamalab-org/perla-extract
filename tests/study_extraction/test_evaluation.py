@@ -272,19 +272,6 @@ def test_relative_tolerance_does_not_become_one_absolute_unit_below_one():
     assert report.field_agreement.reported_value_accuracy == 0
 
 
-def test_reference_exclusions_are_rejected_before_scoring():
-    """Every system must face the same complete reference, not its own exclusions."""
-
-    with pytest.raises(
-        ValueError, match="reference exclusions are no longer supported"
-    ):
-        evaluate_study(
-            study(),
-            study(prefix="prediction"),
-            ignored_truth_record_keys=["device_families:truth-family"],
-        )
-
-
 def test_parent_relationships_are_scored_separately_from_record_content():
     prediction = study(prefix="prediction")
     prediction.individual_devices[0].family_id = "wrong-family"
@@ -333,17 +320,6 @@ def test_reordering_schema_lists_does_not_change_scalar_agreement():
     report = evaluate_study(truth, prediction)
 
     assert report.field_agreement.scalar_field_accuracy == 1
-
-
-def test_unknown_uncertainty_mask_key_is_rejected():
-    with pytest.raises(
-        ValueError, match="reference exclusions are no longer supported"
-    ):
-        evaluate_study(
-            study(),
-            study(prefix="prediction"),
-            ignored_truth_record_keys=["device_families:typo"],
-        )
 
 
 def quantity(name, number, unit):
@@ -1071,6 +1047,7 @@ def _write_frozen_truth_inputs(tmp_path, artifact_version):
                 "evidence_version": 1,
                 "evidence_document_sha256": "a" * 64,
                 "study_schema_sha256": study_schema_sha256(),
+                "study_schema_version": 8,
                 "paper_id": "paper-a",
                 "split": "test",
                 "source_manifest": {"main": "source.pdf"},
@@ -1138,7 +1115,7 @@ def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
 def test_cli_rejects_unresolved_reference_without_writing_scores(
     tmp_path, artifact_version
 ):
-    # Start with a valid legacy/current manifest, then expose an unresolved decision.
+    # Start with a finalized current manifest, then expose an unresolved decision.
     _write_frozen_truth_inputs(tmp_path, artifact_version)
     manifest_path = tmp_path / "truth" / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

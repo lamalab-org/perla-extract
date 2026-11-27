@@ -1415,7 +1415,6 @@ def evaluate_study(
     truth: StudyExtraction,
     prediction: StudyExtraction,
     *,
-    ignored_truth_record_keys: Iterable[str] = (),
     benchmark: BenchmarkProvenance | None = None,
     prediction_validation: PredictionValidation | None = None,
     run_efficiency: RunEfficiency | None = None,
@@ -1426,9 +1425,8 @@ def evaluate_study(
 ) -> EvaluationReport:
     """Compare every reference record without prediction-dependent exclusions.
 
-    Reviewer uncertainty must be resolved before benchmark export. The legacy
-    exclusion argument is accepted only when empty so older callers fail explicitly
-    instead of silently changing which facts contribute to a score.
+    Reviewer uncertainty must be resolved before benchmark export. Every supplied
+    reference fact contributes to the inventory; predictions cannot filter it.
     """
 
     config = config or EvaluationConfig()
@@ -1479,11 +1477,6 @@ def evaluate_study(
                     f"{side}.{kind} contains duplicate record IDs: {', '.join(duplicates)}; "
                     "resolve the identities before scoring"
                 )
-    if tuple(ignored_truth_record_keys):
-        raise ValueError(
-            "reference exclusions are no longer supported; resolve uncertain records "
-            "and export a finalized reference before scoring"
-        )
     inventory: dict[RecordKind, PRF] = {}
     matches: list[RecordMatch] = []
     unmatched_truth: list[str] = []

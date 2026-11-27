@@ -239,10 +239,10 @@ The status vocabulary separates scientific availability from operational failure
 | `missing_doi` | No DOI or configured DOI-free source was available | Yes, up to `max_attempts` |
 | `error` | Processing raised an operational or malformed-response error | Yes, up to `max_attempts` |
 
-Older state formats are migrated on read. A state file with a newer format version is
-rejected instead of being loaded partially and rewritten with fields silently lost.
-The format version is recorded in the state file; keep a backup before upgrading
-software that migrates persisted state.
+Only state format 5 is accepted. Existing state must declare that version and use
+canonical paper identifiers. Unsupported or inconsistent state is rejected before
+discovery, downloads or writes; it is never reset or upgraded automatically. An
+absent state file starts a new run.
 
 Every invocation also checkpoints `STATE_DIR/runs/<run-id>.json` and
 `STATE_DIR/last_run.json`. A run record contains timestamps, a non-secret configuration

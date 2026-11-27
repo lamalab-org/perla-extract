@@ -14,10 +14,10 @@ use_targeted_repair = false
 use_enrichment = false
 max_model_calls = 2
 
-[control]
+[arms.control]
 use_refinement = false
 
-[treatment]
+[arms.treatment]
 use_refinement = true
 
 [[papers]]

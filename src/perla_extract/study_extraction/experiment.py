@@ -254,14 +254,6 @@ def _paired_output(
 def _results(
     experiment: Experiment, spending: CampaignSpending, stopped: str | None
 ) -> dict:
-    if experiment.legacy:
-        return _paired_output(
-            experiment,
-            experiment.output,
-            experiment.study,
-            experiment.attempts,
-            stopped,
-        )
     comparisons = {}
     unique_runs = {}
     for arm, study in experiment.studies.items():
@@ -308,7 +300,7 @@ def _results(
                 [row for row in unique_runs.values() if row["arm"] == arm],
                 sum(a.arm == arm for a in experiment.attempts),
             )
-            for arm in experiment.settings.methods
+            for arm in experiment.settings.arms
         },
         "reference_agreement": {"status": "see_paired_comparisons"},
     }
@@ -458,7 +450,7 @@ def main(experiment_file: Path, check: bool, resume: bool) -> None:
         experiment = prepare(experiment_file, resume=resume)
         _show_input_mapping(experiment)
         click.echo(
-            f"{len(experiment.study.paper_ids)} paper(s), {len(experiment.settings.methods)} arms: {len(experiment.attempts)} runs"
+            f"{len({a.paper_id for a in experiment.attempts})} paper(s), {len(experiment.settings.arms)} arms: {len(experiment.attempts)} runs"
         )
         for arm, study in experiment.studies.items():
             for name, contrast in sorted(study.factors.items()):
@@ -473,13 +465,13 @@ def main(experiment_file: Path, check: bool, resume: bool) -> None:
             return
         result = execute(experiment)
         click.echo(f"Read first: {experiment.output / 'summary.md'}")
-        comparisons = result.get("comparisons", {"paired": result})
+        comparisons = result["comparisons"]
         if any(
             r["issues"] and not automatic_comparison_ready(r)
             for r in comparisons.values()
         ):
             raise ValueError(
-                "Experiment needs attention; see summary.md and errors.json"
+                "Experiment needs attention; see summary.md for the paired reports"
             )
     except (OSError, RuntimeError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc

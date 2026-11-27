@@ -3,6 +3,7 @@
 import csv
 import json
 import shutil
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,7 @@ from click.testing import CliRunner
 from examples.scoring.run import build_example
 from perla_extract.study_extraction import experiment
 from perla_extract.study_extraction.artifacts import write_json_exclusive
-from perla_extract.study_extraction.configuration import resolve_config, tomllib
+from perla_extract.study_extraction.configuration import resolve_config
 from perla_extract.study_extraction.experiment_plan import (
     ExperimentSettings,
     _arm_settings,
@@ -40,9 +41,9 @@ model = "openai/synthetic"
 parser = "pymupdf"
 max_model_calls = 3
 use_claim_ledger = true
-[control]
+[arms.control]
 claim_recall_passes = 1
-[treatment]
+[arms.treatment]
 claim_recall_passes = 2
 [[papers]]
 pdf = {json.dumps(pdf.name)}
@@ -60,7 +61,7 @@ reference = {json.dumps(str(reference.relative_to(tmp_path)))}
                 tomllib.loads(path.read_text())
             )
             assert len(list(csv.DictReader(stream))) == settings.repeats * len(
-                settings.methods
+                settings.arms
             )
         output.mkdir(parents=True)
         report = {
@@ -131,7 +132,7 @@ def test_shipped_experiments_parse_and_use_docling_by_default(filename, paper_co
         else len(json.loads((path.parent / settings.dataset).read_text())["papers"])
         == paper_count
     )
-    for arm in settings.methods:
+    for arm in settings.arms:
         config = resolve_config(
             pdf=Path("paper.pdf"),
             **_arm_settings(settings, arm, path.parent),
@@ -143,8 +144,8 @@ def test_check_accepts_an_explicit_parser_ablation(setup):
     path, calls, _ = setup
     path.write_text(
         path.read_text().replace(
-            "[treatment]\nclaim_recall_passes = 2",
-            '[treatment]\nclaim_recall_passes = 1\nparser = "docling"',
+            "[arms.treatment]\nclaim_recall_passes = 2",
+            '[arms.treatment]\nclaim_recall_passes = 1\nparser = "docling"',
         )
     )
     result = CliRunner().invoke(experiment.main, [str(path), "--check"])
@@ -163,7 +164,7 @@ def test_unreviewed_benchmark_finishes_with_an_automatic_diagnostic_result(setup
     result = CliRunner().invoke(experiment.main, [str(path)])
     assert result.exit_code == 0, result.output
     assert len(calls) == 4
-    output = path.parent / "results"
+    output = path.parent / "results/comparisons/treatment-vs-control/primary"
     report = json.loads((output / "comparison.json").read_text())
     assert report["quality"] is None
     assert report["reference_agreement"]["status"] == "complete_roster"
@@ -173,7 +174,7 @@ def test_unreviewed_benchmark_finishes_with_an_automatic_diagnostic_result(setup
     assert "Comparison unavailable" not in summary
     assert "Reviewed-scope conclusion unavailable" in summary
     assert (output / "figure-data/paired_reference_agreement.csv").exists()
-    assert json.loads((output / "errors.json").read_text()) == []
+    assert json.loads((path.parent / "results/errors.json").read_text()) == []
 
 
 def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
@@ -183,7 +184,7 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
     assert len(calls) == 4
     assert len({call.model_cache_dir for call in calls}) == 4
     assert len({call.document_cache_dir for call in calls}) == 1
-    output = path.parent / "results"
+    output = path.parent / "results/comparisons/treatment-vs-control/primary"
     report = json.loads((output / "comparison.json").read_text(encoding="utf-8"))
     assert report["quality_status"] == "ready"
     assert report["quality"]["mean_paired_fact_f1_delta"] == 0
@@ -211,7 +212,7 @@ def test_one_command_runs_scores_and_compares_with_separate_caches(setup):
         row for row in field_rows if row["field"] == "measurement:pce"
     ]
     assert any(row["field"] == "material:stack" for row in important)
-    assert (output / "experiment.toml").read_bytes() == path.read_bytes()
+    assert (path.parent / "results/experiment.toml").read_bytes() == path.read_bytes()
     summary = (output / "summary.md").read_text(encoding="utf-8")
     assert "Treatment − control: +0.0000" in summary
     assert "only one paper" in summary
@@ -233,7 +234,10 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
     assert result.exit_code == 1
     assert len(calls) == 4
     report = json.loads(
-        (path.parent / "results/comparison.json").read_text(encoding="utf-8")
+        (
+            path.parent
+            / "results/comparisons/treatment-vs-control/primary/comparison.json"
+        ).read_text(encoding="utf-8")
     )
     assert len(report["runs"]) == 4
     failed = next(
@@ -251,7 +255,9 @@ def test_failed_run_stays_in_roster_and_accounting(setup, monkeypatch):
         )
         == 1
     )
-    summary = (path.parent / "results/summary.md").read_text(encoding="utf-8")
+    summary = (
+        path.parent / "results/comparisons/treatment-vs-control/primary/summary.md"
+    ).read_text(encoding="utf-8")
     assert "Reviewed-scope conclusion unavailable" in summary
     assert "Treatment − control:" not in summary
     assert "| control | 1 / 2 | 2 | 2.000000 |" in summary
@@ -268,11 +274,18 @@ def test_all_failed_attempts_have_no_automatic_effect_estimate(setup, monkeypatc
     result = CliRunner().invoke(experiment.main, [str(path)])
     assert result.exit_code == 1
     assert len(calls) == 4
-    summary = (path.parent / "results/summary.md").read_text()
+    summary = (
+        path.parent / "results/comparisons/treatment-vs-control/primary/summary.md"
+    ).read_text()
     assert "Comparison unavailable" in summary
     assert "Automatic reference-agreement difference" not in summary
     assert "Treatment − control:" not in summary
-    report = json.loads((path.parent / "results/comparison.json").read_text())
+    report = json.loads(
+        (
+            path.parent
+            / "results/comparisons/treatment-vs-control/primary/comparison.json"
+        ).read_text()
+    )
     for counts in report["accounting"].values():
         assert counts["cost_per_completed_extraction_usd"] is None
         assert counts["projected_cost_usd"] == {"10000": None, "50000": None}
@@ -316,7 +329,10 @@ def test_explicit_paper_si_reference_match_is_shown_and_scored(setup):
     assert result.exit_code == 0, result.output
     assert all(config.supplement == supplement for config in calls)
     report = json.loads(
-        (path.parent / "results/comparison.json").read_text(encoding="utf-8")
+        (
+            path.parent
+            / "results/comparisons/treatment-vs-control/primary/comparison.json"
+        ).read_text(encoding="utf-8")
     )
     assert report["quality_status"] == "ready"
 
@@ -368,7 +384,10 @@ def test_changed_inputs_stop_remaining_calls_and_preserve_paid_work(
     assert "Input changed" in result.output
     assert len(calls) == change_after
     report = json.loads(
-        (path.parent / "results/comparison.json").read_text(encoding="utf-8")
+        (
+            path.parent
+            / "results/comparisons/treatment-vs-control/primary/comparison.json"
+        ).read_text(encoding="utf-8")
     )
     assert report["quality"] is None
     assert (
@@ -386,14 +405,17 @@ def test_endpoint_override_expands_both_arm_defaults_without_false_missing_field
     path, _, _ = setup
     path.write_text(
         path.read_text(encoding="utf-8")
-        + '\n[treatment.stages.read]\nmodel = "openai/other-reader"\n'
+        + '\n[arms.treatment.stages.read]\nmodel = "openai/other-reader"\n'
     )
     prepared = experiment.prepare(path)
-    contrast = prepared.study.factors["deployments.read.model"]
+    contrast = prepared.studies["treatment"].factors["deployments.read.model"]
     assert contrast.control == "openai/synthetic"
     assert contrast.treatment == "openai/other-reader"
     result = experiment.execute(prepared)
-    assert result["quality_status"] == "ready"
+    assert (
+        result["comparisons"]["treatment-vs-control/primary"]["quality_status"]
+        == "ready"
+    )
 
 
 def test_arm_model_switch_does_not_keep_shared_endpoint_or_credentials(setup):
@@ -402,7 +424,9 @@ def test_arm_model_switch_does_not_keep_shared_endpoint_or_credentials(setup):
         'model = "openai/synthetic"',
         'model = "openai/synthetic"\nbase_url = "http://localhost:8000/v1"\napi_key_env = "LOCAL_KEY"',
     )
-    path.write_text(text + '\n[treatment.stages.default]\nmodel = "openrouter/other"\n')
+    path.write_text(
+        text + '\n[arms.treatment.stages.default]\nmodel = "openrouter/other"\n'
+    )
     prepared = experiment.prepare(path)
     control, treatment = prepared.attempts[:2]
     assert control.config.effective_deployment("read").api_key_env == "LOCAL_KEY"
@@ -417,8 +441,8 @@ def test_repeating_the_effective_default_is_not_an_ablation(setup):
     path, _, _ = setup
     path.write_text(
         path.read_text(encoding="utf-8").replace(
-            "[treatment]\nclaim_recall_passes = 2",
-            '[treatment]\nclaim_recall_passes = 1\n[treatment.stages.read]\nmodel = "openai/synthetic"',
+            "[arms.treatment]\nclaim_recall_passes = 2",
+            '[arms.treatment]\nclaim_recall_passes = 1\n[arms.treatment.stages.read]\nmodel = "openai/synthetic"',
         )
     )
     with pytest.raises(ValueError, match="identical"):

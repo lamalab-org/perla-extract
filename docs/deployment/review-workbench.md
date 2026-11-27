@@ -7,9 +7,6 @@ performance, population statistics, stability, and record relationships without
 modifying the immutable model seed.
 
 For reviewer instructions, start with [Build ground truth](../workflows/ground-truth-review.md).
-The separate [blinded extractor comparison](../workflows/expert-comparison.md) uses
-the same authentication and PDFs but writes an independent immutable experiment log;
-comparison answers never alter ground truth.
 
 ## Run locally
 
@@ -166,10 +163,8 @@ is rejected. The import appears in **My edits & undo** and can be reversed while
 of its corrected records has since changed. Excel does not add or delete complete
 records; those structural changes stay in the browser so links remain explicit.
 
-The study header compares the immutable seed's schema version and generated schema
-hash with the running extractor. Older seeds that remain structurally readable are
-not silently presented as current outputs: the interface warns that newly introduced
-fields still need regeneration or explicit human review.
+The seed manifest records the producer schema version and hash.
+Every loaded study validates against the current model; old fields are not upgraded.
 
 An administrator may replace an active pre-annotation with a regenerated extraction.
 The refresh validates the extraction against the regenerated `document.json`, stores
@@ -209,11 +204,6 @@ the complete deployment rather than requiring a paper-by-paper download:
   current decisions, census answers, and completion stages derived from it;
 - `review_events.csv` is one row per saved ground-truth review action and explicitly
   marks edits that were later undone;
-- `comparison_reviews.csv` contains blinded extractor-study responses, native-output
-  utility ratings, and dimension-specific A/B preferences. Candidate origins remain
-  blank until every assigned review stage in that comparison is final;
-- the comparison batches inside `feedback.json` include the exact frozen rubric
-  questions, minimum acceptable bars, and preference rules shown to reviewers;
 - `README.txt` explains the files and how resets, drafts, and superseded answers are
   represented.
 
@@ -314,7 +304,6 @@ changing reviewer identities or saved annotations.
 | `REVIEW_INTERNAL_ACCOUNT_OVERRIDES` | Optional final account layer for an independently deployable password rotation |
 | `REVIEW_INTERNAL_ACCOUNT_LAYER_*` | Optional named JSON layers, applied alphabetically after the legacy layers, so later password resets can be deployed without replacing write-only secrets |
 | `REVIEW_SESSION_SECRET` | At least 32 characters; signs seven-day sessions |
-| `REVIEW_COMPARISON_HOSTS` | Optional comma-separated hostnames whose root URL opens the blinded extractor study instead of ground-truth review |
 
 An account role is `reviewer` unless it is explicitly `admin`.
 
@@ -385,29 +374,11 @@ and export still validate the schema, links, values, and citations. A successful
 does not prove scientific completeness; that remains the expert's judgment.
 It cannot establish whether an SI file was omitted from the imported source material.
 
-### Dedicated comparison hostname
-
-The blinded extractor study can use a separate hostname without a second backend.
-Point an additional Vercel alias at the same deployment and list its hostname in
-`REVIEW_COMPARISON_HOSTS`. Requests to `/` on that hostname open the comparison
-workflow; `/review` opens ground-truth review, and the existing `/comparison.html`
-address remains valid for local development and old bookmarks. Both surfaces therefore
-share the same accounts, PDFs, immutable responses, and feedback export.
-
-Each hostname presents its own sign-in screen. This is intentional: browser storage
-and identity cookies are scoped to a hostname, so redirecting an unauthenticated
-comparison request to that hostname's `/` route would only reload the comparison and
-create a sign-in loop. A project-password session established on one hostname does not
-silently authenticate the other.
-
-For example, `review.example.org` can serve ground-truth correction and
-`compare.example.org` the blinded comparison. Configure hostnames owned by your deployment.
-
 Vercel's `all_except_custom_domains` SSO setting still protects an additional
 `vercel.app` alias, even when it points at the production deployment. For this setup,
 disable Vercel SSO protection only after the workbench's own authentication variables
 are configured. Confirm the boundary from a signed-out client: the HTML landing pages
-may load, but `/api/papers` and `/api/comparisons` must both return HTTP 401. The
+may load, but `/api/papers` must return HTTP 401. The
 `all_except_custom_domains` mode exempts custom domains too; retaining an outer SSO
 layer therefore requires a Vercel protection configuration that explicitly covers the
 chosen hostname.

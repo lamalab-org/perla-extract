@@ -1,7 +1,7 @@
 [project]
 name = "perla-ground-truth-review"
 version = "0.2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
   "click>=8.1",
   "loguru>=0.7",

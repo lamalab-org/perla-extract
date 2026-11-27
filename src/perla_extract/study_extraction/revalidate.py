@@ -28,13 +28,11 @@ def revalidate_run(run_dir: Path) -> dict[str, object]:
 
     Each check writes a numbered revalidation directory. The original report is
     sealed together with paid usage and must remain byte-for-byte unchanged, even
-    when newer evidence checks produce a different status. Legacy unsealed runs can
-    be checked, but this operation does not turn them into reproducible new runs.
+    when newer evidence checks produce a different status. The input must be a
+    sealed run so its scientific inputs and paid accounting remain bound together.
     """
 
-    manifest_digest = None
-    if (run_dir / "run_manifest.json").is_file():
-        _, manifest_digest = verify_run_manifest(run_dir)
+    _, manifest_digest = verify_run_manifest(run_dir)
     extraction = StudyExtraction.model_validate(_json(run_dir / "extraction.json"))
     document = _json(run_dir / "document.json")
     raw_blocks = document.get("blocks") if isinstance(document, dict) else None

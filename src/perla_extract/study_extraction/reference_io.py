@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import ValidationError
 
-from .models import StudyExtraction, compatible_study_schema
+from .models import StudyExtraction
 from .scoring_coverage import ReferenceCoverage
 
 if TYPE_CHECKING:
@@ -82,7 +82,7 @@ def load_reference(
         raise ValueError(f"{manifest_path} is not a JSON object")
     if manifest.get("artifact_format_version") != GROUND_TRUTH_FORMAT_VERSION:
         raise ValueError(
-            "ground-truth artifact format is unsupported; regenerate or migrate it"
+            "ground-truth artifact format is unsupported; export the current format"
         )
     evidence_version = manifest.get("evidence_version")
     evidence_digest = manifest.get("evidence_document_sha256")
@@ -96,9 +96,15 @@ def load_reference(
             "format-4 reference requires an evidence version and document hash"
         )
     expected_schema = manifest.get("study_schema_sha256")
-    if not compatible_study_schema(expected_schema):
+    producer_version = manifest.get("study_schema_version")
+    if (
+        not isinstance(expected_schema, str)
+        or not re.fullmatch(r"[0-9a-f]{64}", expected_schema)
+        or type(producer_version) is not int
+        or producer_version < 1
+    ):
         raise ValueError(
-            "ground-truth schema hash differs from the installed evaluator"
+            "manifest requires a producer schema version and SHA-256 fingerprint"
         )
     files = manifest.get("files")
     expected_truth = files.get("ground_truth.json") if isinstance(files, dict) else None
@@ -117,15 +123,14 @@ def load_reference(
             "reference contains unresolved records; complete adjudication and export "
             "a finalized reference before scoring"
         )
-    # Public manifests redact reviewer IDs but retain stage names. Private
-    # exports retain the stage-to-reviewer mapping. Neither is authentication;
-    # both must at least declare the final gate that format 4 promises.
-    stages = review.get("completed_stage_names", review.get("completed_stages"))
+    # Reviewer identities can remain in private audit metadata. The current
+    # manifest contract always declares stage names independently of that mapping.
+    stages = review.get("completed_stage_names")
     validation = manifest.get("validation")
     if (
-        not isinstance(stages, (dict, list))
+        not isinstance(stages, list)
+        or not all(isinstance(stage, str) for stage in stages)
         or "adjudication" not in stages
-        or (isinstance(stages, dict) and not stages["adjudication"])
         or not isinstance(validation, dict)
         or validation.get("status") != "verified"
         or type(validation.get("issue_count")) is not int

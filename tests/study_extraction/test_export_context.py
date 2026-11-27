@@ -2,9 +2,6 @@
 
 import json
 
-import pytest
-
-from perla_extract.study_extraction.compatibility import to_reduced_with_report
 from perla_extract.study_extraction.models import (
     EvidenceCitation,
     IndividualDevice,
@@ -20,8 +17,7 @@ from perla_extract.study_extraction.models import (
 from perla_extract.study_extraction.nomad import to_nomad_with_report
 
 
-@pytest.mark.parametrize("target", ["nomad", "reduced"])
-def test_export_keeps_context_next_to_each_result(target):
+def test_nomad_export_keeps_context_next_to_each_result():
     evidence = [EvidenceCitation(block_id="invented", quote="Synthetic export test")]
 
     def quantity(name, number, unit):
@@ -104,12 +100,8 @@ def test_export_keeps_context_next_to_each_result(target):
         ],
         unresolved_notes=[],
     )
-    if target == "nomad":
-        exported = to_nomad_with_report(study, model="synthetic")
-        cells = [archive.data for archive in exported.archives]
-    else:
-        exported = to_reduced_with_report(study)
-        cells = exported.cells.cells
+    exported = to_nomad_with_report(study, model="synthetic")
+    cells = [archive.data for archive in exported.archives]
     notes = {
         mapping.source_kind: json.loads(cell.additional_notes)
         for mapping, cell in zip(exported.mappings, cells, strict=True)
@@ -130,6 +122,4 @@ def test_export_keeps_context_next_to_each_result(target):
     assert population["measurement_type"] == "jv_scan"
     assert population["scan_direction"] == "forward"
     aging = notes["stability_test"]
-    if target == "reduced":
-        aging = aging["rich_stability"]
     assert aging["conditions"][0]["raw_value"] == "85 °C"

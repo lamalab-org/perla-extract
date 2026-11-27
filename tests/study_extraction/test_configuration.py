@@ -159,24 +159,6 @@ def test_transport_override_requires_an_explicit_model(tmp_path, stage, field, v
         resolve_config("paper.pdf", config_file=path)
 
 
-@pytest.mark.parametrize(
-    "key,target",
-    [
-        ("model", "default.model"),
-        ("claim_model", "read.model"),
-        ("refinement_model", "refine.model"),
-        ("repair_model", "repair.model"),
-        ("enrichment_model", "enrich.model"),
-        ("max_output_tokens", "default.max_output_tokens"),
-    ],
-)
-def test_duplicate_model_settings_report_their_replacement(tmp_path, key, target):
-    path = tmp_path / "old.toml"
-    path.write_text(f'[extraction]\n{key} = "old-setting"\n')
-    with pytest.raises(ValueError, match=f"has moved to stages.{target}"):
-        resolve_config("paper.pdf", config_file=path)
-
-
 def test_cohort_and_cli_merge_use_the_same_deployment_rules(tmp_path):
     shared = DeploymentSettings(
         model="openai/local",

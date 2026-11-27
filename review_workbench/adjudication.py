@@ -739,14 +739,7 @@ class AdjudicationQueue:
             resolution = resolutions.get(case["id"])
             if resolution:
                 saved = resolution["details"]
-                old_case = saved.get("case", {})
-                matches = saved.get("binding") == _case_binding(truth, case)
-                # Existing decisions used the whole paper for comment-only cases.
-                # Preserve those only when that original, broader check still passes.
-                legacy_matches = "binding_keys" not in old_case and saved.get(
-                    "binding"
-                ) == _binding(truth, case["keys"])
-                if matches or legacy_matches:
+                if saved.get("binding") == _case_binding(truth, case):
                     continue
             # A prepared replacement sometimes describes an edit already saved by
             # an expert. Exact content + explicit approval is sufficient; no LLM
@@ -839,9 +832,9 @@ class AdjudicationQueue:
     ):
         """Offer source-wide expert checks only for the exact study and source scope.
 
-        For older events without hashes, the append-only history must show no
-        subsequent scientific edit or source refresh. Counts alone never count as
-        a completeness review, and a main-paper check cannot cover an available SI.
+        A completion must carry the saved study, evidence and inventory hashes.
+        Counts alone do not establish a completeness review, and a main-paper
+        check cannot cover an available supporting-information file.
         """
 
         candidates = [
@@ -869,28 +862,7 @@ class AdjudicationQueue:
             ):
                 continue
             if check is None:
-                # Examine even undone mutations: an edit followed by an undo does
-                # not prove that the old source-wide check was repeated.
-                later = [e for e in current.events if e["revision"] > event["revision"]]
-                if any(
-                    e["kind"]
-                    in {"mutation", "structural_mutation", "ground_truth_refresh"}
-                    or e["details"].get("record_replacements")
-                    or e["details"].get("collection_replacements")
-                    or (
-                        e["kind"] == "inventory_audit"
-                        and e["reviewer_id"] == event["reviewer_id"]
-                    )
-                    for e in later
-                ):
-                    continue
-                check = {
-                    "study_sha256": _digest(current.ground_truth),
-                    "evidence_version": current.evidence_version,
-                    "inventory_sha256": _digest(audit),
-                    "review_scope_sources": audit["review_scope_sources"],
-                    "binding_method": "unchanged_since_completion",
-                }
+                continue
             if (
                 check.get("study_sha256") != _digest(current.ground_truth)
                 or check.get("evidence_version") != current.evidence_version

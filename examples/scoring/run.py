@@ -200,7 +200,7 @@ def build_example(output: Path) -> dict:
         PAPER,
         InventoryAuditRequest(
             base_revision=bundle["revision"],
-            searched_sources=["main"],
+            review_scope_sources=["main"],
             coverage=synthetic_coverage(),
             expected_counts={},
         ),

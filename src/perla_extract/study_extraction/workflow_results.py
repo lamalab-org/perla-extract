@@ -72,4 +72,3 @@ class ExportResult:
     enrichment_status: str | None
     nomad: NOMADExport | None
     nomad_error: str | None
-    reduced_error: str | None

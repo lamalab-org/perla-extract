@@ -18,7 +18,6 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from typing import Any
 
-from review_workbench.expert_comparison import ComparisonService
 from review_workbench.study_review import StudyReviewStore
 
 SPLITS = ("calibration", "dev", "test")
@@ -107,68 +106,6 @@ def _ground_truth_feedback(store: StudyReviewStore) -> list[dict[str, Any]]:
         )
 
 
-def _comparison_feedback(service: ComparisonService) -> list[dict[str, Any]]:
-    """Export responses without breaking the experiment's reveal boundary."""
-
-    batches: list[dict[str, Any]] = []
-    for comparison_id in service.storage.list_ids():
-        source = service.storage.load_source(comparison_id)
-        reviews = [
-            review.model_dump(mode="json")
-            for assignment in source.assignments
-            if (
-                review := service.storage.load_review(
-                    comparison_id, assignment.reviewer_id
-                )
-            )
-            is not None
-        ]
-        utilities = [
-            review.model_dump(mode="json")
-            for assignment in source.assignments
-            if (
-                review := service.storage.load_utility(
-                    comparison_id, assignment.reviewer_id
-                )
-            )
-            is not None
-        ]
-        preferences = [
-            review.model_dump(mode="json")
-            for assignment in source.assignments
-            if (
-                review := service.storage.load_preference(
-                    comparison_id, assignment.reviewer_id
-                )
-            )
-            is not None
-        ]
-        complete = len(preferences) == len(source.assignments)
-        batch: dict[str, Any] = {
-            "comparison_id": comparison_id,
-            "paper_id": source.paper_id,
-            "split": source.split,
-            "title": source.title,
-            "assigned_reviewer_count": len(source.assignments),
-            "accuracy_review_count": len(reviews),
-            "native_utility_review_count": len(utilities),
-            "pairwise_preference_count": len(preferences),
-            "comparison_complete": complete,
-            "pairwise_rubrics": [
-                rubric.model_dump(mode="json") for rubric in source.pairwise_rubrics
-            ],
-            "reviews": reviews,
-            "native_utility_reviews": utilities,
-            "pairwise_preference_reviews": preferences,
-        }
-        if complete:
-            identified = service.export(comparison_id)
-            batch["candidate_mapping"] = identified["candidate_mapping"]
-            batch["summary_by_origin"] = identified["summary_by_origin"]
-        batches.append(batch)
-    return batches
-
-
 def _event_rows(papers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows = []
     for paper in papers:
@@ -243,71 +180,12 @@ def _figure_census_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _comparison_rows(batches: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    rows = []
-    for batch in batches:
-        mapping = batch.get("candidate_mapping", {})
-        utilities = {
-            item["reviewer_id"]: item for item in batch["native_utility_reviews"]
-        }
-        preferences = {
-            item["reviewer_id"]: item for item in batch["pairwise_preference_reviews"]
-        }
-        for review in batch["reviews"]:
-            verdicts = Counter(item["verdict"] for item in review["judgments"])
-            utility = utilities.get(review["reviewer_id"], {})
-            preference = preferences.get(review["reviewer_id"], {})
-            rows.append(
-                {
-                    "comparison_id": batch["comparison_id"],
-                    "paper_id": batch["paper_id"],
-                    "split": batch["split"],
-                    "reviewer_id": review["reviewer_id"],
-                    "blind_label": review["blind_label"],
-                    "origin_if_revealed": mapping.get(review["blind_label"], ""),
-                    "final": review["final"],
-                    "revision": review["revision"],
-                    "started_at": review["started_at"],
-                    "saved_at": review["saved_at"],
-                    "submitted_at": review.get("submitted_at") or "",
-                    "active_seconds": review["active_seconds"],
-                    "confidence": review.get("confidence") or "",
-                    "judgment_count": len(review["judgments"]),
-                    "correct": verdicts["correct"],
-                    "incorrect": verdicts["incorrect"],
-                    "unsupported": verdicts["unsupported"],
-                    "cannot_determine": verdicts["cannot_determine"],
-                    "missing_fact_count": len(review["missing_facts"]),
-                    "extra_records": review["extra_records"],
-                    "missing_records": review["missing_records"],
-                    "wrong_links": review["wrong_links"],
-                    "notes": review["notes"],
-                    "judgments_json": _compact_json(review["judgments"]),
-                    "missing_facts_json": _compact_json(review["missing_facts"]),
-                    "native_utility_submitted": bool(utility),
-                    "native_ratings_json": _compact_json(utility.get("ratings")),
-                    "suitable_as_curation_start": utility.get(
-                        "suitable_as_curation_start", ""
-                    ),
-                    "native_notes": utility.get("notes", ""),
-                    "pairwise_preference_submitted": bool(preference),
-                    "pairwise_preferences_json": _compact_json(
-                        preference.get("preferences")
-                    ),
-                    "pairwise_confidence": preference.get("confidence", ""),
-                    "pairwise_rationale": preference.get("rationale", ""),
-                }
-            )
-    return rows
-
-
 def build_feedback_archive(
     store: StudyReviewStore,
-    comparisons: ComparisonService,
     uploaded_workbooks: list[dict[str, Any]] | None = None,
     figure_census_proposals: dict[str, Any] | None = None,
 ) -> bytes:
-    """Create one self-describing download of all reviewer-authored responses."""
+    """Package study-review events, source-linked snapshots and uploaded workbooks."""
 
     papers = _ground_truth_feedback(store)
     workbook_artifacts = uploaded_workbooks or []
@@ -315,26 +193,19 @@ def build_feedback_archive(
         {key: value for key, value in artifact.items() if key != "data"}
         for artifact in workbook_artifacts
     ]
-    comparison_batches = _comparison_feedback(comparisons)
     event_rows = _event_rows(papers)
     figure_panel_rows = _figure_panel_rows(papers)
-    comparison_rows = _comparison_rows(comparison_batches)
     snapshot = {
         "format_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "ground_truth_reviews": papers,
-        "extractor_comparisons": comparison_batches,
         "uploaded_review_workbooks": workbook_metadata,
         "figure_census_proposals": figure_census_proposals,
         "figure_census_summary": _figure_census_summary(figure_panel_rows),
         "counts": {
             "papers_with_feedback": sum(bool(item["events"]) for item in papers),
             "review_events": len(event_rows),
-            "reviewers": len(
-                {row["reviewer_id"] for row in [*event_rows, *comparison_rows]}
-            ),
-            "comparison_batches": len(comparison_batches),
-            "comparison_responses": len(comparison_rows),
+            "reviewers": len({row["reviewer_id"] for row in event_rows}),
             "uploaded_review_workbooks": len(workbook_artifacts),
             "figure_panels": len(figure_panel_rows),
         },
@@ -369,16 +240,6 @@ figure_census_proposals.json contains the exact model-generated starting point s
 reviewers. Comparing it with figure_panels.csv recovers model-to-human corrections;
 the proposals never overwrite reviewer-authored events.
 
-comparison_reviews.csv is one row per started extractor-comparison response. It keeps
-the independent accuracy review, native-utility ratings, and rubric-level A/B
-preferences together. Drafts and final responses are distinguished by the final
-column. Candidate origins remain blank while a comparison batch is incomplete,
-preserving the blinded protocol.
-
-Each comparison batch in feedback.json also contains the exact frozen rubrics shown
-to its reviewers, including the question, minimum acceptable bar, and preference
-rule. This supports reproducible analysis if a later study revises the wording.
-
 Reviewer identifiers are stable application IDs, not passwords or session tokens.
 The archive contains no PDFs and no authentication configuration.
 
@@ -409,45 +270,6 @@ this archival feature was deployed are not recoverable as files.
             "after_json",
             "evidence_json",
             "details_json",
-        ]
-    )
-    comparison_fields = (
-        list(comparison_rows[0])
-        if comparison_rows
-        else [
-            "comparison_id",
-            "paper_id",
-            "split",
-            "reviewer_id",
-            "blind_label",
-            "origin_if_revealed",
-            "final",
-            "revision",
-            "started_at",
-            "saved_at",
-            "submitted_at",
-            "active_seconds",
-            "confidence",
-            "judgment_count",
-            "correct",
-            "incorrect",
-            "unsupported",
-            "cannot_determine",
-            "missing_fact_count",
-            "extra_records",
-            "missing_records",
-            "wrong_links",
-            "notes",
-            "judgments_json",
-            "missing_facts_json",
-            "native_utility_submitted",
-            "native_ratings_json",
-            "suitable_as_curation_start",
-            "native_notes",
-            "pairwise_preference_submitted",
-            "pairwise_preferences_json",
-            "pairwise_confidence",
-            "pairwise_rationale",
         ]
     )
     figure_panel_fields = (
@@ -488,11 +310,6 @@ this archival feature was deployed are not recoverable as files.
                 "figure_census_proposals.json",
                 _json_bytes(figure_census_proposals),
             )
-        _zip_member(
-            archive,
-            "comparison_reviews.csv",
-            _csv_bytes(comparison_rows, comparison_fields),
-        )
         for artifact in workbook_artifacts:
             _zip_member(archive, artifact["archive_path"], artifact["data"])
     return stream.getvalue()

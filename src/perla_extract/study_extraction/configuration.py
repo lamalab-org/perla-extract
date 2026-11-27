@@ -10,15 +10,11 @@ from __future__ import annotations
 import hashlib
 import math
 import platform
+import tomllib
 from dataclasses import asdict, dataclass, field, fields, replace
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
-
-try:
-    import tomllib
-except ModuleNotFoundError:  # Python 3.10
-    import tomli as tomllib  # type: ignore[no-redef]
 
 from .deployment import DeploymentSettings
 from .request_policy import ResolvedStagePolicy
@@ -45,15 +41,6 @@ _DEPLOYMENT_SHORTCUTS = {
     "reasoning_effort",
     "temperature",
     "max_output_tokens",
-}
-_REMOVED_SETTINGS = {
-    "claim_model": "read.model",
-    "refinement_model": "refine.model",
-    "repair_model": "repair.model",
-    "enrichment_model": "enrich.model",
-    "claim_max_output_tokens": "read.max_output_tokens",
-    "repair_max_output_tokens": "repair.max_output_tokens",
-    "enrichment_max_output_tokens": "enrich.max_output_tokens",
 }
 _PATHS = {"pdf", "supplement", "output_dir", "document_cache_dir", "model_cache_dir"}
 _OPERATIONAL = _PATHS | {
@@ -167,7 +154,6 @@ class ExtractionConfig:
     document_cache_dir: Path = Path(".perla-cache/documents")
     model_cache_dir: Path = Path(".perla-cache/models")
     refresh_document_cache: bool = False
-    reduced_export: bool = False
     dry_run: bool = False
     deployments: dict[str, DeploymentSettings] = field(default_factory=dict)
     langfuse: bool = False
@@ -188,7 +174,6 @@ class ExtractionConfig:
             "use_refinement",
             "use_targeted_repair",
             "refresh_document_cache",
-            "reduced_export",
             "dry_run",
             "langfuse",
             "langfuse_capture_content",
@@ -361,12 +346,6 @@ def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
     if not isinstance(options, dict):
         raise ValueError("[extraction] must be a table")
     options = dict(options)
-    for key in options:
-        if key in _REMOVED_SETTINGS or key in _DEPLOYMENT_SHORTCUTS:
-            target = _REMOVED_SETTINGS.get(key, f"default.{key}")
-            raise ValueError(
-                f"extraction.{key} has moved to stages.{target}; use one deployment table"
-            )
     allowed = {f.name for f in fields(ExtractionConfig)} - {
         "deployments",
         "langfuse",
@@ -422,11 +401,6 @@ def resolve_config(
 ) -> ExtractionConfig:
     """Apply invocation overrides to file settings, then validate the resulting method."""
     options = load_settings(config_file)
-    for key in overrides:
-        if key in _REMOVED_SETTINGS:
-            raise ValueError(
-                f"{key} has moved to stages.{_REMOVED_SETTINGS[key]}; use a deployment table"
-            )
     deployment_options = {
         key: overrides.pop(key) for key in _DEPLOYMENT_SHORTCUTS if key in overrides
     }

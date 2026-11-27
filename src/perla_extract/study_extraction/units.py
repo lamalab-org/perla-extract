@@ -1,8 +1,8 @@
 """Conservative unit conversion shared by downstream projections.
 
-Pint versions supported on older Python releases can raise AssertionError for
-malformed expressions such as ``Ω/``. Catch it only at these conversion boundaries,
-like other parser errors, so callers retain the source label instead of aborting.
+Malformed expressions such as ``Ω/`` can raise parser errors, including
+AssertionError. Catch them only at conversion boundaries so callers retain the
+source label instead of aborting a paper's extraction or score.
 """
 
 from __future__ import annotations

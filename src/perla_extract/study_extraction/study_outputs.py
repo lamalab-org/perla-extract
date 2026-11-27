@@ -1,4 +1,4 @@
-"""Interpret optional composition/process details and write downstream formats.
+"""Interpret optional composition/process details and write NOMAD archives.
 
 Enrichment proposals never overwrite the source-reported extraction. Failed or
 unresolved proposals stay in their audit and the stage outcome for review.
@@ -12,7 +12,6 @@ from pydantic import ValidationError
 
 from .artifacts import write_json_atomic
 from .client import ModelClient
-from .compatibility import to_reduced_with_report
 from .configuration import ExtractionConfig
 from .enrichment import EnrichmentAudit, run_enrichment
 from .logging import logger
@@ -88,7 +87,7 @@ def _interpret_and_export(
     assembly_blocked: bool,
     journal: EventJournal,
 ) -> ExportResult:
-    """Keep optional interpretations beside the reported study and export both."""
+    """Keep interpretation proposals separate from source facts and emit NOMAD archives."""
     extraction = final.extraction
     nomad: NOMADExport | None = None
     enrichment_status = None
@@ -146,26 +145,4 @@ def _interpret_and_export(
             {"error": nomad_error},
         )
 
-    reduced_error: str | None = None
-    if config.reduced_export:
-        try:
-            with journal.stage("export_reduced"):
-                reduced = to_reduced_with_report(extraction)
-                write_json_atomic(
-                    config.output_dir / "reduced.json",
-                    reduced.cells.model_dump(mode="json"),
-                )
-                write_json_atomic(
-                    config.output_dir / "reduced_conversion.json",
-                    reduced.model_dump(mode="json"),
-                )
-        except (ValidationError, ValueError) as exc:
-            reduced_error = str(exc)
-            write_json_atomic(
-                config.output_dir / "reduced_conversion_failure.json",
-                {"error": reduced_error},
-            )
-
-    return ExportResult(
-        enrichment, enrichment_status, nomad, nomad_error, reduced_error
-    )
+    return ExportResult(enrichment, enrichment_status, nomad, nomad_error)

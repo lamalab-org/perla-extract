@@ -3,42 +3,6 @@ from pathlib import Path
 APP = Path(__file__).resolve().parents[1] / "review_app"
 
 
-def test_blinded_comparison_is_a_separate_review_workflow():
-    main = (APP / "index.html").read_text(encoding="utf-8")
-    html = (APP / "comparison.html").read_text(encoding="utf-8")
-    javascript = (APP / "comparison.js").read_text(encoding="utf-8")
-    backend = (APP.parent / "expert_comparison.py").read_text(encoding="utf-8")
-
-    assert 'href="/comparison.html"' in main
-    assert 'href="/review"' in html
-    assert "one randomly assigned output" in html
-    assert "Values and units are separate claims" in html
-    assert (
-        "Extra records" in html and "Missing records" in html and "Wrong links" in html
-    )
-    assert "Chemical detail" in html and "Usefulness for NOMAD" in html
-    assert "/api/comparison-reviews/" in javascript
-    assert "/api/native-comparisons/" in javascript
-    assert "/api/native-utility-reviews/" in javascript
-    assert "/api/pairwise-comparisons/" in javascript
-    assert "/api/pairwise-preference-reviews/" in javascript
-    assert "Your accuracy review is locked" in html
-    assert "Blinded A/B preference" in html
-    assert "Both inadequate" in javascript
-    assert "Cannot judge" in javascript
-    assert "Factual correctness" in backend
-    assert "Coverage and completeness" in backend
-    assert "NOMAD readiness" in backend
-    assert "Minimum acceptable:" in javascript
-    assert "Preference rule:" in javascript
-    assert "state.preference.rubrics" in javascript
-    assert "How to apply the preference choices" in html
-    assert "Neither candidate reaches" in html
-    assert "Submit and lock this review" in javascript
-    assert "historical_database" not in javascript
-    assert "new_extractor" not in javascript
-
-
 def test_refreshed_review_dataset_is_the_clear_default():
     html = (APP / "index.html").read_text(encoding="utf-8")
     javascript = (APP / "app.js").read_text(encoding="utf-8")
@@ -79,30 +43,6 @@ def test_deployed_authentication_has_a_recoverable_sign_in_flow():
     assert '"Connection problem"' not in javascript
     assert ".internal-sign-in[hidden]" in styles
     assert "#clerk-sign-in[hidden]" in styles
-
-
-def test_comparison_authentication_stays_on_its_own_hostname():
-    html = (APP / "comparison.html").read_text(encoding="utf-8")
-    javascript = (APP / "comparison.js").read_text(encoding="utf-8")
-
-    assert 'id="auth-gate"' in html
-    assert 'id="internal-sign-in"' in html
-    assert 'id="use-email-sign-in"' in html
-    assert 'id="retry-auth"' in html
-    assert 'id="sign-out"' in html
-    assert 'fetch("/api/auth/login"' in javascript
-    assert "localStorage.setItem(TOKEN_KEY, payload.token)" in javascript
-    assert "window.location.assign" not in javascript
-    assert "return initializeAuth()" in javascript
-    assert "state.clerk.addListener" in javascript
-    assert "startComparison().catch(showAuthenticationError)" in javascript
-    assert "Authentication is not completely configured" in javascript
-    assert "finally" in javascript
-    assert "function clearComparison()" in javascript
-    assert "state.current = null" in javascript
-    assert "state.judgments.clear()" in javascript
-    assert '$("records").replaceChildren()' in javascript
-    assert '$("comparison-workspace").hidden = true' in javascript
 
 
 def test_ui_allows_record_review_before_the_census():
@@ -153,7 +93,6 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert 'id="figure-review-progress"' in html
     assert 'id="figure-review-filter"' in html
     assert "Confirm and next" in javascript
-    assert 'fromProposal ? "unreviewed"' in javascript
     assert "Check ${unchecked.length} remaining subfigure" in javascript
     assert "perla-census-draft" in javascript
     assert "function mergeNewProposalPanels" in javascript
@@ -173,7 +112,6 @@ def test_inventory_measures_the_main_text_figure_gap_without_source_checkboxes()
     assert "no automatic image match" in javascript
     assert "main_text_figure_census" in javascript
     assert "review_scope_sources: state.bundle.sources" in javascript
-    assert "Earlier aggregate census" in javascript
 
 
 def test_ui_covers_every_rich_record_collection():

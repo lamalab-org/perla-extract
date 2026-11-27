@@ -170,7 +170,7 @@ The resulting judgment columns remain empty until a person reviews them.
 
 First test whether the full pipeline improves on direct source-to-study extraction.
 In `experiment.toml`, set `use_claim_ledger`, `use_refinement`, `use_targeted_repair`
-and `use_enrichment` to `false` under `[control]` and `true` under `[treatment]`.
+and `use_enrichment` to `false` under `[arms.control]` and `true` under `[arms.treatment]`.
 Hold model, parser, source scope and resource limits fixed. A direct
 request that exceeds its context budget is a retained failure, not permission to
 truncate the source or remove that paper. This combined comparison establishes a

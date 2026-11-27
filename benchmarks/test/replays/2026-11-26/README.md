@@ -60,12 +60,16 @@ The four-paper pilot is too small for a strong statistical conclusion.
 
 ## Simplification check, 27 November
 
-Cleanup commit `d829665` reproduces **all 410 evaluation reports byte-for-byte**,
-with identical inputs/settings/dependencies and no changed decisions. The retained
-114 production functions/classes were also checked for unchanged syntax trees.
-The full suite passes 1,680 tests; all 132 reference-release/dataset checks and
-three installed export/deployment checks pass. Ruff, mypy and strict docs pass.
-This removes file/API indirection without changing the scientific method.
+Both the file simplification (`d829665`) and the subsequent current-only cleanup
+reproduce **all 410 evaluation reports byte-for-byte**, with identical inputs,
+settings and dependencies and no changed decisions. The latter removes ten files,
+old exports, format migrations and duplicate experiment interfaces; frozen
+reference and extraction bytes remain intact.
+
+The current suite passes 1,677 tests; all 101 active-reference/release checks,
+76 final output/frontend checks and three installed export/deployment checks pass.
+Ruff, mypy, strict docs and the offline scoring example pass. Older format support
+is removed without changing the scientific method or its automatic controls.
 
 ## Original verification, 26 November
 
@@ -123,6 +127,14 @@ and assignments before interpreting any F1 change.
       "spincoating": "spin coating",
       "thermal annealing": "annealing"
     }
+  },
+  "current_only_cleanup": {
+    "code_sha256": "ad03289f16083eb1ce3dfdd423e139d0d1567efb9ee7ae91419fa1902ff2fb69",
+    "decision_changes": 0,
+    "identical_reports": 410,
+    "replay_manifest_sha256": "ac195291ba53ae4e34e233bd136ebef3d2013886e9d03cf046ec3b72184b6c77",
+    "same_environment": true,
+    "same_inputs": true
   },
   "environment": {
     "pint": "0.26.2",

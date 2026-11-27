@@ -35,7 +35,7 @@ perla-evaluate \
 ```
 
 A frozen reference directory contains `ground_truth.json` and `manifest.json`.
-The command checks structural schema compatibility and verifies that the
+The command validates the study against the current schema and verifies that the
 reference's content hash matches its manifest. It records the paper ID, split,
 reference hash, source hashes and source-manifest hash in the report.
 
@@ -52,15 +52,13 @@ to create the reference.
 
 New references use format 4 and require a final verified decision for every record.
 The loader also requires the manifest to declare completed adjudication and verified
-validation with zero issues. It accepts private stage-to-reviewer mappings and public,
-redacted stage names. These declarations are checked for consistency, not authenticated
-as an independent review; retain the private review history.
-Only ground-truth artifact format 4 is supported. References must declare the reviewed
-evidence-document version and hash. Descriptive schema prose has its own fingerprint;
-editing help text alone does not make a reference structurally incompatible.
-The known archived schema-6 fingerprint remains accepted without rewriting frozen files.
-Other structural mismatches require an explicit migration. The scorer records them; it does not load that
-archived document to verify the declaration.
+validation with zero issues. Every exported manifest declares a
+`completed_stage_names` list; reviewer assignments remain in the private review
+history. These declarations are checked, not authenticated as independent review.
+Only ground-truth artifact format 4 is supported. The evidence-document version
+and hash bind the reviewed source. Producer schema versions and hashes describe
+where the artifact came from; its payload must validate against the one current
+`StudyExtraction`. No old field names or automatic schema upgrades are accepted.
 
 For `--prediction`, prefer a complete run directory containing:
 
@@ -763,8 +761,7 @@ comparing systems.
 
 The report records `reference_policy="fixed-no-exclusions"`. Bare JSON inputs and
 direct Python calls remain useful for development, but cannot prove that review
-took place. The legacy Python `ignored_truth_record_keys` argument now rejects any
-nonempty list.
+took place. The evaluator has no per-record exclusion argument.
 
 Matching problems are a separate issue: `core_facts.issues` reports them without
 changing which reference facts are counted. A finalized reference can still expose

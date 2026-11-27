@@ -59,7 +59,7 @@ class GroundTruthReview(BaseModel):
     event_count: int = Field(ge=1)
     reviewers: list[str]
     adjudicators: list[str] = Field(min_length=1)
-    completed_stages: dict[str, list[str]]
+    completed_stage_names: list[str]
     uncertain_record_keys: list[str] = Field(max_length=0)
 
 
@@ -221,7 +221,7 @@ def build_ground_truth_export(
             "event_count": len(events),
             "reviewers": reviewers,
             "adjudicators": [adjudicator],
-            "completed_stages": summary["completed_stages"],
+            "completed_stage_names": sorted(summary["completed_stages"]),
             "uncertain_record_keys": [],
         },
         validation={

@@ -5,11 +5,11 @@ from __future__ import annotations
 import re
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Literal, TypeAlias
+from typing import Final, Literal, TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-PAPERSBOT_FORMAT_VERSION = 5
+PAPERSBOT_FORMAT_VERSION: Final[Literal[5]] = 5
 PaperStatus: TypeAlias = Literal[
     "new",
     "downloaded",
@@ -26,21 +26,25 @@ PaperDisposition: TypeAlias = Literal[
 ]
 
 
+class _ClosedModel(BaseModel):
+    """Reject unrecognized fields while preserving normal JSON date parsing."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
 def _unique_nonempty(values: list[str]) -> list[str]:
     """Normalize user-authored policy lists before they become matching rules."""
 
     return list(dict.fromkeys(value.strip() for value in values if value.strip()))
 
 
-class OpenAlexPolicy(BaseModel):
+class OpenAlexPolicy(_ClosedModel):
     """Configure topic discovery and its incremental overlap.
 
     Topic IDs are kept in the policy file because they describe the literature
     domain, not the retrieval algorithm. Re-reading several days on each run makes
     delayed indexing harmless; DOI deduplication keeps that overlap inexpensive.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     topic_ids: list[str]
     initial_lookback_days: int = Field(default=30, ge=1)
@@ -57,15 +61,13 @@ class OpenAlexPolicy(BaseModel):
         return cleaned
 
 
-class SelectionPolicy(BaseModel):
+class SelectionPolicy(_ClosedModel):
     """Describe relevance as data so the bot is not tied to one coded heuristic.
 
     A paper must contain at least one term from every required group. Title-only
     exclusions remove publication types that should not enter device extraction.
     Projects can replace the packaged policy from the command line.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     required_groups: list[list[str]]
     excluded_title_terms: list[str] = Field(default_factory=list)
@@ -127,7 +129,7 @@ class SelectionPolicy(BaseModel):
         )
 
 
-class PaperDocument(BaseModel):
+class PaperDocument(_ClosedModel):
     """Describe one locally retained PDF without guessing its scientific role."""
 
     source_identifier: str | None = None
@@ -141,7 +143,7 @@ class PaperDocument(BaseModel):
     access_basis: str
 
 
-class PaperRecord(BaseModel):
+class PaperRecord(_ClosedModel):
     """Store one discovered paper and the latest outcome of processing it.
 
     A DOI is the stable identity whenever it is available. ``sources`` retains all
@@ -175,32 +177,28 @@ class PaperRecord(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
     )
 
-    @model_validator(mode="before")
-    @classmethod
-    def read_legacy_feed_source(cls, value: object) -> object:
-        """Load version-one state without keeping its feed-only name in new files."""
 
-        if (
-            isinstance(value, dict)
-            and "source_feed" in value
-            and "sources" not in value
-        ):
-            migrated = dict(value)
-            source = migrated.pop("source_feed")
-            migrated["sources"] = [source] if source else []
-            return migrated
-        return value
-
-
-class BotState(BaseModel):
+class BotState(_ClosedModel):
     """Versioned JSON state that makes scheduled runs incremental and inspectable."""
 
-    format_version: int = PAPERSBOT_FORMAT_VERSION
+    format_version: Literal[5] = PAPERSBOT_FORMAT_VERSION
     papers: dict[str, PaperRecord] = Field(default_factory=dict)
     openalex_last_successful_date: date | None = None
 
+    @model_validator(mode="after")
+    def require_canonical_paper_keys(self) -> BotState:
+        """Keep DOI deduplication exact instead of repairing persisted identities."""
 
-class BotRunConfiguration(BaseModel):
+        for key, record in self.papers.items():
+            expected = record.doi if record.doi is not None else record.identifier
+            if key != record.identifier or key != expected:
+                raise ValueError(
+                    f"Paper key {key!r} must match its identifier and DOI when present"
+                )
+        return self
+
+
+class BotRunConfiguration(_ClosedModel):
     """Record the non-secret inputs needed to interpret one run's statistics."""
 
     feeds: list[str]
@@ -223,7 +221,7 @@ class BotRunConfiguration(BaseModel):
     zotero_curated: bool = False
 
 
-class DiscoveryFailure(BaseModel):
+class DiscoveryFailure(_ClosedModel):
     """Preserve a source failure that would otherwise exist only in console output."""
 
     source_kind: Literal["rss", "openalex", "zotero"]
@@ -231,7 +229,7 @@ class DiscoveryFailure(BaseModel):
     error: str
 
 
-class PdfAcquisitionFailure(BaseModel):
+class PdfAcquisitionFailure(_ClosedModel):
     """Preserve one failed retrieval attempt even when a later source succeeds."""
 
     source: str
@@ -240,7 +238,7 @@ class PdfAcquisitionFailure(BaseModel):
     error: str
 
 
-class OpenAlexRunStats(BaseModel):
+class OpenAlexRunStats(_ClosedModel):
     """Record enough query detail to audit coverage and API use after a run."""
 
     start_date: date
@@ -253,7 +251,7 @@ class OpenAlexRunStats(BaseModel):
     checkpoint_advanced: bool = False
 
 
-class ZoteroRunStats(BaseModel):
+class ZoteroRunStats(_ClosedModel):
     """Account for group-library reads and stored attachment downloads."""
 
     group_id: str
@@ -266,7 +264,7 @@ class ZoteroRunStats(BaseModel):
     errors: int = 0
 
 
-class PaperRunOutcome(BaseModel):
+class PaperRunOutcome(_ClosedModel):
     """Describe how one discovered paper contributed—or did not contribute—to a run."""
 
     identifier: str
@@ -277,10 +275,10 @@ class PaperRunOutcome(BaseModel):
     error: str | None = None
 
 
-class BotResult(BaseModel):
+class BotResult(_ClosedModel):
     """Versioned, retrievable account of one PapersBot invocation."""
 
-    format_version: int = PAPERSBOT_FORMAT_VERSION
+    format_version: Literal[5] = PAPERSBOT_FORMAT_VERSION
     run_id: str
     status: Literal["running", "complete", "complete_with_errors", "failed"] = "running"
     started_at: str

@@ -25,10 +25,9 @@ The paths below are relative to the repository root.
 | PDF text and evidence | `study_extraction/source.py` → `spans.py`, `transport.py` | Source IDs and quotations remain traceable to the supplied PDFs |
 | Scientific scoring | [Scoring maintainer guide](scoring.md), then `study_extraction/evaluation.py` | Match owners separately from values; use one credit ledger for all summaries |
 | Experiment results | `study_extraction/comparison.py` → `figure_data.py`, `experiment_summary.py` | Present saved scores without implementing another scorer |
-| Export | `study_extraction/nomad.py`, `compatibility.py` | Project supported fields; retain other context in notes and report conversion losses |
+| Export | `study_extraction/nomad.py` | Project supported fields; retain other context in notes and report conversion losses |
 | Reference review | [Reviewer guide](reviewer-ui.md), then `review_workbench/study_review.py` | Keep drafts, saved revisions and reference exports distinct |
 | Paper discovery | `src/perla_extract/papersbot/cli.py` → `bot.py` | Discovery and acquisition do not establish extraction accuracy |
-| Historical flat schema | `src/perla_extract/pydantic_model_reduced.py` | Compatibility consumer only; new extraction uses `StudyExtraction` |
 
 `tests/` checks the Python package; `review_workbench/tests/` also exercises browser
 modules. `data/study_extraction/ground_truth/` contains frozen references, while

@@ -9,10 +9,6 @@ from zipfile import ZipFile
 
 import pytest
 
-from review_workbench.expert_comparison import (
-    ComparisonService,
-    LocalComparisonStorage,
-)
 from review_workbench.feedback_export import build_feedback_archive
 from review_workbench.study_review import (
     FigurePanelCensus,
@@ -101,8 +97,7 @@ def test_export_keeps_legacy_refresh_without_evidence_version(
     store.storage.compare_and_swap(
         "calibration", paper, expected_revision=1, revision=current
     )
-    comparisons = ComparisonService(LocalComparisonStorage(tmp_path / "comparisons"))
-    with ZipFile(BytesIO(build_feedback_archive(store, comparisons))) as archive:
+    with ZipFile(BytesIO(build_feedback_archive(store))) as archive:
         feedback = json.loads(archive.read("feedback.json"))
     exported = feedback["ground_truth_reviews"][0]
     assert exported["events"] == [event]
@@ -172,14 +167,12 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
         ),
         "reviewer-1",
     )
-    comparisons = ComparisonService(LocalComparisonStorage(tmp_path / "comparisons"))
 
     archive_path = tmp_path / "feedback.zip"
     workbook = b"exact reviewer workbook bytes"
     archive_path.write_bytes(
         build_feedback_archive(
             store,
-            comparisons,
             [
                 {
                     "split": "dev",
@@ -207,7 +200,6 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
             "review_events.csv",
             "figure_panels.csv",
             "figure_census_proposals.json",
-            "comparison_reviews.csv",
             (
                 "uploaded_workbooks/dev/10.0000--example/"
                 "00000002--event-1--reviewer-1--review.xlsx"
@@ -227,11 +219,6 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
                 StringIO(archive.read("review_events.csv").decode("utf-8-sig"))
             )
         )
-        comparison_rows = list(
-            csv.DictReader(
-                StringIO(archive.read("comparison_reviews.csv").decode("utf-8-sig"))
-            )
-        )
         figure_rows = list(
             csv.DictReader(
                 StringIO(archive.read("figure_panels.csv").decode("utf-8-sig"))
@@ -241,8 +228,6 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
     assert proposals == {"format_version": 1, "papers": {}}
     assert snapshot["figure_census_proposals"] == proposals
     assert snapshot["counts"] == {
-        "comparison_batches": 0,
-        "comparison_responses": 0,
         "papers_with_feedback": 1,
         "review_events": 1,
         "reviewers": 1,
@@ -281,7 +266,6 @@ def test_feedback_download_preserves_history_and_is_easy_to_inspect(
     assert rows[0]["reviewer_id"] == "reviewer-1"
     assert rows[0]["before_json"] == '"Initial model note"'
     assert rows[0]["after_json"] == '"Checked against the paper"'
-    assert comparison_rows == []
     assert figure_rows == []
 
 
@@ -364,7 +348,6 @@ def test_feedback_download_flattens_only_current_subfigure_census(
 
     archive = build_feedback_archive(
         store,
-        ComparisonService(LocalComparisonStorage(tmp_path / "comparisons")),
     )
     with ZipFile(BytesIO(archive)) as bundle:
         snapshot = json.loads(bundle.read("feedback.json"))

@@ -22,8 +22,8 @@ def test_three_named_arms_share_baseline_and_resume_without_provider_work(setup)
     path, calls, _ = setup
     text = (
         path.read_text()
-        .replace("[control]", "[arms.astra]")
-        .replace("[treatment]", "[arms.terra]")
+        .replace("[arms.control]", "[arms.astra]")
+        .replace("[arms.treatment]", "[arms.terra]")
     )
     path.write_text(
         'baseline = "astra"\n'
@@ -90,8 +90,8 @@ def test_killed_attempt_keeps_reservation_and_is_not_redispatched(setup, monkeyp
     path.write_text(path.read_text() + "\n[budget]\nmax_cost_usd = 10\n")
     path.write_text(
         path.read_text()
-        .replace("[control]", "[control]\nreservation_usd = 2")
-        .replace("[treatment]", "[treatment]\nreservation_usd = 2")
+        .replace("[arms.control]", "[arms.control]\nreservation_usd = 2")
+        .replace("[arms.treatment]", "[arms.treatment]\nreservation_usd = 2")
     )
 
     def killed(config):
@@ -149,8 +149,8 @@ def test_budget_holds_unknown_costs_and_stops_before_next_dispatch(setup, monkey
     path, calls, extract = setup
     path.write_text(
         path.read_text()
-        .replace("[control]", "[control]\nreservation_usd = 2")
-        .replace("[treatment]", "[treatment]\nreservation_usd = 2")
+        .replace("[arms.control]", "[arms.control]\nreservation_usd = 2")
+        .replace("[arms.treatment]", "[arms.treatment]\nreservation_usd = 2")
         + "\n[budget]\nmax_cost_usd = 3\n"
     )
 
@@ -170,7 +170,7 @@ def test_budget_holds_unknown_costs_and_stops_before_next_dispatch(setup, monkey
     monkeypatch.setattr(experiment, "run_extraction", unknown)
     result = experiment.execute(experiment.prepare(path))
     assert len(calls) == 1
-    assert result["quality"] is None
+    assert result["comparisons"]["treatment-vs-control/primary"]["quality"] is None
     assert (
         "Campaign admission stopped"
         in (path.parent / "results/errors.json").read_text()
@@ -258,8 +258,7 @@ def test_method_tokenizer_is_relative_to_its_own_file(setup):
         {
             "output": "results",
             "config": "methods/method.toml",
-            "control": {},
-            "treatment": {"use_refinement": True},
+            "arms": {"control": {}, "treatment": {"use_refinement": True}},
             "papers": [{"pdf": "paper.pdf", "reference": "reference"}],
         }
     )
@@ -296,11 +295,11 @@ def test_production_parser_extractor_scorer_and_repeatability_report(
         "use_claim_ledger = true", "use_claim_ledger = false"
     )
     text = text.replace(
-        "[control]\nclaim_recall_passes = 1",
+        "[arms.control]\nclaim_recall_passes = 1",
         '[arms.astra.stages.default]\nmodel = "openai/synthetic-astra"',
     )
     text = text.replace(
-        "[treatment]\nclaim_recall_passes = 2",
+        "[arms.treatment]\nclaim_recall_passes = 2",
         '[arms.terra.stages.default]\nmodel = "openai/synthetic-terra"',
     )
     text = text.replace(
@@ -335,7 +334,7 @@ def test_production_parser_extractor_scorer_and_repeatability_report(
     plan = replace(
         plan,
         settings=plan.settings.model_copy(update={"repeats": 1}),
-        repeat_papers=plan.study.paper_ids,
+        repeat_papers=plan.studies["terra"].paper_ids,
     )
     result = experiment.execute(plan)
     assert len(calls) == 4
@@ -378,17 +377,24 @@ def test_optional_stage_ablation_compares_enabled_settings_only(setup):
         "use_claim_ledger = true", "use_claim_ledger = false"
     )
     text = text.replace(
-        "[control]\nclaim_recall_passes = 1", "[control]\nuse_refinement = false"
+        "[arms.control]\nclaim_recall_passes = 1",
+        "[arms.control]\nuse_refinement = false",
     )
     text = text.replace(
-        "[treatment]\nclaim_recall_passes = 2", "[treatment]\nuse_refinement = true"
+        "[arms.treatment]\nclaim_recall_passes = 2",
+        "[arms.treatment]\nuse_refinement = true",
     )
     path.write_text(text)
     plan = experiment.prepare(path)
-    contrast = plan.study.factors["deployments.refine.model"]
+    contrast = plan.studies["treatment"].factors["deployments.refine.model"]
     assert contrast.control is None
     assert contrast.treatment == "openai/synthetic"
-    assert experiment.execute(plan)["quality_status"] == "ready"
+    assert (
+        experiment.execute(plan)["comparisons"]["treatment-vs-control/primary"][
+            "quality_status"
+        ]
+        == "ready"
+    )
 
 
 def test_missing_explicit_credential_stops_before_parsing_and_can_resume(
@@ -413,4 +419,7 @@ def test_missing_explicit_credential_stops_before_parsing_and_can_resume(
     monkeypatch.setenv(key, "synthetic-not-a-secret")
     result = experiment.execute(experiment.prepare(path, resume=True))
     assert len(calls) == 4
-    assert result["quality_status"] == "ready"
+    assert (
+        result["comparisons"]["treatment-vs-control/primary"]["quality_status"]
+        == "ready"
+    )

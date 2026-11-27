@@ -15,7 +15,7 @@ import unicodedata
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from .evidence import assembled_from_quotes, source_contains_text
 from .models import (
@@ -92,7 +92,7 @@ class CompositionProposal(_StrictModel):
     """Group all site assignments proposed for one scoped absorber."""
 
     family_id: str = Field(min_length=1, max_length=200)
-    absorber_id: str | None = Field(default=None, min_length=1, max_length=200)
+    absorber_id: str = Field(min_length=1, max_length=200)
     ions: list[ProposedIon] = Field(max_length=40)
 
 
@@ -156,19 +156,6 @@ class EnrichmentAudit(_StrictModel):
     unresolved_absorber_ids: list[str] = Field(default_factory=list)
     unresolved_processing_step_ids: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
-
-    @model_validator(mode="before")
-    @classmethod
-    def migrate_unscoped_ids(cls, value: object) -> object:
-        """Read historical audits while exposing absorber-scoped output going forward."""
-
-        if isinstance(value, dict) and "unresolved_composition_ids" in value:
-            migrated = dict(value)
-            migrated["unresolved_absorber_ids"] = migrated.pop(
-                "unresolved_composition_ids"
-            )
-            return migrated
-        return value
 
 
 def _citations_for_absorber(
@@ -389,29 +376,6 @@ def _reported_value_is_grounded(
     )
 
 
-def composition_target_id(
-    study: StudyExtraction, proposal: CompositionProposal
-) -> str | None:
-    """Resolve a legacy family-only proposal only when that family has one formula."""
-
-    if proposal.absorber_id is not None:
-        return proposal.absorber_id
-    family = next(
-        (
-            candidate
-            for candidate in study.device_families
-            if candidate.family_id == proposal.family_id
-        ),
-        None,
-    )
-    formula_absorbers = (
-        [absorber for absorber in family.absorbers if absorber.formula is not None]
-        if family
-        else []
-    )
-    return formula_absorbers[0].absorber_id if len(formula_absorbers) == 1 else None
-
-
 def validate_composition_proposals(
     study: StudyExtraction,
     response: CompositionProposalResponse,
@@ -431,9 +395,7 @@ def validate_composition_proposals(
     for proposal in response.proposals:
         issues: list[str] = []
         family = families.get(proposal.family_id)
-        target_id = composition_target_id(study, proposal)
-        target = absorbers.get(target_id or "")
-        absorber_id = target[1].absorber_id if target else proposal.absorber_id
+        target = absorbers.get(proposal.absorber_id)
         if family is None:
             issues.append("family_id does not exist in extraction.json")
             status: ProposalStatus = "rejected"
@@ -443,7 +405,7 @@ def validate_composition_proposals(
         elif target[0].family_id != proposal.family_id:
             issues.append("absorber_id does not belong to the supplied family_id")
             status = "rejected"
-        elif absorber_id in seen:
+        elif proposal.absorber_id in seen:
             issues.append("more than one proposal targets this absorber_id")
             status = "rejected"
         elif target[1].formula is None:
@@ -472,8 +434,7 @@ def validate_composition_proposals(
             status = "needs_review"
         else:
             status = "accepted"
-        if absorber_id:
-            seen.add(absorber_id)
+        seen.add(proposal.absorber_id)
         results.append(
             CompositionProposalResult(proposal=proposal, status=status, issues=issues)
         )
@@ -663,9 +624,7 @@ def run_enrichment(
                 study, response, blocks
             )
     resolved_compositions = {
-        target
-        for result in composition_results
-        if (target := composition_target_id(study, result.proposal)) is not None
+        result.proposal.absorber_id for result in composition_results
     }
     missing_composition_input = [
         item
@@ -698,8 +657,7 @@ def run_enrichment(
             composition_results.extend(
                 result
                 for result in retry_results
-                if composition_target_id(study, result.proposal)
-                not in resolved_compositions
+                if result.proposal.absorber_id not in resolved_compositions
             )
     processing_input = processing_context(study, blocks)
     if processing_input:
@@ -726,11 +684,7 @@ def run_enrichment(
         processing_results=processing_results,
         unresolved_absorber_ids=sorted(
             {str(item["absorber_id"]) for item in composition_input}
-            - {
-                target
-                for result in composition_results
-                if (target := composition_target_id(study, result.proposal)) is not None
-            }
+            - {result.proposal.absorber_id for result in composition_results}
         ),
         unresolved_processing_step_ids=sorted(
             {str(item["step_id"]) for item in processing_input}

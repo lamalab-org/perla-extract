@@ -85,17 +85,6 @@ assert.equal(review.reviewProgress(summary, [...events,{kind:'mutation'}], user)
 """)
 
 
-def test_schema_notice_reports_only_known_compatibility():
-    run_javascript("""
-assert.equal(review.schemaCompatibilityMessage({exact_match:true}), '');
-const readable = review.schemaCompatibilityMessage({exact_match:false,readable_by_current_schema:true});
-assert.ok(!readable.includes('fields added'));
-const compatible = review.schemaCompatibilityMessage({exact_match:false,readable_by_current_schema:true,structurally_compatible:true});
-assert.ok(compatible.includes('compatible'));
-assert.ok(review.schemaCompatibilityMessage({exact_match:false,readable_by_current_schema:false}).includes('cannot be read'));
-""")
-
-
 def test_relationship_choices_keep_ids_and_never_reclassify_identity_fields():
     run_javascript("""
 const truth = {device_families:[{family_id:'first',label:'Control'},{family_id:'second',label:'Alternative'}]};

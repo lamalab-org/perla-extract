@@ -2,7 +2,7 @@
 # Export to NOMAD
 
 The default workflow projects `StudyExtraction` directly into the pinned NOMAD LLM
-extraction schema, without passing through the historical reduced PERLA schema.
+extraction schema.
 The input can be a model output or an adjudicated reference; conversion does not
 confer human-review status.
 
@@ -78,9 +78,3 @@ The adapter targets `perovskite-solar-cell-database==1.2.14` at commit
 `afd75e69ebb07c8f7f82d203231b70f488e40997`. Local Pydantic models validate every
 normal run. Repository CI installs the optional `nomad` dependency in a dedicated job
 and compares the outbound fields with the pinned upstream schema.
-
-## Historical reduced export
-
-Pass `--reduced-export` only when an older consumer still needs `reduced.json` and
-`reduced_conversion.json`. That adapter remains deterministic and reported, but is no
-longer on the default route to NOMAD.

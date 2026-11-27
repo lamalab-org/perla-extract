@@ -29,9 +29,11 @@ The reference directory contains `ground_truth.json` and `manifest.json` for bot
 sources. Paths are relative to the TOML; hashes must match the original PDFs.
 For the committed dataset, set `dataset` and `sources` instead of listing papers.
 
-Shared `[extraction]` and `[stages.default]` settings apply to both arms;
-`[control]` and `[treatment]` hold their differences. Optional passes need a larger
-`max_model_calls` budget. [Stage and context reference](extraction.md).
+Shared `[extraction]` and `[stages.default]` settings apply to every arm;
+`[arms.control]` and `[arms.treatment]` hold their differences. Add more named
+arms under `[arms.NAME]`; `baseline` selects the reference arm (default `control`).
+Optional passes need a larger `max_model_calls` budget.
+[Stage and context reference](extraction.md).
 
 `--check` creates no output and makes no requests. Execution preflights every
 paper before paid work. Resume verifies the frozen inputs, code and method;
@@ -48,10 +50,13 @@ For another experiment, choose a new `output` directory.
 | `figure-data/scoring_diagnostics.csv` | Per-field value, unit and attribution failures |
 | `figure-data/runs.csv` | Requests, tokens, latency, cost and failures |
 | `runs/paper-NNN/ARM-REPEAT/` | Extraction, evaluation, report and local events |
-| `errors.json`, `comparison.json` | Execution failures and full comparison checks |
+| `comparison.json` | Campaign accounting and named paired comparisons |
+| `errors.json` | Execution failures, retained once per attempt |
+| `comparisons/CANDIDATE-vs-BASELINE/primary/` | Paired summary, comparison, intervals and field tables |
 
 A change of `+0.03` means three percentage points of attributed fact F1.
-Paper means receive equal weight; bootstrap intervals resample papers, not facts
+Paired summaries live under `comparisons/` for every experiment, including two-arm
+studies. Paper means receive equal weight; bootstrap intervals resample papers, not facts
 or repeats. Field metrics retain literal and malformed predictions.
 
 `reference_agreement` measures agreement with the annotated subset; incomplete

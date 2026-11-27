@@ -62,4 +62,3 @@ responses, configuration and export losses alongside the final study.
 - [Extract a batch for review](workflows/quality-first-ground-truth.md)
 - [Interpret composition and processing](workflows/enrichment.md)
 - [Export directly to NOMAD](workflows/nomad-export.md)
-- [Export to the historical reduced PERLA schema](compatibility/reduced-schema.md)

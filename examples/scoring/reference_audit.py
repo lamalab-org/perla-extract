@@ -73,13 +73,7 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     score = evaluate_study(truth, truth, benchmark=provenance, config=config)
     check_reference_self_score(score, provenance.paper_id)
     review = manifest["review"]
-    stages = review.get("completed_stage_names")
-    if stages is None:
-        stages = [
-            name
-            for name, people in review.get("completed_stages", {}).items()
-            if people
-        ]
+    stages = review["completed_stage_names"]
     return score, {
         "benchmark": provenance.model_dump(mode="json"),
         "truth_content_sha256": score.truth_content_sha256,

@@ -7,6 +7,7 @@ from perla_extract.study_extraction.evidence import (
     source_contains_text,
 )
 from perla_extract.study_extraction.models import (
+    AbsorberComponent,
     DeviceFamily,
     EvidenceBlock,
     EvidenceCitation,
@@ -135,15 +136,23 @@ def test_reported_value_can_be_an_exact_join_of_multiple_verified_quotes():
         polarity="tandem",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=ReportedValue(
-            name="absorber formulas",
-            raw_value="CsPbI3; FASnI3",
-            value_number=None,
-            unit=None,
-            evidence=references,
-        ),
-        absorber_properties=[],
-        absorber_constituents=[],
+        absorbers=[
+            AbsorberComponent(
+                absorber_id="f-absorber-1",
+                layer_id=None,
+                label="Unscoped absorber",
+                formula=ReportedValue(
+                    name="absorber formulas",
+                    raw_value="CsPbI3; FASnI3",
+                    value_number=None,
+                    unit=None,
+                    evidence=references,
+                ),
+                properties=[],
+                constituents=[],
+                evidence=references,
+            )
+        ],
         processing_steps=[],
         evidence=references,
     )
@@ -184,17 +193,25 @@ def test_reported_value_can_reuse_a_unit_printed_once_for_a_list():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[
-            ReportedValue(
-                name="first rate",
-                raw_value="0.2 Å s-1",
-                value_number=0.2,
-                unit="Å s-1",
+        absorbers=[
+            AbsorberComponent(
+                absorber_id="f-absorber-1",
+                layer_id=None,
+                label="Unscoped absorber",
+                formula=None,
+                properties=[
+                    ReportedValue(
+                        name="first rate",
+                        raw_value="0.2 Å s-1",
+                        value_number=0.2,
+                        unit="Å s-1",
+                        evidence=evidence,
+                    )
+                ],
+                constituents=[],
                 evidence=evidence,
             )
         ],
-        absorber_constituents=[],
         processing_steps=[],
         evidence=evidence,
     )
@@ -236,17 +253,25 @@ def test_reported_value_can_reuse_a_unit_from_its_table_header():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[
-            ReportedValue(
-                name="open-circuit voltage",
-                raw_value="1.13 V",
-                value_number=1.13,
-                unit="V",
+        absorbers=[
+            AbsorberComponent(
+                absorber_id="f-absorber-1",
+                layer_id=None,
+                label="Unscoped absorber",
+                formula=None,
+                properties=[
+                    ReportedValue(
+                        name="open-circuit voltage",
+                        raw_value="1.13 V",
+                        value_number=1.13,
+                        unit="V",
+                        evidence=[citation],
+                    )
+                ],
+                constituents=[],
                 evidence=[citation],
             )
         ],
-        absorber_constituents=[],
         processing_steps=[],
         evidence=[citation],
     )
@@ -287,17 +312,25 @@ def test_table_unit_reuse_retains_an_uncertainty_for_ocr_matching():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[
-            ReportedValue(
-                name="open-circuit voltage",
-                raw_value="1.13 ± 0.01 V",
-                value_number=1.13,
-                unit="V",
+        absorbers=[
+            AbsorberComponent(
+                absorber_id="f-absorber-1",
+                layer_id=None,
+                label="Unscoped absorber",
+                formula=None,
+                properties=[
+                    ReportedValue(
+                        name="open-circuit voltage",
+                        raw_value="1.13 ± 0.01 V",
+                        value_number=1.13,
+                        unit="V",
+                        evidence=[citation],
+                    )
+                ],
+                constituents=[],
                 evidence=[citation],
             )
         ],
-        absorber_constituents=[],
         processing_steps=[],
         evidence=[citation],
     )
@@ -336,15 +369,23 @@ def test_reported_value_with_one_invalid_citation_is_not_in_grounded_subset():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=ReportedValue(
-            name="absorber",
-            raw_value="CsPbI3",
-            value_number=None,
-            unit=None,
-            evidence=[valid, invalid],
-        ),
-        absorber_properties=[],
-        absorber_constituents=[],
+        absorbers=[
+            AbsorberComponent(
+                absorber_id="f-absorber-1",
+                layer_id=None,
+                label="Unscoped absorber",
+                formula=ReportedValue(
+                    name="absorber",
+                    raw_value="CsPbI3",
+                    value_number=None,
+                    unit=None,
+                    evidence=[valid, invalid],
+                ),
+                properties=[],
+                constituents=[],
+                evidence=[valid, invalid],
+            )
+        ],
         processing_steps=[],
         evidence=[valid],
     )
@@ -378,9 +419,7 @@ def test_unique_quote_match_repairs_only_the_source_pointer():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[],
-        absorber_constituents=[],
+        absorbers=[],
         processing_steps=[],
         evidence=[wrong],
     )
@@ -424,9 +463,7 @@ def test_ambiguous_quote_match_is_not_repaired():
                 polarity="not_reported",
                 full_stack_raw=None,
                 layers=[],
-                absorber_formula=None,
-                absorber_properties=[],
-                absorber_constituents=[],
+                absorbers=[],
                 processing_steps=[],
                 evidence=[citation],
             )
@@ -474,9 +511,7 @@ def test_bare_value_is_not_used_to_repair_a_citation_pointer():
                 polarity="not_reported",
                 full_stack_raw=None,
                 layers=[],
-                absorber_formula=None,
-                absorber_properties=[],
-                absorber_constituents=[],
+                absorbers=[],
                 processing_steps=[],
                 evidence=[citation],
             )
@@ -513,9 +548,7 @@ def test_ordered_source_content_repairs_a_noncontiguous_model_quote():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[],
-        absorber_constituents=[],
+        absorbers=[],
         processing_steps=[],
         evidence=[EvidenceCitation(block_id="a", quote=stitched)],
     )
@@ -563,9 +596,7 @@ def test_long_block_repairs_stitched_quote_as_two_exact_citations():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[],
-        absorber_constituents=[],
+        absorbers=[],
         processing_steps=[],
         evidence=[EvidenceCitation(block_id="a", quote=f"{first} {second}")],
     )
@@ -607,9 +638,7 @@ def test_full_evidence_list_repairs_stitched_quote_without_growing():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[],
-        absorber_constituents=[],
+        absorbers=[],
         processing_steps=[],
         evidence=citations,
     )
@@ -661,9 +690,7 @@ def test_validation_reports_duplicate_ids_for_every_entity_collection():
         polarity="not_reported",
         full_stack_raw=None,
         layers=[],
-        absorber_formula=None,
-        absorber_properties=[],
-        absorber_constituents=[],
+        absorbers=[],
         processing_steps=[],
         evidence=evidence,
     )

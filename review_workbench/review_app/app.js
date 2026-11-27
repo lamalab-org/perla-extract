@@ -4,7 +4,7 @@ import { createReviewSession } from "./review-session.js";
 import { renderRecordDetails, renderSubjectContext } from "./record-details.js";
 import { createRecordEditor } from "./record-editor.js";
 import { createFinalizationQueue } from "/adjudication.js";
-import { schemaCompatibilityMessage, reviewProgress, recordEvidenceSection } from "/review-state.js";
+import { reviewProgress, recordEvidenceSection } from "/review-state.js";
 
 const $ = (id) => document.getElementById(id);
 const REVIEW_TOKEN_KEY = "review-token";
@@ -608,10 +608,7 @@ function renderStudy() {
   $("paper-title").textContent = truth.paper.title || state.paperId;
   $("paper-doi").textContent = truth.paper.doi || "DOI not reported";
   $("revision").textContent = `Version ${state.bundle.revision}`;
-  const compatibility = state.bundle.schema_compatibility;
-  const compatibilityNotice = $("schema-compatibility");
-  compatibilityNotice.textContent = schemaCompatibilityMessage(compatibility);
-  compatibilityNotice.hidden = !compatibilityNotice.textContent;
+
   $("pdf-source").replaceChildren(...state.bundle.sources.map((source) => element("option", {
     text: source === "main" ? "Main paper" : "Supporting information (SI)",
     properties: { value: source, selected: source === state.source },
@@ -676,7 +673,8 @@ function proposalPanelId(panel, index) {
 
 function normalizeFigurePanels(panels, fromProposal = false) {
   return (panels || []).map((panel, index) => {
-    const reviewStatus = panel.review_status || (fromProposal ? "unreviewed" : "legacy_unspecified");
+    const reviewStatus = ["confirmed", "corrected"].includes(panel.review_status)
+      ? panel.review_status : "unreviewed";
     return {
       ...structuredClone(panel),
       proposal_panel_id: panel.proposal_panel_id || (fromProposal ? proposalPanelId(panel, index) : null),
@@ -879,9 +877,7 @@ function figureCensusTotals(panels) {
 
 function renderFigureCensusSummary() {
   const panels = state.censusDraft.main_text_figure_census.panels || [];
-  const totals = panels.length ? figureCensusTotals(panels) : state.censusDraft.main_text_figure_census;
-  const legacy = !panels.length && !state.censusDraft.main_text_figure_census.panels?.length
-    && (totals.figures_reviewed || totals.schema_relevant_figures || totals.figure_only_records || totals.figure_only_atomic_values);
+  const totals = figureCensusTotals(panels);
   const proposal = state.figureCensusProposals[state.paperId];
   const savedPanels = state.bundle?.summary.inventory_audits?.[state.user.id]
     ?.main_text_figure_census?.panels;
@@ -892,9 +888,7 @@ function renderFigureCensusSummary() {
   const localizationWarning = unresolvedCaptions
     ? `${unresolvedCaptions} numbered figure caption${unresolvedCaptions === 1 ? " has" : "s have"} no automatic image match; add ${unresolvedCaptions === 1 ? "it" : "them"} manually. `
     : "";
-  $("figure-census-summary").textContent = proposalPrefix + localizationWarning + (legacy
-    ? `Earlier aggregate census: ${totals.figures_reviewed || 0} figures · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only records · ${totals.figure_only_atomic_values || 0} individual field values shown only in figures. Add subfigures to replace it.`
-    : `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} individual field value${totals.figure_only_atomic_values === 1 ? "" : "s"} shown only in figures`);
+  $("figure-census-summary").textContent = proposalPrefix + localizationWarning + `${panels.length} subfigure${panels.length === 1 ? "" : "s"} · ${totals.figures_reviewed || 0} main figure${totals.figures_reviewed === 1 ? "" : "s"} · ${totals.schema_relevant_figures || 0} schema-relevant · ${totals.figure_only_records || 0} figure-only record${totals.figure_only_records === 1 ? "" : "s"} · ${totals.figure_only_atomic_values || 0} individual field value${totals.figure_only_atomic_values === 1 ? "" : "s"} shown only in figures`;
 }
 
 function figurePanelNeedsAttention(panel) {
@@ -908,7 +902,7 @@ function filteredFigureIndexes() {
   const panels = state.censusDraft.main_text_figure_census.panels || [];
   return panels.flatMap((panel, index) => {
     const matches = state.figureReviewFilter === "all"
-      || (state.figureReviewFilter === "unreviewed" && ["unreviewed", "legacy_unspecified"].includes(panel.review_status))
+      || (state.figureReviewFilter === "unreviewed" && panel.review_status === "unreviewed")
       || (state.figureReviewFilter === "attention" && figurePanelNeedsAttention(panel))
       || (state.figureReviewFilter === "schema_relevant" && panel.schema_relevant);
     return matches ? [index] : [];
@@ -1192,7 +1186,7 @@ function renderInventoryComparison() {
         ]),
         element("p", { text: panel.description }),
         element("p", { className: "muted", text: [
-          panel.review_status === "confirmed" ? "confirmed by reviewer" : panel.review_status === "corrected" ? "corrected by reviewer" : "review status predates panel tracking",
+          panel.review_status === "confirmed" ? "confirmed by reviewer" : panel.review_status === "corrected" ? "corrected by reviewer" : "unreviewed",
           panel.page ? `page ${panel.page}` : null,
           panel.x_axis_label ? `x: ${panel.x_axis_label}` : null,
           panel.y_axis_label ? `y: ${panel.y_axis_label}` : null,
@@ -1201,10 +1195,10 @@ function renderInventoryComparison() {
           FIGURE_SCHEMA_DESTINATIONS[panel.figure_class]?.label,
           panel.schema_relevant ? `${panel.figure_only_records} figure-only records · ${panel.figure_only_atomic_values} individual field values` : "Outside schema",
         ].filter(Boolean).join(" · ") }),
-      ])))] : [element("p", { className: "muted", text: "This earlier census contains aggregate totals only. Add subfigures when updating it." })]),
+      ])))] : [element("p", { className: "muted", text: "No subfigures recorded." })]),
       ...(figures.notes ? [element("p", { className: "callout", text: figures.notes })] : []),
     ])
-    : element("p", { className: "callout", text: "This legacy inventory did not record a main-text figure census." }));
+    : element("p", { className: "callout", text: "No main-text figure census has been recorded." }));
   if (audit.missing_or_ambiguous) comparison.push(element("p", { className: "callout", text: audit.missing_or_ambiguous }));
   $("inventory-comparison").replaceChildren(...comparison);
 }

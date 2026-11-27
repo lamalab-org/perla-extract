@@ -149,7 +149,7 @@ Place a condition according to what happened in the experiment:
 | Aging of a completed device | `StabilityTest.conditions` or a checkpoint's `conditions` | Temperature during a 1000-hour stability test |
 
 An unreported condition remains absent. The scorer cannot treat an unknown protocol
-as equivalent to an explicitly different one. NOMAD and reduced exports retain these
+as equivalent to an explicitly different one. NOMAD exports retain these
 contexts in `additional_notes` when their native fields cannot represent them.
 
 `ReportedValue` keeps:

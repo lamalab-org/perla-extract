@@ -1,4 +1,4 @@
-"""Keep the public expert-reviewed release intact and usable by the real scorer."""
+"""Preserve published reference bytes and score the active human-reference release."""
 
 import json
 import os
@@ -19,20 +19,26 @@ from perla_extract.study_extraction.reference_io import (
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 ROOT = Path(__file__).resolve().parents[2] / "data/study_extraction/ground_truth"
-RELEASES = [
+ARCHIVES = [
     (path.parent, json.loads(path.read_text(encoding="utf-8")))
     for path in sorted(ROOT.glob("v*/release.json"))
 ]
+RELEASES = [entry for entry in ARCHIVES if entry[0].name == "v2"]
 PAPERS = [
     pytest.param(release, index, paper, id=f"{release.name}/{paper['paper_id']}")
     for release, index in RELEASES
+    for paper in index["papers"]
+]
+ARCHIVED_PAPERS = [
+    pytest.param(release, index, paper, id=f"{release.name}/{paper['paper_id']}")
+    for release, index in ARCHIVES
     for paper in index["papers"]
 ]
 
 
 @pytest.mark.parametrize(
     "release,index",
-    RELEASES,
+    ARCHIVES,
     ids=lambda item: item.name if isinstance(item, Path) else item["release"],
 )
 def test_release_roster_is_complete(release, index):
@@ -50,7 +56,7 @@ def test_release_roster_is_complete(release, index):
     }
 
 
-@pytest.mark.parametrize("release,index,paper", PAPERS)
+@pytest.mark.parametrize("release,index,paper", ARCHIVED_PAPERS)
 def test_public_reference_preserves_hashes_and_excludes_private_metadata(
     release, index, paper
 ):
@@ -83,9 +89,6 @@ def test_public_reference_preserves_hashes_and_excludes_private_metadata(
         r"internal_[0-9a-f]+|/Users/|/home/|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}",
         manifest_text + truth_text,
     )
-    _, provenance = load_reference(directory)
-    assert provenance is not None
-    assert provenance.ground_truth_sha256 == paper["ground_truth_sha256"]
 
 
 def _rename_and_reorder(value, field=""):

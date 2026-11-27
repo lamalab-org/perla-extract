@@ -1,4 +1,4 @@
-"""Reference compatibility follows data constraints, not wording in model prompts."""
+"""References use one current data model and retain the producer's provenance."""
 
 import json
 from pathlib import Path
@@ -7,39 +7,27 @@ import pytest
 
 from perla_extract.study_extraction.models import (
     StudyExtraction,
-    compatible_study_schema,
     study_schema_prose_sha256,
     study_schema_sha256,
 )
-from perla_extract.study_extraction.reference_io import load_reference
+from perla_extract.study_extraction.reference_io import (
+    load_reference,
+    reference_content_digest,
+)
 
 
-def test_schema_prose_changes_leave_reference_contract_compatible(monkeypatch):
+def test_schema_prose_changes_leave_the_data_contract_fingerprint_unchanged(
+    monkeypatch,
+):
     original = StudyExtraction.model_json_schema()
     structural, prose = study_schema_sha256(), study_schema_prose_sha256()
     changed = json.loads(json.dumps(original))
-    changed["description"] = (
-        "Clearer instructions for extracting this scientific record."
-    )
+    changed["description"] = "Clearer scientific extraction instructions."
     monkeypatch.setattr(
         StudyExtraction, "model_json_schema", classmethod(lambda cls: changed)
     )
     assert study_schema_sha256() == structural
     assert study_schema_prose_sha256() != prose
-    assert compatible_study_schema(
-        "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db011413"
-    )
-
-
-def test_structural_change_rejects_archived_compatibility(monkeypatch):
-    changed = StudyExtraction.model_json_schema()
-    changed["additionalProperties"] = True
-    monkeypatch.setattr(
-        StudyExtraction, "model_json_schema", classmethod(lambda cls: changed)
-    )
-    assert not compatible_study_schema(
-        "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db011413"
-    )
 
 
 def test_annotation_named_fields_are_still_part_of_schema_contract():
@@ -50,15 +38,62 @@ def test_annotation_named_fields_are_still_part_of_schema_contract():
     ) == {"properties": {"description": {"type": "string"}}}
 
 
-def test_all_frozen_references_remain_readable_without_rewriting():
-    root = Path(__file__).resolve().parents[2] / "data/study_extraction/ground_truth"
-    manifests = sorted(root.glob("v*/dev/*/manifest.json"))
-    assert len(manifests) == 60
+def test_frozen_references_validate_without_upgrades_or_rewriting():
+    root = (
+        Path(__file__).resolve().parents[2]
+        / "data/study_extraction/ground_truth/v2/dev"
+    )
+    manifests = sorted(root.glob("*/manifest.json"))
+    assert len(manifests) == 30
     for path in manifests:
         before = path.read_bytes()
         truth, provenance = load_reference(path.parent)
         assert truth and provenance is not None
         assert path.read_bytes() == before
+
+
+@pytest.fixture
+def reference_copy(tmp_path):
+    root = (
+        Path(__file__).resolve().parents[2]
+        / "data/study_extraction/ground_truth/v2/dev"
+    )
+    original = next(root.glob("*/manifest.json")).parent
+    for name in ("manifest.json", "ground_truth.json"):
+        (tmp_path / name).write_bytes((original / name).read_bytes())
+    return tmp_path
+
+
+def test_producer_fingerprint_cannot_override_current_payload_validation(
+    reference_copy,
+):
+    path = reference_copy / "ground_truth.json"
+    payload = json.loads(path.read_text())
+    payload["retired_field"] = []
+    path.write_text(json.dumps(payload))
+    manifest_path = reference_copy / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["files"]["ground_truth.json"] = reference_content_digest(payload)
+    manifest_path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+        load_reference(reference_copy)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("study_schema_sha256", "unknown"),
+        ("study_schema_version", 0),
+        ("study_schema_version", True),
+    ],
+)
+def test_reference_requires_valid_producer_metadata(reference_copy, field, value):
+    path = reference_copy / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest[field] = value
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="producer schema version and SHA-256"):
+        load_reference(reference_copy)
 
 
 @pytest.mark.parametrize("version", [2, 3])

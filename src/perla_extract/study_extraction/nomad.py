@@ -20,7 +20,6 @@ from .enrichment import (
     EnrichmentAudit,
     ProcessingProposalResponse,
     ProcessingProposalResult,
-    composition_target_id,
     validate_composition_proposals,
     validate_processing_proposals,
 )
@@ -704,10 +703,9 @@ def _accepted_enrichment(
         evidence_blocks if evidence_blocks is not None else [],
     )
     compositions = {
-        target_id: result
+        result.proposal.absorber_id: result
         for result in composition_results
         if result.status == "accepted"
-        and (target_id := composition_target_id(study, result.proposal)) is not None
     }
     processing = {
         result.proposal.step_id: result
@@ -829,8 +827,7 @@ def to_nomad_with_report(
                     issues,
                     "enrichment_not_applied",
                     "absorber",
-                    composition_target_id(study, result.proposal)
-                    or result.proposal.family_id,
+                    result.proposal.absorber_id,
                     "; ".join(result.issues) or result.status,
                     "perovskite_composition",
                 )
@@ -853,8 +850,7 @@ def to_nomad_with_report(
                 else "processing_step"
             )
             source_id = (
-                composition_target_id(study, result.proposal)
-                or result.proposal.family_id
+                result.proposal.absorber_id
                 if isinstance(result, CompositionProposalResult)
                 else result.proposal.step_id
             )

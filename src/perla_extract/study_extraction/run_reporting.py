@@ -122,7 +122,6 @@ def _completed_report(
     enrichment_status = exports.enrichment_status
     nomad = exports.nomad
     nomad_error = exports.nomad_error
-    reduced_error = exports.reduced_error
     counts = validation["counts"]
     assembled = any(
         outcome.stage == "assemble" and outcome.status == "complete"
@@ -133,7 +132,7 @@ def _completed_report(
         if not assembled
         else (
             "partial"
-            if errors or nomad_error or reduced_error
+            if errors or nomad_error
             else (
                 "complete"
                 if validation["status"] == "verified"
@@ -178,7 +177,6 @@ def _completed_report(
         "nomad_archive_count": len(nomad.archives) if nomad is not None else 0,
         "nomad_issue_count": len(nomad.issues) if nomad is not None else 0,
         "nomad_conversion_error": nomad_error,
-        "reduced_conversion_error": reduced_error,
         "errors": errors,
         "calls": client.calls,
         "usage": summarize_calls(client.calls),

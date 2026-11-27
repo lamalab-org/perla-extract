@@ -24,7 +24,6 @@ nav:
       - From corrections to a benchmark: workflows/review-to-benchmark.md
       - Scoring reference: workflows/evaluation.md
       - Run an experiment: workflows/extraction-ablations.md
-      - Historical comparison and preference: workflows/expert-comparison.md
   - Concepts:
       - Study model: concepts/study-model.md
       - Evidence and validation: concepts/evidence.md
@@ -37,8 +36,6 @@ nav:
       - Build ground truth: workflows/ground-truth-review.md
       - Review and classify figures: workflows/figure-review.md
       - Extract a batch for review: workflows/quality-first-ground-truth.md
-  - Compatibility:
-      - Reduced PERLA schema: compatibility/reduced-schema.md
   - Reference:
       - Command line: reference/cli.md
       - Experiment records: reference/experiment-artifacts.md

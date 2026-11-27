@@ -135,9 +135,7 @@ def study_with_family(empty_study):
             "polarity": "not_reported",
             "full_stack_raw": None,
             "layers": [],
-            "absorber_formula": None,
-            "absorber_properties": [],
-            "absorber_constituents": [],
+            "absorbers": [],
             "processing_steps": [],
             "evidence": [
                 {
@@ -188,7 +186,6 @@ def test_seed_is_immutable_and_truth_is_versioned(
     assert updated["revision"] == 2
     assert bundle["manifest"]["schema_version"] == STUDY_SCHEMA_VERSION
     assert bundle["manifest"]["schema_sha256"] == study_schema_sha256()
-    assert bundle["schema_compatibility"]["exact_match"] is True
 
 
 def test_reviewer_can_undo_an_untouched_saved_correction(
@@ -791,13 +788,22 @@ def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
         "10.0000--example",
         InventoryAuditRequest(
             base_revision=1,
-            searched_sources=["main"],
+            review_scope_sources=["main"],
             expected_counts={"individual_devices": 0},
             main_text_figure_census=MainTextFigureCensus(
-                figures_reviewed=4,
-                schema_relevant_figures=2,
-                figure_only_records=1,
-                figure_only_atomic_values=3,
+                panels=[
+                    FigurePanelCensus(
+                        review_status="confirmed",
+                        figure_number="3",
+                        figure_class="stability",
+                        description="Stability values absent from the caption",
+                        data_presentation="explicit_numeric_labels",
+                        extraction_feasibility="straightforward",
+                        schema_relevant=True,
+                        figure_only_records=1,
+                        figure_only_atomic_values=3,
+                    )
+                ],
                 notes="Figure 3 contains stability values absent from the caption.",
             ),
             missing_or_ambiguous="No missing devices found.",
@@ -846,29 +852,34 @@ def test_reviewer_progress_contains_only_that_reviewers_persisted_work(
     )
     assert paper["current_inventory_audit"]["review_scope_sources"] == ["main"]
     assert "searched_sources" not in paper["current_inventory_audit"]
-    assert paper["current_inventory_audit"]["main_text_figure_census"] == {
-        "figures_reviewed": 4,
-        "schema_relevant_figures": 2,
-        "figure_only_records": 1,
-        "figure_only_atomic_values": 3,
-        "panels": [],
-        "notes": "Figure 3 contains stability values absent from the caption.",
-    }
+    census = paper["current_inventory_audit"]["main_text_figure_census"]
+    assert (census["figures_reviewed"], census["schema_relevant_figures"]) == (1, 1)
+    assert (census["figure_only_records"], census["figure_only_atomic_values"]) == (
+        1,
+        3,
+    )
+    assert census["panels"][0]["figure_number"] == "3"
+    assert census["panels"][0]["review_status"] == "confirmed"
+    assert (
+        census["notes"] == "Figure 3 contains stability values absent from the caption."
+    )
     assert paper["current_event_ids"] == [audited["events"][-1]["event_id"]]
     assert all(event["reviewer_id"] == "ada" for event in paper["events"])
     assert store.reviewer_progress("calibration", "nobody")["papers"] == []
 
 
-def test_main_text_figure_census_rejects_incoherent_counts():
-    with pytest.raises(ValueError, match="cannot exceed figures reviewed"):
-        MainTextFigureCensus(figures_reviewed=1, schema_relevant_figures=2)
-
-    with pytest.raises(ValueError, match="require a schema-relevant figure"):
-        MainTextFigureCensus(
-            figures_reviewed=3,
-            schema_relevant_figures=0,
-            figure_only_atomic_values=1,
-        )
+@pytest.mark.parametrize(
+    "field",
+    [
+        "figures_reviewed",
+        "schema_relevant_figures",
+        "figure_only_records",
+        "figure_only_atomic_values",
+    ],
+)
+def test_main_text_figure_census_requires_panels_for_nonzero_totals(field):
+    with pytest.raises(ValueError, match="totals require panel annotations"):
+        MainTextFigureCensus(**{field: 1})
 
 
 def test_main_text_figure_census_derives_totals_from_subfigures():
@@ -977,7 +988,7 @@ def test_inventory_submission_requires_explicit_panel_review():
     assert request.main_text_figure_census.panels[0].review_status == "confirmed"
 
 
-def test_summary_renames_legacy_searched_sources_without_rewriting_the_event(
+def test_unbound_archive_inventory_does_not_gain_current_review_scope(
     empty_study,
 ):
     event = {
@@ -988,19 +999,19 @@ def test_summary_renames_legacy_searched_sources_without_rewriting_the_event(
 
     summary = StudyReviewStore.summary(empty_study, [event])
 
-    assert summary["inventory_audits"]["ada"]["review_scope_sources"] == ["main"]
-    assert "searched_sources" not in summary["inventory_audits"]["ada"]
+    assert summary["inventory_audits"]["ada"].get("review_scope_sources", []) == []
+    assert summary["inventory_audits"]["ada"]["searched_sources"] == ["main"]
     assert event["details"]["searched_sources"] == ["main"]
 
 
-def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
+def test_bundle_preserves_producer_schema_as_provenance(
     tmp_path, empty_study, document_payload
 ):
     store = StudyReviewStore(tmp_path)
     bundle = seed(store, empty_study, document_payload)
     source = store.storage.load_source("calibration", "10.0000--example")
     source.manifest["schema_version"] = 1
-    source.manifest["schema_sha256"] = "historical"
+    source.manifest["schema_sha256"] = "0" * 64
     source_path = (
         store.root / "state" / "sources" / "calibration" / "10.0000--example.json"
     )
@@ -1010,16 +1021,9 @@ def test_bundle_marks_readable_older_schema_as_not_exactly_comparable(
 
     reloaded = store.load_bundle("calibration", "10.0000--example")
 
-    assert bundle["schema_compatibility"]["exact_match"] is True
-    assert reloaded["schema_compatibility"] == {
-        "seed_schema_version": 1,
-        "current_schema_version": STUDY_SCHEMA_VERSION,
-        "seed_schema_sha256": "historical",
-        "current_schema_sha256": study_schema_sha256(),
-        "exact_match": False,
-        "readable_by_current_schema": True,
-        "structurally_compatible": False,
-    }
+    assert reloaded["ground_truth"] == bundle["ground_truth"]
+    assert reloaded["manifest"]["schema_version"] == 1
+    assert reloaded["manifest"]["schema_sha256"] == "0" * 64
 
 
 def test_human_citations_use_the_extraction_evidence_policy(
@@ -1307,7 +1311,7 @@ def test_census_precedes_inventory_completion(tmp_path, empty_study, document_pa
         "10.0000--example",
         InventoryAuditRequest(
             base_revision=1,
-            searched_sources=["main", "supplement"],
+            review_scope_sources=["main", "supplement"],
             expected_counts={"individual_devices": 2},
             missing_or_ambiguous="One stabilized specimen needs linkage.",
         ),
@@ -1351,7 +1355,7 @@ def test_field_completion_requires_current_record_decisions(
         "10.0000--example",
         InventoryAuditRequest(
             base_revision=1,
-            searched_sources=["main"],
+            review_scope_sources=["main"],
             expected_counts={"device_families": 1},
         ),
         "ada",
@@ -1435,7 +1439,7 @@ def test_stage_cannot_be_completed_twice(tmp_path, empty_study, document_payload
         "calibration",
         "10.0000--example",
         InventoryAuditRequest(
-            base_revision=1, searched_sources=["main"], expected_counts={}
+            base_revision=1, review_scope_sources=["main"], expected_counts={}
         ),
         "ada",
     )
@@ -1483,7 +1487,7 @@ def test_reviewer_can_reset_current_progress_without_erasing_history_or_others(
         "10.0000--example",
         InventoryAuditRequest(
             base_revision=corrected["revision"],
-            searched_sources=["main"],
+            review_scope_sources=["main"],
             expected_counts={"device_families": 1},
         ),
         "ada",
@@ -1557,7 +1561,7 @@ def test_stale_revisions_cannot_overwrite_other_reviewers(
         "calibration",
         "10.0000--example",
         InventoryAuditRequest(
-            base_revision=1, searched_sources=["main"], expected_counts={}
+            base_revision=1, review_scope_sources=["main"], expected_counts={}
         ),
         "ada",
     )
@@ -1589,7 +1593,7 @@ def test_concurrent_reviews_create_exactly_one_next_revision(
                 "10.0000--example",
                 InventoryAuditRequest(
                     base_revision=1,
-                    searched_sources=["main"],
+                    review_scope_sources=["main"],
                     expected_counts={"individual_devices": 1},
                 ),
                 reviewer,

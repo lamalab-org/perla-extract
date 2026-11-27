@@ -23,12 +23,6 @@ sys.path[:0] = [str(PROJECT_ROOT), str(PROJECT_ROOT / "src")]
 
 from perla_extract.study_extraction.artifacts import write_json_atomic  # noqa: E402
 from review_workbench.auth import clerk_key_allowed  # noqa: E402
-from review_workbench.expert_comparison import (  # noqa: E402
-    ComparisonReview,
-    ComparisonSource,
-    NativeUtilityReview,
-    PairwisePreferenceReview,
-)
 from review_workbench.review_storage import (  # noqa: E402
     ReviewPaperSource,
     ReviewRevision,
@@ -287,133 +281,6 @@ class BlobReviewStateStorage:
             return list(executor.map(head, paper_ids))
 
 
-class BlobComparisonStorage:
-    """Persist blinded comparison sources and reviewer drafts as immutable blobs."""
-
-    source_prefix = "workbench/comparison-sources/"
-    review_prefix = "workbench/comparison-reviews/"
-    utility_prefix = "workbench/comparison-utility/"
-    preference_prefix = "workbench/comparison-preferences/"
-
-    def __init__(self, blob: BlobStore):
-        self.blob = blob
-
-    @staticmethod
-    def _body(value: Any) -> bytes:
-        return json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
-
-    def _put_exclusive(self, pathname: str, value: Any) -> None:
-        try:
-            self.blob.put(
-                pathname, self._body(value), "application/json", overwrite=False
-            )
-        except Exception as error:
-            if self.blob.find(pathname) is not None:
-                raise FileExistsError(pathname) from error
-            raise
-
-    def _source_path(self, comparison_id: str) -> str:
-        return f"{self.source_prefix}{comparison_id}.json"
-
-    def _review_prefix(self, comparison_id: str, reviewer_id: str) -> str:
-        return f"{self.review_prefix}{comparison_id}/{reviewer_id}/"
-
-    def create(self, source: ComparisonSource) -> None:
-        try:
-            self._put_exclusive(
-                self._source_path(source.comparison_id), source.model_dump(mode="json")
-            )
-        except FileExistsError as error:
-            raise ValueError("comparison already exists") from error
-
-    def list_ids(self) -> list[str]:
-        return sorted(
-            Path(str(item["pathname"])).stem
-            for item in self.blob.list(self.source_prefix)
-            if str(item.get("pathname", "")).endswith(".json")
-        )
-
-    def load_source(self, comparison_id: str) -> ComparisonSource:
-        item = self.blob.find(self._source_path(comparison_id))
-        if item is None:
-            raise FileNotFoundError(comparison_id)
-        return ComparisonSource.model_validate_json(self.blob.download(item))
-
-    def load_review(
-        self, comparison_id: str, reviewer_id: str
-    ) -> ComparisonReview | None:
-        items = self.blob.list(self._review_prefix(comparison_id, reviewer_id))
-        if not items:
-            return None
-        latest = max(items, key=lambda item: str(item.get("pathname", "")))
-        return ComparisonReview.model_validate_json(self.blob.download(latest))
-
-    def compare_and_swap(
-        self, expected_revision: int, review: ComparisonReview
-    ) -> None:
-        current = self.load_review(review.comparison_id, review.reviewer_id)
-        current_revision = current.revision if current else 0
-        if (
-            current_revision != expected_revision
-            or review.revision != expected_revision + 1
-        ):
-            raise StaleRevisionError("comparison review changed in another session")
-        pathname = (
-            f"{self._review_prefix(review.comparison_id, review.reviewer_id)}"
-            f"{review.revision:08d}.json"
-        )
-        try:
-            self._put_exclusive(pathname, review.model_dump(mode="json"))
-        except FileExistsError as error:
-            raise StaleRevisionError(
-                "comparison review changed in another session"
-            ) from error
-
-    def _utility_path(self, comparison_id: str, reviewer_id: str) -> str:
-        return f"{self.utility_prefix}{comparison_id}/{reviewer_id}.json"
-
-    def load_utility(
-        self, comparison_id: str, reviewer_id: str
-    ) -> NativeUtilityReview | None:
-        item = self.blob.find(self._utility_path(comparison_id, reviewer_id))
-        return (
-            NativeUtilityReview.model_validate_json(self.blob.download(item))
-            if item
-            else None
-        )
-
-    def save_utility(self, review: NativeUtilityReview) -> None:
-        try:
-            self._put_exclusive(
-                self._utility_path(review.comparison_id, review.reviewer_id),
-                review.model_dump(mode="json"),
-            )
-        except FileExistsError as error:
-            raise ValueError("native utility review is already submitted") from error
-
-    def _preference_path(self, comparison_id: str, reviewer_id: str) -> str:
-        return f"{self.preference_prefix}{comparison_id}/{reviewer_id}.json"
-
-    def load_preference(
-        self, comparison_id: str, reviewer_id: str
-    ) -> PairwisePreferenceReview | None:
-        item = self.blob.find(self._preference_path(comparison_id, reviewer_id))
-        return (
-            PairwisePreferenceReview.model_validate_json(self.blob.download(item))
-            if item
-            else None
-        )
-
-    def save_preference(self, review: PairwisePreferenceReview) -> None:
-        try:
-            self._put_exclusive(
-                self._preference_path(review.comparison_id, review.reviewer_id),
-                review.model_dump(mode="json"),
-            )
-        except FileExistsError as error:
-            raise ValueError("pairwise preference is already submitted") from error
-
-
 class VercelReviewApplication(ReviewApplication):
     """Adapt the filesystem-oriented review core to Vercel's ephemeral runtime.
 
@@ -439,7 +306,6 @@ class VercelReviewApplication(ReviewApplication):
             pdfs,
             ground_truth,
             BlobReviewStateStorage(blob),
-            BlobComparisonStorage(blob),
         )
         self._hydrate()
 
@@ -505,9 +371,7 @@ class VercelReviewApplication(ReviewApplication):
                 "application/json",
             )
 
-    def _pdf_cache_path(
-        self, paper_id: str, source: str, split: str | None
-    ) -> Path:
+    def _pdf_cache_path(self, paper_id: str, source: str, split: str | None) -> Path:
         """Keep split-scoped downloads separate inside an ephemeral runtime."""
 
         self.store.validate_identity(split or "dev", paper_id)
@@ -520,9 +384,7 @@ class VercelReviewApplication(ReviewApplication):
         suffix = ".supplement.pdf" if source == "supplement" else ".pdf"
         return directory / f"{paper_id}{suffix}"
 
-    def ensure_pdf(
-        self, paper_id: str, source: str, split: str | None = None
-    ) -> Path:
+    def ensure_pdf(self, paper_id: str, source: str, split: str | None = None) -> Path:
         """Download the split-scoped source, falling back only to legacy storage."""
 
         exact_key = (split, paper_id, source)
@@ -579,9 +441,7 @@ class VercelReviewApplication(ReviewApplication):
             overwrite=False,
         )
 
-    def _record_workbook_outcome(
-        self, relative: Path, outcome: dict[str, Any]
-    ) -> None:
+    def _record_workbook_outcome(self, relative: Path, outcome: dict[str, Any]) -> None:
         """Persist an immutable accepted or rejected validation outcome."""
 
         pathname = PurePosixPath(

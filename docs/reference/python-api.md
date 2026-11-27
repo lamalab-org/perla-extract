@@ -20,12 +20,12 @@ report = extract_study(
 
 Docling is the default parser, matching the CLI and experiment commands.
 
-Refinement runs by default; `use_refinement=False` disables it.
-`use_targeted_repair=False` disables the audit-driven recovery call.
+Refinement and targeted repair are optional. Enable them explicitly with
+`use_refinement=True` and `use_targeted_repair=True`.
 Pass `config_file="method.toml"` to configure `[stages.default]` and stage overrides
 using the same format as experiments. Python callers can instead pass a `deployments`
 mapping from `"default"` and stage names to `DeploymentSettings` objects; it uses the
-same inheritance rules. The older per-step model keywords are no longer accepted.
+same inheritance rules.
 
 ::: perla_extract.study_extraction.cli.extract_study
     options:
@@ -74,19 +74,6 @@ score requires correct scientific values in the correct context; separate invent
 value-recovery and attribution reports explain mismatches.
 
 ::: perla_extract.study_extraction.evaluation.evaluate_study
-    options:
-      show_root_heading: true
-
-## Convert to the historical reduced schema
-
-Use `to_reduced_with_report` when conversion provenance matters. `to_reduced` is a
-convenience wrapper that returns only the validated reduced cells.
-
-::: perla_extract.study_extraction.compatibility.to_reduced_with_report
-    options:
-      show_root_heading: true
-
-::: perla_extract.study_extraction.compatibility.to_reduced
     options:
       show_root_heading: true
 

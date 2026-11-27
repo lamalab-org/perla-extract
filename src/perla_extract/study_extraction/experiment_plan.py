@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import random
 import re
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,7 +22,6 @@ from .configuration import (
     merge_deployments,
     parse_settings,
     resolve_config,
-    tomllib,
 )
 from .models import StrictModel
 from .reference_dataset import verify_dataset
@@ -62,9 +62,7 @@ class ExperimentSettings(StrictModel):
     extraction: dict[str, Any] = Field(default_factory=dict)
     stages: dict[str, dict[str, Any]] = Field(default_factory=dict)
     tracing: dict[str, Any] = Field(default_factory=dict)
-    control: dict[str, Any] | None = None
-    treatment: dict[str, Any] | None = None
-    arms: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    arms: dict[str, dict[str, Any]]
     baseline: str = "control"
     papers: list[Paper] = Field(default_factory=list)
     dataset: str | None = None
@@ -73,16 +71,9 @@ class ExperimentSettings(StrictModel):
 
     @model_validator(mode="after")
     def complete_design(self):
-        if self.arms:
-            if self.control is not None or self.treatment is not None:
-                raise ValueError("Use [arms.NAME] or [control]/[treatment], not both")
-            if len(self.arms) < 2 or self.baseline not in self.arms:
-                raise ValueError("Declare at least two arms and name their baseline")
-        elif (
-            self.control is None or self.treatment is None or self.baseline != "control"
-        ):
-            raise ValueError("Declare both [control] and [treatment], or named arms")
-        if any(not re.fullmatch(r"[a-z][a-z0-9_-]*", name) for name in self.methods):
+        if len(self.arms) < 2 or self.baseline not in self.arms:
+            raise ValueError("Declare at least two arms and name their baseline")
+        if any(not re.fullmatch(r"[a-z][a-z0-9_-]*", name) for name in self.arms):
             raise ValueError(
                 "Arm names must start with a lowercase letter and use a-z, 0-9, _ or -"
             )
@@ -95,13 +86,6 @@ class ExperimentSettings(StrictModel):
         if self.repeat_subset and (not self.dataset or self.repeats != 1):
             raise ValueError("repeat_subset requires a dataset and repeats = 1")
         return self
-
-    @property
-    def methods(self) -> dict[str, dict[str, Any]]:
-        return self.arms or {
-            "control": self.control or {},
-            "treatment": self.treatment or {},
-        }
 
 
 @dataclass(frozen=True)
@@ -129,14 +113,6 @@ class Experiment:
     repeat_papers: list[str]
     resume: bool = False
     dataset_role: str | None = None
-
-    @property
-    def study(self) -> ComparisonStudy:
-        return next(iter(self.studies.values()))
-
-    @property
-    def legacy(self) -> bool:
-        return not self.settings.arms
 
     def ordered_attempts(self) -> list[Attempt]:
         """Shuffle papers and arms within each repeat; finish primary runs first."""
@@ -172,7 +148,7 @@ def _arm_settings(settings: ExperimentSettings, arm: str, directory: Path) -> di
         if set(shared) - {"extraction", "stages", "tracing"}:
             raise ValueError("config must be an ordinary extraction configuration")
         base = parse_settings(shared, method_path.parent)
-    overrides = dict(settings.methods[arm])
+    overrides = dict(settings.arms[arm])
     overrides.pop("reservation_usd", None)
     arm_stages = overrides.pop("stages", {})
     if not isinstance(arm_stages, dict):
@@ -224,9 +200,7 @@ def prepare(path: Path, *, resume: bool = False) -> Experiment:
         )
     if resume and not (output / "plan.json").is_file():
         raise ValueError(f"No frozen experiment to resume: {output}")
-    methods = {
-        arm: _arm_settings(settings, arm, path.parent) for arm in settings.methods
-    }
+    methods = {arm: _arm_settings(settings, arm, path.parent) for arm in settings.arms}
     inputs = {path: file_digest(path)}
     if settings.config:
         config_path = _path(path.parent, settings.config)
@@ -257,7 +231,7 @@ def prepare(path: Path, *, resume: bool = False) -> Experiment:
         ):
             inputs[source] = file_digest(source)
     reservations = {}
-    for arm, method in settings.methods.items():
+    for arm, method in settings.arms.items():
         reservation = method.get("reservation_usd")
         if reservation is not None:
             if (

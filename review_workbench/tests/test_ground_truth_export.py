@@ -40,6 +40,24 @@ def test_adjudicated_app_export_can_be_scored(tmp_path, empty_study, document_pa
     _adjudicate(store, study, document_payload)
     export = build_ground_truth_export(store, SPLIT, PAPER_ID)
     target = write_ground_truth_export(export, tmp_path / "frozen")
+    review = json.loads((target / "manifest.json").read_text())["review"]
+    assert review["completed_stage_names"] == [
+        "adjudication",
+        "completeness",
+        "fields",
+        "inventory",
+    ]
+    assert "completed_stages" not in review
+    assert {
+        event.details["stage"]: event.reviewer_id
+        for event in export.review_events
+        if event.kind == "stage_complete"
+    } == {
+        "inventory": "ada",
+        "fields": "ada",
+        "completeness": "ada",
+        "adjudication": "ada",
+    }
     output = tmp_path / "evaluation.json"
     result = CliRunner().invoke(
         evaluate,
@@ -91,7 +109,7 @@ def _adjudicate(
         PAPER_ID,
         InventoryAuditRequest(
             base_revision=bundle["revision"],
-            searched_sources=["main", "supplement"],
+            review_scope_sources=["main", "supplement"],
             expected_counts={},
         ),
         "ada",
@@ -195,7 +213,12 @@ def test_saved_scientific_correction_changes_the_reference_not_the_seed(
         ],
     )
     assert result.exit_code == 0, result.output
-    assert json.loads(output.read_text())["core_facts"]["groups"]["material_device_identity"]["f1"] == 0
+    assert (
+        json.loads(output.read_text())["core_facts"]["groups"][
+            "material_device_identity"
+        ]["f1"]
+        == 0
+    )
 
 
 def test_invalid_historical_seed_does_not_block_corrected_reference(
@@ -261,9 +284,7 @@ def _study_with_evidence(study: dict, quote: str) -> dict:
             "polarity": "not_reported",
             "full_stack_raw": None,
             "layers": [],
-            "absorber_formula": None,
-            "absorber_properties": [],
-            "absorber_constituents": [],
+            "absorbers": [],
             "processing_steps": [],
             "evidence": [{"block_id": "main_p1_text_1", "quote": quote}],
         }

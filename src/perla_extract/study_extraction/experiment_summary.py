@@ -273,9 +273,9 @@ def write_summary(result: dict, path: Path) -> None:
             "| Which fact groups changed? | [figure-data/group_scores.csv](figure-data/group_scores.csv): use `attributed` for primary quality and `recovery` for information found; inspect explanations for context errors |",
             "| Which specific fields changed? | [figure-data/subfield_scores.csv](figure-data/subfield_scores.csv): material identity, outcomes, protocol and processing breakdowns; filter `quality_available` for verified runs |",
             "| What did each attempt consume? | [figure-data/runs.csv](figure-data/runs.csv): scores, tokens, requests, time, cost and failures; empty cells mean unavailable |",
-            "| Which exact values were wrong? | `runs/paper-NNN/ARM-REPEAT/evaluation.json`: matched and unmatched field paths; `extraction.json` contains the prediction |",
-            "| Why did a run fail? | [errors.json](errors.json) and that run's `report.json` / `events.jsonl` |",
-            "| What was planned and scored? | [experiment.toml](experiment.toml), [runs.csv](runs.csv) (the planned roster), [inputs.json](inputs.json) (hashes), [comparison.json](comparison.json) (full result) |",
+            "| Which exact values were wrong? | Follow `run_dir` in [runs.csv](runs.csv) to `evaluation.json` for matched and unmatched field paths, and `extraction.json` for the prediction |",
+            "| Why did a run fail? | Follow `run_dir` in [runs.csv](runs.csv) to that run's `report.json` / `events.jsonl`; the campaign root retains `errors.json` |",
+            "| What was planned and scored? | [study.json](study.json) (paired design), [runs.csv](runs.csv) (planned roster), [comparison.json](comparison.json) (full result); the campaign root retains the experiment and input hashes |",
         ]
     )
     if result["issues"]:
@@ -313,7 +313,7 @@ def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
         )
     lines += [
         "",
-        "Costs include failures and count shared baseline attempts once.",
+        "Costs include failures and count shared baseline attempts once. Execution failures are retained in `errors.json`.",
         "",
         f"New recorded provider cost: **${spending['known_run_cost_usd']:.6f}**. Unresolved attempt costs: **{spending['unresolved_attempts']}**.",
         f"Committed spending, including prior spending and unknown-cost reservations: **${spending['committed_usd']:.6f}**. "

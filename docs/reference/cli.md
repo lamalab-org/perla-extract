@@ -18,7 +18,6 @@ final report to stdout and writes progress logs to stderr.
 | `--supplement PATH` | none | Supporting Information PDF |
 | `--output-dir DIRECTORY` | `study_extraction` | New or empty artifact directory |
 | `--env-file PATH` | `.env.local` when present | Provider environment variables to load |
-| `--reduced-export` | off | Also write historical reduced-schema compatibility files |
 
 Variables already present in the process environment take precedence over the env
 file. Provider credentials are consumed by LiteLLM and are not written to
@@ -194,7 +193,7 @@ Without `--resume`, output must be new. Resume verifies the frozen method, input
 implementation and runtime; it reuses sealed attempts and never retries a reserved slot.
 A terminal failure stays in the roster. An uncertain attempt keeps its cost reservation.
 
-The single TOML defines shared `[extraction]` settings, `[control]` and `[treatment]`
+The single TOML defines shared `[extraction]` settings, `[arms.control]` and `[arms.treatment]`
 overrides, and `[[papers]]` with `pdf`, optional `supplement`, and `reference` paths.
 Each paper block explicitly links the main article, its SI, and the reviewed
 ground-truth directory for both sources. Filenames need not share a stem. The
@@ -202,11 +201,11 @@ reference manifest supplies the paper ID; source hashes verify the file set,
 while the TOML fields assign the main/SI roles.
 Paths are relative to the TOML file. `output` names a new results directory;
 `repeats` defaults to 1 and `order_seed` to 0. Shared `[stages]` and `[tracing]` use
-the extraction configuration format, including `[stages.default]`; `[control.stages.NAME]` or
-`[treatment.stages.NAME]` override a stage in one arm.
+the extraction configuration format, including `[stages.default]`; `[arms.control.stages.NAME]` or
+`[arms.treatment.stages.NAME]` override a stage in one arm.
 
-To compare parsers, set `parser = "pymupdf"` in `[control]` and
-`parser = "docling"` in `[treatment]`. Both arms must use the same PDF/SI files
+To compare parsers, set `parser = "pymupdf"` in `[arms.control]` and
+`parser = "docling"` in `[arms.treatment]`. Both arms must use the same PDF/SI files
 and references. Their parsed-evidence fingerprints may differ; both are retained.
 Backend-specific dependencies are recorded, while shared dependency versions,
 instructions, implementation and scoring remain subject to the usual checks.
@@ -214,9 +213,11 @@ instructions, implementation and scoring remain subject to the usual checks.
 `--check` prints the validated paper/SI/reference mapping and checks every source/reference hash and setting without parsing PDFs,
 creating outputs or making model calls. Running freezes the intended roster before
 extraction, assigns independent response caches, scores each usable result and
-writes `summary.md` (read first), `comparison.json`, and figure data. Failed attempts remain visible and prevent a complete
-quality result. Existing output directories are refused; there is no automatic
-campaign retry or resume. See [Run an experiment](../workflows/extraction-ablations.md).
+writes campaign accounting in `summary.md` (read first) and `comparison.json`.
+Paired results and figure data live under `comparisons/CANDIDATE-vs-BASELINE/primary/`.
+Failed attempts remain visible and prevent a complete quality result. Use explicit
+`--resume` to continue an interrupted campaign; failed slots are never retried.
+See [Run an experiment](../workflows/extraction-ablations.md).
 
 ## Compare externally executed runs
 
