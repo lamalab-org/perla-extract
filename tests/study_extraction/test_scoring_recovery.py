@@ -11,8 +11,8 @@ from perla_extract.study_extraction.evaluation import (
     evaluate_study_with_explanations,
 )
 from perla_extract.study_extraction.models import Layer, ReportedValue
+from perla_extract.study_extraction.scoring_context import equal_value
 from perla_extract.study_extraction.scoring_explanation import FactSelection
-from perla_extract.study_extraction.scoring_facts import equal_value
 from perla_extract.study_extraction.scoring_vocabulary import (
     material_name,
     scoped_property_name,

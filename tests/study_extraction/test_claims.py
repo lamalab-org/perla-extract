@@ -5,6 +5,7 @@ from perla_extract.study_extraction.claims import (
     ExperimentalObject,
     SourceClaim,
     assembly_blocks,
+    assembly_evidence_payload,
     assembly_spans,
     audit_claim_coverage,
     combine_ledgers,
@@ -91,7 +92,7 @@ def test_assembly_keeps_claim_evidence_and_the_main_paper_header():
     assert [block.block_id for block in selected] == ["title", "result"]
 
 
-def test_assembly_includes_only_a_bounded_local_neighborhood():
+def test_assembly_keeps_the_complete_cited_table():
     block = EvidenceBlock(
         block_id="recipe",
         source="supplement",
@@ -118,7 +119,76 @@ def test_assembly_includes_only_a_bounded_local_neighborhood():
         "First row",
         "The solution was stirred",
         "It was deposited immediately",
+        "Last row",
     ]
+
+
+def test_assembly_selection_retains_linked_context_through_citation_decoding():
+    from perla_extract.study_extraction.transport import expand_span_citations
+
+    blocks = [
+        EvidenceBlock(
+            block_id="title", source="main", page=1, kind="text", text="Paper title"
+        ),
+        EvidenceBlock(
+            block_id="table",
+            source="main",
+            page=3,
+            kind="table",
+            text="Device | PCE (%)\nControl | 20\nTreated | 24",
+            metadata={"context_block_ids": ["caption"]},
+        ),
+        EvidenceBlock(
+            block_id="caption",
+            source="main",
+            page=3,
+            kind="text",
+            text="Table 1. Reverse J-V scans.",
+            metadata={"context_block_ids": ["note", "table"]},
+        ),
+        EvidenceBlock(
+            block_id="note",
+            source="supplement",
+            page=2,
+            kind="text",
+            text="Both measurements used 100 mW/cm2.",
+        ),
+        EvidenceBlock(
+            block_id="unrelated",
+            source="main",
+            page=3,
+            kind="text",
+            text="A different experiment used 50 mW/cm2.",
+        ),
+    ]
+    ledger = ClaimLedger(
+        objects=[
+            ExperimentalObject(
+                object_id="control",
+                label="Control",
+                role="individual_device",
+                scope="target",
+                evidence=[citation("table", "Control | 20")],
+            )
+        ],
+        claims=[],
+    )
+
+    selected = assembly_blocks(blocks, ledger)
+    spans = assembly_spans(selected, ledger)
+    payload = assembly_evidence_payload(selected, ledger)
+
+    assert [b.block_id for b in selected] == ["title", "table", "caption", "note"]
+    assert {s.block_id for s in spans} == {"title", "table", "caption", "note"}
+    assert payload[1]["context_block_ids"] == ["caption"]
+    assert "Device | PCE (%)" in payload[1]["spans"].values()
+    chosen = [s.span_id for s in spans if s.text in {"Control | 20", blocks[3].text}]
+    assert expand_span_citations({"evidence": chosen}, spans) == {
+        "evidence": [
+            {"block_id": "table", "quote": "Control | 20"},
+            {"block_id": "note", "quote": blocks[3].text},
+        ]
+    }
 
 
 def test_exact_repeated_statements_coalesce_with_reading_provenance():

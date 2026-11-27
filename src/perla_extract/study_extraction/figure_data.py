@@ -11,6 +11,7 @@ import csv
 from pathlib import Path
 
 from .artifacts import write_json_exclusive
+from .scoring_diagnostics import FactDiagnostic
 from .scoring_fields import IMPORTANT_FIELDS
 
 
@@ -155,18 +156,7 @@ def export_tables(result: dict, directory: Path) -> None:
             "arm",
             "repeat",
             "side",
-            "path",
-            "rule_id",
-            "statistical_level",
-            "value_interpretation",
-            "unit_source",
-            "unsupported_condition_name",
-            "candidate_count",
-            "owner_paired",
-            "context_available",
-            "eligible_candidates",
-            "matched",
-            "blockers",
+            *FactDiagnostic.model_fields,
             "source_paths",
         ],
         diagnostics,

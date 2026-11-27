@@ -26,8 +26,9 @@ from perla_extract.study_extraction.models import (
     ReportedValue,
     StudyExtraction,
 )
+from perla_extract.study_extraction.quantities import is_plain_number
 from perla_extract.study_extraction.reference_release import ReferenceRelease
-from perla_extract.study_extraction.scoring_facts import equal_value, is_plain_number
+from perla_extract.study_extraction.scoring_context import equal_value
 
 EVIDENCE = [{"block_id": "synthetic", "quote": "synthetic test fixture"}]
 
@@ -224,7 +225,7 @@ def test_suffix_equivalence_does_not_relax_scales_offsets_or_qualifiers(raw, uni
 def test_global_not_local_assignment_ambiguity(weights, expected):
     with patch(
         "perla_extract.study_extraction.evaluation._record_similarity",
-        side_effect=lambda a, b, *_: weights[a][b],
+        side_effect=lambda a, b, *_, **__: weights[a][b],
     ):
         pairs = _record_pairs("device_families", [0, 1], [0, 1], [], 0.35, 0.01, 0.0)
     assert any(ambiguous for _, _, _, ambiguous in pairs) is expected

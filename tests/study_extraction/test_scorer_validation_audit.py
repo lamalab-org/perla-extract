@@ -2,12 +2,12 @@
 
 import pytest
 
-from examples.scoring.equivalence_probe import CASES
+from examples.scoring.calibration import EQUIVALENCE_CASES
 from examples.scoring.run import quantity, seed_study
 from examples.scoring.validate import controls, convert_units, validate_control
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
 from perla_extract.study_extraction.models import StudyExtraction
-from perla_extract.study_extraction.scoring_facts import equal_value
+from perla_extract.study_extraction.scoring_context import equal_value
 
 
 def test_known_dimensional_arithmetic_preserves_values():
@@ -76,7 +76,7 @@ def test_nonunique_protocol_does_not_claim_known_record_identity():
             expected,
             id=name,
         )
-        for name, left, right, expected in CASES
+        for name, left, right, expected in EQUIVALENCE_CASES
     ],
 )
 def test_independently_specified_scientific_equivalences(name, left, right, expected):
@@ -254,3 +254,41 @@ def test_public_reference_audit_still_refuses_changed_manifest(one_paper_release
     path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="manifest hash mismatch"):
         audit_release(one_paper_release)
+
+
+def test_public_reference_audit_retains_explicit_quantity_conflicts():
+    from pathlib import Path
+
+    from examples.scoring.reference_audit import inspect_reference
+
+    reference = (
+        Path(__file__).resolve().parents[2]
+        / "data/study_extraction/ground_truth/v2/dev/10.1002--solr.201900370"
+    )
+    score, audit = inspect_reference(reference)
+    expected = {f"/individual_devices/{i}/reported_properties/6" for i in range(4)}
+    assert audit["self_score"]["status"] == "needs_review"
+    for view in (score.core_facts, score.core_facts.recovery):
+        assert set(view.unmatched_truth_paths) == expected
+        assert set(view.unmatched_prediction_paths) == expected
+        assert view.micro.matched == view.micro.truth - 4
+        assert view.micro.truth == view.micro.predicted
+    assert len(audit["self_score"]["issues"]) == 8
+    assert all(i["kind"] == "quantity_conflict" for i in audit["self_score"]["issues"])
+
+
+@pytest.mark.parametrize("side", ["truth", "prediction"])
+def test_quantity_conflicts_do_not_excuse_unexplained_reference_loss(monkeypatch, side):
+    from pathlib import Path
+
+    from examples.scoring import reference_audit
+
+    reference = (
+        Path(__file__).resolve().parents[2]
+        / "data/study_extraction/ground_truth/v2/dev/10.1002--solr.201900370"
+    )
+    score, _ = reference_audit.inspect_reference(reference)
+    getattr(score.core_facts.recovery, f"unmatched_{side}_paths").append("/unexplained")
+    monkeypatch.setattr(reference_audit, "evaluate_study", lambda *a, **kw: score)
+    with pytest.raises(ValueError, match="Unexplained reference self-check failure"):
+        reference_audit.inspect_reference(reference)

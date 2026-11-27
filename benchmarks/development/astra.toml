@@ -1,0 +1,25 @@
+# Candidate Astra direct baseline; settings are not yet calibrated.
+[stages.default]
+model = "openai/gpt-6.2-astra"
+api_key_env = "OPENAI_API_KEY"
+service_tier = "default"
+reasoning_effort = "high"
+# Shared study ceilings; output allowance includes reasoning.
+context_tokens = 262144
+max_input_tokens = 180000
+max_output_tokens = 40000
+
+[extraction]
+parser = "docling"
+use_claim_ledger = false
+use_refinement = false
+use_targeted_repair = false
+use_enrichment = false
+max_model_calls = 1
+max_total_tokens = 220000
+max_elapsed_seconds = 1050
+timeout_seconds = 900
+
+[tracing]
+langfuse = true
+capture_content = true

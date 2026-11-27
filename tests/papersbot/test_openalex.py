@@ -248,17 +248,17 @@ def test_historical_backfill_does_not_move_checkpoint_backward(tmp_path: Path):
     assert result.openalex.checkpoint_advanced is False
 
 
-def test_legacy_feed_identifier_is_migrated_to_doi(tmp_path: Path):
+def test_canonical_doi_keeps_prior_sources_and_skips_terminal_download(tmp_path: Path):
     state_path = tmp_path / "state/state.json"
     downloaded_file = tmp_path / "shared.pdf"
-    downloaded_file.write_bytes(b"%PDF-1.7\nlegacy")
+    downloaded_file.write_bytes(b"%PDF-1.7\ncurrent")
     save_state(
         state_path,
         BotState(
             papers={
-                "publisher-id": PaperRecord(
-                    identifier="publisher-id",
-                    sources=["rss:old"],
+                "10.1234/shared": PaperRecord(
+                    identifier="10.1234/shared",
+                    sources=["rss:prior"],
                     doi="10.1234/shared",
                     status="downloaded",
                     attempts=1,
@@ -302,4 +302,10 @@ def test_legacy_feed_identifier_is_migrated_to_doi(tmp_path: Path):
 
     state = load_state(state_path)
     assert list(state.papers) == ["10.1234/shared"]
+    retained = state.papers["10.1234/shared"]
+    assert set(retained.sources) == {"rss:prior", "rss:https://example.test/feed"}
+    assert retained.attempts == 1
+    assert (
+        retained.pdf_sha256 == hashlib.sha256(downloaded_file.read_bytes()).hexdigest()
+    )
     assert result.skip_counts == {"terminal:downloaded": 1}

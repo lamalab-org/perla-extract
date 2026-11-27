@@ -33,11 +33,8 @@ from perla_extract.study_extraction.models import (
     StudyExtraction,
     study_schema_sha256,
 )
-from perla_extract.study_extraction.scoring_facts import (
-    UnorderedContext,
-    equal_value,
-    is_plain_number,
-)
+from perla_extract.study_extraction.quantities import is_plain_number
+from perla_extract.study_extraction.scoring_context import UnorderedContext, equal_value
 
 EVIDENCE = [EvidenceCitation(block_id="b", quote="reported")]
 
@@ -275,19 +272,6 @@ def test_relative_tolerance_does_not_become_one_absolute_unit_below_one():
     assert report.field_agreement.reported_value_accuracy == 0
 
 
-def test_reference_exclusions_are_rejected_before_scoring():
-    """Every system must face the same complete reference, not its own exclusions."""
-
-    with pytest.raises(
-        ValueError, match="reference exclusions are no longer supported"
-    ):
-        evaluate_study(
-            study(),
-            study(prefix="prediction"),
-            ignored_truth_record_keys=["device_families:truth-family"],
-        )
-
-
 def test_parent_relationships_are_scored_separately_from_record_content():
     prediction = study(prefix="prediction")
     prediction.individual_devices[0].family_id = "wrong-family"
@@ -336,17 +320,6 @@ def test_reordering_schema_lists_does_not_change_scalar_agreement():
     report = evaluate_study(truth, prediction)
 
     assert report.field_agreement.scalar_field_accuracy == 1
-
-
-def test_unknown_uncertainty_mask_key_is_rejected():
-    with pytest.raises(
-        ValueError, match="reference exclusions are no longer supported"
-    ):
-        evaluate_study(
-            study(),
-            study(prefix="prediction"),
-            ignored_truth_record_keys=["device_families:typo"],
-        )
 
 
 def quantity(name, number, unit):
@@ -585,7 +558,10 @@ def test_scoring_guide_numeric_examples(reference, prediction, expected):
     """
 
     config = EvaluationConfig()
-    left, right = value(*reference), value(*prediction)
+    # This table exercises generic physical quantities. PV percentage-point
+    # conventions are covered separately with explicitly named PCE/FF claims.
+    left = value(*reference).model_copy(update={"name": "reported quantity"})
+    right = value(*prediction).model_copy(update={"name": "reported quantity"})
     for a, b in ((left, right), (right, left)):
         assert (
             equal_value(
@@ -1071,6 +1047,7 @@ def _write_frozen_truth_inputs(tmp_path, artifact_version):
                 "evidence_version": 1,
                 "evidence_document_sha256": "a" * 64,
                 "study_schema_sha256": study_schema_sha256(),
+                "study_schema_version": 8,
                 "paper_id": "paper-a",
                 "split": "test",
                 "source_manifest": {"main": "source.pdf"},
@@ -1138,7 +1115,7 @@ def test_cli_verifies_frozen_truth_manifest(tmp_path, artifact_version):
 def test_cli_rejects_unresolved_reference_without_writing_scores(
     tmp_path, artifact_version
 ):
-    # Start with a valid legacy/current manifest, then expose an unresolved decision.
+    # Start with a finalized current manifest, then expose an unresolved decision.
     _write_frozen_truth_inputs(tmp_path, artifact_version)
     manifest_path = tmp_path / "truth" / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -1186,8 +1163,8 @@ def test_default_tolerance_has_no_absolute_floor(a, b, unit, expected):
 
 @pytest.mark.parametrize("raw", ["1e-13", "-1e-13", "0.0000000000001 m"])
 def test_inconsistent_tiny_raw_number_cannot_match_zero(raw):
-    inconsistent = value(raw, 0.0, "m")
-    zero = value("0", 0.0, "m")
+    inconsistent = value(raw, 0.0, "m").model_copy(update={"name": "thickness"})
+    zero = value("0", 0.0, "m").model_copy(update={"name": "thickness"})
     config = EvaluationConfig()
 
     assert not is_plain_number(inconsistent)
@@ -1211,7 +1188,12 @@ def test_inconsistent_tiny_raw_number_cannot_match_zero(raw):
     ],
 )
 def test_raw_number_consistency_uses_only_relative_tolerance(raw, number, expected):
-    assert is_plain_number(value(raw, number, "m")) is expected
+    assert (
+        is_plain_number(
+            value(raw, number, "m").model_copy(update={"name": "thickness"})
+        )
+        is expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -1517,7 +1499,7 @@ def test_old_scoring_report_is_not_silently_loaded_as_current():
 
     payload = evaluate_study(study(), study()).model_dump()
     assert payload["format_version"] == 17
-    assert payload["core_facts"]["profile"] == "core-scientific-facts-v19"
+    assert payload["core_facts"]["profile"] == "core-scientific-facts-v24"
     payload["format_version"] = 9
     with pytest.raises(ValidationError):
         EvaluationReport.model_validate(payload)

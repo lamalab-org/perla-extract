@@ -135,35 +135,107 @@ def test_default_http_session_retries_only_safe_transient_failures():
     assert retries.respect_retry_after_header is True
 
 
-def test_load_state_migrates_the_feed_only_source_field(tmp_path: Path):
-    path = tmp_path / "state.json"
-    path.write_text(
-        json.dumps(
-            {
-                "format_version": 1,
-                "papers": {
-                    "old-id": {
-                        "identifier": "old-id",
-                        "source_feed": "https://example.test/feed",
-                    }
-                },
-            }
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"papers": {}},
+        *(
+            {"format_version": version, "papers": {}}
+            for version in (1, 4, 6, True, 5.0)
         ),
-        encoding="utf-8",
-    )
+        {"format_version": 5},
+        {"format_version": 5, "papers": []},
+        {"format_version": 5, "papers": {}, "unrecognized_records": []},
+        {"format_version": 5, "papers": {"paper": {"identifier": "different"}}},
+        {
+            "format_version": 5,
+            "papers": {"paper": {"identifier": "paper", "doi": "10.1234/shared"}},
+        },
+        {
+            "format_version": 5,
+            "papers": {
+                "paper": {
+                    "identifier": "paper",
+                    "source_feed": "https://example.test/feed",
+                }
+            },
+        },
+    ],
+)
+def test_invalid_state_fails_before_requests_or_writes(tmp_path: Path, payload):
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    state_path = state_dir / "state.json"
+    original = json.dumps(payload).encode()
+    state_path.write_bytes(original)
 
-    state = load_state(path)
+    class NoRequests:
+        calls = []
 
-    assert state.format_version == 5
-    assert state.papers["old-id"].sources == ["https://example.test/feed"]
+        def get(self, *args, **kwargs):
+            self.calls.append((args, kwargs))
+            raise AssertionError("Invalid state must fail before HTTP requests")
+
+    session = NoRequests()
+    with pytest.raises(ValueError):
+        run_papersbot(
+            tmp_path / "papers",
+            state_dir=state_dir,
+            feeds=["https://example.test/feed"],
+            openalex_enabled=False,
+            session=session,
+            feedparser_module=FakeFeedParser(),
+        )
+    assert not session.calls
+    assert state_path.read_bytes() == original
+    assert {p.name for p in state_dir.iterdir()} == {"state.json"}
+    assert not (tmp_path / "papers").exists()
 
 
-def test_load_state_refuses_a_newer_format_instead_of_dropping_fields(tmp_path: Path):
+def test_current_state_roundtrip_preserves_cursor_attempts_and_pdf_metadata(
+    tmp_path: Path,
+):
+    from datetime import date
+
+    from perla_extract.papersbot.bot import save_state
+    from perla_extract.papersbot.models import BotState, PaperDocument, PaperRecord
+
     path = tmp_path / "state.json"
-    path.write_text('{"format_version": 999, "papers": {}, "future": true}')
+    state = BotState(
+        openalex_last_successful_date=date(2026, 8, 20),
+        papers={
+            "10.1234/shared": PaperRecord(
+                identifier="10.1234/shared",
+                doi="10.1234/shared",
+                sources=["rss:journal", "openalex:topic"],
+                attempts=2,
+                status="error",
+                error="A later source timed out",
+                documents=[
+                    PaperDocument(
+                        source_url="https://example.test/article.pdf",
+                        local_file="article.pdf",
+                        sha256="a" * 64,
+                        pdf_source="openalex",
+                        access_basis="open_access",
+                    )
+                ],
+            )
+        },
+    )
+    save_state(path, state)
+    original = path.read_bytes()
+    loaded = load_state(path)
+    assert loaded == state
+    assert loaded.openalex_last_successful_date == date(2026, 8, 20)
+    assert path.read_bytes() == original
 
-    with pytest.raises(ValueError, match="newer than supported"):
-        load_state(path)
+
+def test_missing_state_starts_fresh_without_creating_a_file(tmp_path: Path):
+    path = tmp_path / "state.json"
+    state = load_state(path)
+    assert state.format_version == 5 and state.papers == {}
+    assert not path.exists()
 
 
 def test_state_writers_use_independent_atomic_temporary_files(tmp_path: Path):

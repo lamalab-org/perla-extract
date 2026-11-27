@@ -25,6 +25,7 @@ from .artifacts import write_json_atomic
 from .logging import logger
 from .models import EvidenceBlock
 from .progress import heartbeat
+from .spans import linked_context_closure, linked_context_ids
 
 # Bump only when the cache envelope itself becomes incompatible. Parser code,
 # block schema, source, and backend changes are fingerprinted automatically.
@@ -157,27 +158,25 @@ def _formatted_line(line: dict[str, Any]) -> str:
     )
 
 
-def _overlap_fraction(first: list[float], second: list[float]) -> float:
-    """Measure the fraction of a text rectangle covered by a detected table.
+def _contained_in(first: list[float], second: list[float]) -> bool:
+    """Suppress native text only when its entire rectangle is inside a table.
 
-    The measure is deliberately asymmetric: it answers whether the first rectangle is
-    already represented by the second. It is used only to suppress duplicated table
-    text, not as a general geometric similarity score.
+    Even a mostly overlapping block may contain a unique result outside the table.
+    Boundary differences therefore favor retaining text over losing evidence.
     """
 
-    x0, y0 = max(first[0], second[0]), max(first[1], second[1])
-    x1, y1 = min(first[2], second[2]), min(first[3], second[3])
-    intersection = max(0.0, x1 - x0) * max(0.0, y1 - y0)
-    area = max(1.0, first[2] - first[0]) * max(1.0, first[3] - first[1])
-    return intersection / area
+    return (
+        second[0] <= first[0] <= first[2] <= second[2]
+        and second[1] <= first[1] <= first[3] <= second[3]
+    )
 
 
 def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
-    """Recover native text and tables without emitting table contents twice.
+    """Recover native tables without discarding prose outside their rectangles.
 
     PyMuPDF exposes table cells and ordinary text through separate APIs, so accepting
     both naïvely duplicates the same values. Plausible multirow tables are emitted once,
-    and text blocks substantially covered by their rectangles are suppressed. Remaining
+    and text blocks fully contained in their rectangles are suppressed. Remaining
     items retain native geometry and typography so later reading order, headings, and
     citations remain reproducible. Table-detection failure degrades to ordinary text
     rather than failing the complete paper.
@@ -238,10 +237,7 @@ def _pymupdf_layout_items(path: Path) -> list[dict[str, Any]]:
                 if raw_block.get("type") != 0:
                     continue
                 bbox = [float(value) for value in raw_block.get("bbox", (0, 0, 0, 0))]
-                if any(
-                    _overlap_fraction(bbox, table_box) > 0.55
-                    for table_box in table_boxes
-                ):
+                if any(_contained_in(bbox, table_box) for table_box in table_boxes):
                     continue
                 lines = raw_block.get("lines", [])
                 plain_lines = [
@@ -398,24 +394,61 @@ def _parse_pymupdf(path: Path, source: str) -> list[EvidenceBlock]:
     return _evidence_blocks_from_layout(_pymupdf_layout_items(path), source)
 
 
-def _docling_bbox(item: object) -> list[float] | None:
-    """Translate optional Docling provenance into the common rectangle representation.
+def _docling_bbox(item: Any, document: Any) -> list[float] | None:
+    """Return PDF points from the top-left corner, or no geometry when unavailable.
 
-    Attribute access rather than concrete Docling classes keeps this narrow adapter
-    compatible across releases. Returning ``None`` is explicit: the caller can provide
-    deterministic ordering geometry without inventing source coordinates.
+    Docling provenance may use a bottom-left origin. Converting both vertical
+    coordinates using that page's height preserves the rectangle's actual location;
+    sorting the original numbers would instead mirror it. Reading order does not
+    require geometry, so missing coordinates never acquire a synthetic rectangle.
     """
 
     provenance = getattr(item, "prov", None) or []
     if not provenance:
         return None
     bbox = getattr(provenance[0], "bbox", None)
-    values = [getattr(bbox, name, None) for name in ("l", "t", "r", "b")]
-    return (
-        [float(value) for value in values if value is not None]
-        if all(value is not None for value in values)
-        else None
-    )
+    if bbox is None:
+        return None
+    page = document.pages.get(provenance[0].page_no)
+    if page is None or page.size is None:
+        return None
+    converted = bbox.to_top_left_origin(page_height=page.size.height)
+    return [float(getattr(converted, name)) for name in ("l", "t", "r", "b")]
+
+
+def _docling_table(item: Any) -> tuple[str, dict[str, object]]:
+    """Serialize source cells without dataframe-generated columns or merged headers.
+
+    Docling's grid repeats an explicitly spanning cell in the positions it covers;
+    an ordinary blank stays blank. Preserve source header rows separately instead
+    of concatenating them into new column names. Logical cell spans are metadata,
+    not source quantities, and never replace the cell text used for citations.
+    """
+    rows = [
+        [" ".join(_normalize_layout_text(cell.text).split()) or None for cell in row]
+        for row in item.data.grid
+    ]
+    layout = [
+        {
+            "row_start": cell.start_row_offset_idx,
+            "row_end": cell.end_row_offset_idx,
+            "column_start": cell.start_col_offset_idx,
+            "column_end": cell.end_col_offset_idx,
+            "column_header": cell.column_header,
+            "row_header": cell.row_header,
+            "row_section": cell.row_section,
+        }
+        for cell in item.data.table_cells
+        if cell.row_span > 1
+        or cell.col_span > 1
+        or cell.column_header
+        or cell.row_header
+        or cell.row_section
+    ]
+    return "\n".join(" | ".join(cell or "" for cell in row) for row in rows), {
+        "rows": rows,
+        "table_layout": layout,
+    }
 
 
 def _native_typography_blocks(
@@ -495,9 +528,31 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
 
     converter, ContentLayer, DocItemLabel = _docling_runtime()
     document = converter.convert(str(path)).document
+    return _docling_evidence_blocks(
+        document, path, source, content_layer_type=ContentLayer, item_label=DocItemLabel
+    )
+
+
+def _docling_evidence_blocks(
+    document: Any,
+    path: Path,
+    source: str,
+    *,
+    content_layer_type: Any,
+    item_label: Any,
+) -> list[EvidenceBlock]:
+    """Adapt a converted Docling document using the production evidence contract.
+
+    Keeping conversion separate lets local parser experiments compare Docling
+    pipelines without duplicating table, coordinate or context-link handling.
+    Native typography is attached identically for every pipeline.
+    """
+
     layout_items: list[dict[str, Any]] = []
+    context_refs: dict[str, list[str]] = {}
+    item_refs: list[str] = []
     items = document.iterate_items(
-        included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}
+        included_content_layers={content_layer_type.BODY, content_layer_type.FURNITURE}
     )
     for item, hierarchy_level in items:
         label = _semantic_value(getattr(item, "label", ""))
@@ -512,11 +567,11 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             "include_in_evidence": not (
                 getattr(item, "label", None)
                 in {
-                    DocItemLabel.REFERENCE,
-                    DocItemLabel.PAGE_HEADER,
-                    DocItemLabel.PAGE_FOOTER,
+                    item_label.REFERENCE,
+                    item_label.PAGE_HEADER,
+                    item_label.PAGE_FOOTER,
                 }
-                or getattr(item, "content_layer", None) == ContentLayer.FURNITURE
+                or getattr(item, "content_layer", None) == content_layer_type.FURNITURE
             ),
         }
         kind = "text"
@@ -528,32 +583,15 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
             kind = "heading"
         elif "table" in class_name or label.endswith("table"):
             kind = "table"
-            try:
-                dataframe = item.export_to_dataframe(doc=document)
-                rows = [
-                    [
-                        _normalize_layout_text(value) or None
-                        for value in dataframe.columns.tolist()
-                    ],
-                    *[
-                        [_normalize_layout_text(value) or None for value in row]
-                        for row in dataframe.astype(object)
-                        .where(dataframe.notna(), None)
-                        .values.tolist()
-                    ],
-                ]
-                text = "\n".join(" | ".join(cell or "" for cell in row) for row in rows)
-                metadata["rows"] = rows
-            except Exception as exc:  # noqa: BLE001 - Docling APIs vary by release
-                logger.debug("Docling table export failed: {}", exc)
+            text, table_metadata = _docling_table(item)
+            metadata.update(table_metadata)
+            context_refs[item.self_ref] = [
+                ref.cref for ref in [*item.captions, *item.footnotes]
+            ]
         if not text:
             continue
-        bbox = _docling_bbox(item) or [
-            0.0,
-            float(len(layout_items)),
-            0.0,
-            float(len(layout_items) + 1),
-        ]
+        bbox = _docling_bbox(item, document)
+        item_refs.append(item.self_ref)
         layout_items.append(
             {
                 "page": max(1, page),
@@ -570,6 +608,15 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     # Docling already classifies headings. Avoid replacing its labels by giving
     # non-heading layout_items no typography signal in _evidence_blocks_from_layout.
     blocks = _evidence_blocks_from_layout(layout_items, source, sort_geometry=False)
+    block_by_ref = dict(zip(item_refs, blocks))
+    for ref, context in context_refs.items():
+        if ref in block_by_ref:
+            block_by_ref[ref].metadata["context_block_ids"] = [
+                block_by_ref[target].block_id
+                for target in context
+                if target in block_by_ref
+            ]
+    _attach_explicit_table_notes(blocks)
     scientific_pages = {
         block.page
         for block in blocks
@@ -584,6 +631,52 @@ def _parse_docling(path: Path, source: str) -> list[EvidenceBlock]:
     return blocks
 
 
+def _attach_explicit_table_notes(blocks: list[EvidenceBlock]) -> None:
+    """Link a note that explicitly names one uniquely captioned table.
+
+    Docling sometimes retains table notes as ordinary text. A complete heading
+    such as ``Note to Table S1:`` establishes its target without a distance or
+    publisher rule. Repeated table identifiers, unlinked captions, ordinary
+    discussion references and notes without an explicit target remain unresolved.
+    """
+
+    label = r"(?:S\s*)?\d+[A-Za-z]?"
+    caption_pattern = re.compile(rf"^Table\s+({label})\s*[.:]", re.I)
+    note_pattern = re.compile(
+        rf"^(?:Notes?\s+(?:to|for)\s+Table\s+({label})|"
+        rf"Table\s+({label})\s+notes?)\s*[:.]\s*\S",
+        re.I,
+    )
+    by_id = {block.block_id: block for block in blocks}
+    targets: dict[tuple[str, str], list[EvidenceBlock]] = {}
+    for block in blocks:
+        if block.kind != "table":
+            continue
+        for identifier in linked_context_ids(block):
+            caption = by_id.get(identifier)
+            match = caption_pattern.match(caption.text) if caption else None
+            if match:
+                key = (block.source, re.sub(r"\s", "", match[1]).casefold())
+                if block not in targets.setdefault(key, []):
+                    targets[key].append(block)
+    for note in blocks:
+        if note.kind == "table" or (match := note_pattern.match(note.text)) is None:
+            continue
+        identifier = re.sub(r"\s", "", match[1] or match[2]).casefold()
+        tables = targets.get((note.source, identifier), [])
+        if len(tables) != 1:
+            continue
+        table = tables[0]
+        linked = linked_context_ids(table)
+        if note.block_id not in linked:
+            table.metadata["context_block_ids"] = [*linked, note.block_id]
+            note_ids = table.metadata.get("explicit_table_note_ids", [])
+            table.metadata["explicit_table_note_ids"] = [
+                *(note_ids if isinstance(note_ids, list) else []),
+                note.block_id,
+            ]
+
+
 def available_parsers() -> list[str]:
     """List stable user-facing parser choices."""
 
@@ -596,15 +689,20 @@ def _scientific_evidence_blocks(
     """Build the model-facing view from parser semantics, never heading names.
 
     Parsed blocks remain complete in the document cache. Only content that Docling
-    explicitly classifies as references or document furniture is withheld. PyMuPDF
-    and unknown Docling classifications pass through unchanged.
+    explicitly classifies as references or document furniture is withheld unless
+    a retained scientific block links it as required context. PyMuPDF and unknown
+    Docling classifications pass through unchanged.
     """
 
-    evidence: list[EvidenceBlock] = []
-    for block in blocks:
-        if block.metadata.get("include_in_evidence", True) is False:
-            continue
-        evidence.append(block)
+    retained = linked_context_closure(
+        blocks,
+        (
+            block.block_id
+            for block in blocks
+            if block.metadata.get("include_in_evidence", True) is not False
+        ),
+    )
+    evidence = [block for block in blocks if block.block_id in retained]
     return evidence, len(blocks) - len(evidence)
 
 
@@ -642,7 +740,9 @@ def _parser_dependency_versions(parser: str) -> dict[str, str]:
     depends on PyMuPDF alone.
     """
 
-    names = ("docling", "PyMuPDF") if parser == "docling" else ("PyMuPDF",)
+    names = (
+        ("docling", "docling-core", "PyMuPDF") if parser == "docling" else ("PyMuPDF",)
+    )
     return {name: _package_version(name) for name in names}
 
 
@@ -772,18 +872,29 @@ def _normalized_block_text_key(block: EvidenceBlock) -> str:
 def _deduplicate_evidence_blocks(
     blocks: list[EvidenceBlock],
 ) -> tuple[list[EvidenceBlock], int]:
-    """Remove only full SI blocks that repeat a main-paper block verbatim.
+    """Remove repeated SI prose while preserving tables and their context.
 
     Some downloaded supplements contain the article PDF concatenated before the actual
     SI. Long normalized blocks that exactly match the main paper keep the main-paper
-    instance as canonical and record the skipped SI location in its metadata. Short
-    boilerplate, near matches, unique SI evidence, and duplicates within one source are
-    retained to avoid recall loss.
+    instance as canonical and record the skipped SI location in its metadata. Equal
+    table grids can describe different measurements, so tables, explicit context
+    links and their targets are never deduplicated. Short prose, near matches and
+    duplicates within one source are retained to avoid recall loss.
     """
 
+    protected = {
+        identifier for block in blocks for identifier in linked_context_ids(block)
+    }
+    protected.update(
+        block.block_id
+        for block in blocks
+        if block.kind not in {"text", "paragraph"}
+        or linked_context_ids(block)
+        or block.metadata.get("docling_label") in {"caption", "footnote"}
+    )
     main: dict[str, EvidenceBlock] = {}
     for block in blocks:
-        if block.source != "main":
+        if block.source != "main" or block.block_id in protected:
             continue
         key = _normalized_block_text_key(block)
         if len(key) > 40:
@@ -792,7 +903,11 @@ def _deduplicate_evidence_blocks(
     skipped = 0
     for block in blocks:
         key = _normalized_block_text_key(block)
-        canonical = main.get(key) if block.source != "main" else None
+        canonical = (
+            main.get(key)
+            if block.source != "main" and block.block_id not in protected
+            else None
+        )
         if canonical is None:
             output.append(block)
             continue
@@ -818,7 +933,7 @@ def parse_documents(
 
     Both documents use the same selected backend but retain distinct ``main`` and
     ``supplement`` provenance in every block and parse event. After parsing, only exact
-    cross-document repetitions are collapsed. The returned events expose cache use,
+    unlinked cross-document prose repetitions are collapsed. The returned events expose cache use,
     parser versions, source hashes, exclusions, and deduplication for the run manifest.
     """
 

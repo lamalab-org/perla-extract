@@ -20,17 +20,22 @@ from zipfile import ZipFile
 import click
 from pydantic import BaseModel
 
-from examples.scoring.calibration import TRANSFORMS, calibration_cases, check_case
-from examples.scoring.equivalence_probe import probe
+from examples.scoring.calibration import (
+    TRANSFORMS,
+    calibration_cases,
+    check_case,
+    equivalence_probe,
+)
+from examples.scoring.reference_audit import check_reference_self_score
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import EvaluationConfig, evaluate_study
 from perla_extract.study_extraction.models import ReportedValue, StudyExtraction
+from perla_extract.study_extraction.quantities import is_plain_number
 from perla_extract.study_extraction.reference_io import (
     load_reference,
     reference_content_digest,
 )
 from perla_extract.study_extraction.reference_release import ReferenceRelease
-from perla_extract.study_extraction.scoring_facts import is_plain_number
 from perla_extract.study_extraction.scoring_protocol import protocol_name
 
 # Independent dimensional arithmetic for test transformations, not production
@@ -313,10 +318,7 @@ def run(
         if reference_content_digest(manifest) != paper["manifest_sha256"]:
             raise ValueError(f"Reference manifest differs from release: {identity}")
         baseline = evaluate_study(truth, truth)
-        if baseline.core_facts.recovery.micro.f1 != 1 or (
-            baseline.core_facts.micro.f1 != 1 and not baseline.core_facts.issues
-        ):
-            raise ValueError(f"Unexplained baseline self-check failure: {identity}")
+        check_reference_self_score(baseline, identity)
         baselines.append(
             {
                 "paper_id": identity,
@@ -382,7 +384,7 @@ def run(
             ).hexdigest()
             for path in [
                 Path(__file__).resolve(),
-                Path(__file__).with_name("equivalence_probe.py"),
+                Path(__file__).with_name("reference_audit.py").resolve(),
                 Path(__file__).with_name("calibration.py"),
                 *[
                     Path(__file__).resolve().parents[2]
@@ -396,7 +398,7 @@ def run(
                         "scoring_fields.py",
                         "scoring_protocol.py",
                         "scoring_process.py",
-                        "scoring_claims.py",
+                        "quantities.py",
                         "scoring_vocabulary.py",
                         "scoring_explanation.py",
                         "scoring_requirements.py",
@@ -407,7 +409,7 @@ def run(
                 ],
             ]
         },
-        "equivalence_probe": probe(),
+        "equivalence_probe": equivalence_probe(),
         "release_file_sha256": hashlib.sha256(release_path.read_bytes()).hexdigest(),
         "feedback_zip_sha256": hashlib.sha256(feedback_zip.read_bytes()).hexdigest()
         if feedback_zip
@@ -476,7 +478,7 @@ def main(release_path, feedback_zip, output, include_controls, descriptor_equiva
     write_json_exclusive(output, report)
     click.echo(json.dumps(report["control_summary"], indent=2))
     click.echo(
-        f"Reference self-checks needing identity/scope review: "
+        f"Reference self-checks with scientific issues: "
         f"{sum(row['score']['status'] != 'ready' for row in report['reference_self_checks'])}"
     )
     click.echo(

@@ -16,7 +16,7 @@ from functools import lru_cache
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 import click
@@ -43,12 +43,6 @@ from review_workbench.adjudication import (  # noqa: E402
     PlanRequest,
 )
 from review_workbench.completed_review import AdoptReviewRequest  # noqa: E402
-from review_workbench.expert_comparison import (  # noqa: E402
-    ComparisonService,
-    ComparisonStorage,
-    LocalComparisonStorage,
-    build_comparison_source,
-)
 from review_workbench.feedback_export import build_feedback_archive  # noqa: E402
 from review_workbench.ground_truth_export import (  # noqa: E402
     build_ground_truth_export,
@@ -77,28 +71,6 @@ REVISION_CONFLICT_RESPONSE = {
         "review your change again, and then save it."
     ),
 }
-
-
-def review_app_asset(
-    request_path: str, request_host: str, comparison_hosts: set[str]
-) -> str:
-    """Choose the review surface while keeping both workflows on one backend.
-
-    A dedicated hostname can lead reviewers directly into the blinded comparison
-    without copying authentication, PDFs, or review storage into another service.
-    Explicit paths remain available for local development and old bookmarks.
-    """
-
-    if request_path == "/review":
-        return "index.html"
-    if request_path in {"/compare", "/comparison.html"}:
-        return "comparison.html"
-    if request_path != "/":
-        return request_path.lstrip("/")
-    hostname = urlparse(f"//{request_host}").hostname or ""
-    return (
-        "comparison.html" if hostname.casefold() in comparison_hosts else "index.html"
-    )
 
 
 def _same_pdf_page(left: fitz.Page, right: fitz.Page) -> bool:
@@ -139,16 +111,12 @@ class ReviewApplication:
         pdf_dir: Path,
         ground_truth_dir: Path,
         review_storage: ReviewStateStorage | None = None,
-        comparison_storage: ComparisonStorage | None = None,
     ):
         self.pdf_dir = pdf_dir.resolve()
         self.pdf_dir.mkdir(parents=True, exist_ok=True)
         self.store = StudyReviewStore(ground_truth_dir, review_storage)
         self.ground_truth_dir = self.store.root
         self.uploaded_workbook_dir = self.ground_truth_dir / "uploaded_workbooks"
-        self.comparisons = ComparisonService(
-            comparison_storage or LocalComparisonStorage(self.ground_truth_dir)
-        )
         self.static_dir = REPO_ROOT / "review_workbench" / "review_app"
 
     @lru_cache(maxsize=1)
@@ -239,56 +207,6 @@ class ReviewApplication:
                 matrix=fitz.Matrix(2, 2), clip=clip, alpha=False
             ).tobytes("png")
 
-    def create_comparison(self, payload: object) -> dict[str, Any]:
-        """Freeze a blinded experiment from one legacy and one rich extraction."""
-
-        if not isinstance(payload, dict):
-            raise ValueError("comparison must be a JSON object")
-        required = (
-            "comparison_id",
-            "paper_id",
-            "title",
-            "historical",
-            "extracted",
-            "reviewer_ids",
-            "randomization_seed",
-        )
-        missing = [key for key in required if key not in payload]
-        if missing:
-            raise ValueError(f"missing comparison fields: {', '.join(missing)}")
-        paper_id = str(payload["paper_id"])
-        split = str(payload.get("split", "dev"))
-        if split not in {"calibration", "dev", "test"}:
-            raise ValueError("split must be calibration, dev, or test")
-        source_hashes = {
-            name: hashlib.sha256(self.review_pdf(paper_id, name, split)).hexdigest()
-            for name in self.available_sources(paper_id, split)
-        }
-        if "main" not in source_hashes:
-            raise ValueError(
-                "the comparison paper must have a main PDF in the review app"
-            )
-        source = build_comparison_source(
-            comparison_id=str(payload["comparison_id"]),
-            paper_id=paper_id,
-            title=str(payload["title"]),
-            split=cast(Literal["calibration", "dev", "test"], split),
-            historical=payload["historical"],
-            extracted=payload["extracted"],
-            reviewer_ids=[str(item) for item in payload["reviewer_ids"]],
-            randomization_seed=str(payload["randomization_seed"]),
-            source_hashes=source_hashes,
-        )
-        self.comparisons.storage.create(source)
-        return {
-            "comparison_id": source.comparison_id,
-            "paper_id": source.paper_id,
-            "assigned_reviewers": len(source.assignments),
-            "candidate_hashes": sorted(
-                candidate.common_sha256 for candidate in source.candidates.values()
-            ),
-        }
-
     def reviewer_feedback_archive(self) -> bytes:
         """Package team feedback without exposing it to signed-out visitors."""
 
@@ -300,7 +218,6 @@ class ReviewApplication:
         )
         return build_feedback_archive(
             self.store,
-            self.comparisons,
             self.uploaded_review_workbooks(),
             proposals,
         )
@@ -387,7 +304,7 @@ class ReviewApplication:
     def pdf_path(
         self, paper_id: str, source: str = "main", split: str | None = None
     ) -> Path:
-        """Resolve a source PDF; local storage remains flat for CLI compatibility."""
+        """Resolve a source PDF from the shared local paper directory."""
 
         del split
         self.store.validate_identity("dev", paper_id)
@@ -1023,12 +940,6 @@ class ReviewApplication:
 def make_handler(application: ReviewApplication, authenticator=None):
     """Build an HTTP handler while keeping authentication optional for local use."""
 
-    comparison_hosts = {
-        host.strip().casefold()
-        for host in os.environ.get("REVIEW_COMPARISON_HOSTS", "").split(",")
-        if host.strip()
-    }
-
     class Handler(BaseHTTPRequestHandler):
         def send_json(
             self,
@@ -1154,17 +1065,6 @@ def make_handler(application: ReviewApplication, authenticator=None):
                 if parsed.path == "/api/study-schema":
                     self.send_json(application.study_schema())
                     return
-                if parsed.path == "/api/comparisons":
-                    user = self.current_user()
-                    self.send_json(
-                        {
-                            "comparisons": application.comparisons.list_for(
-                                user["id"],
-                                include_unassigned=user.get("role") == "admin",
-                            )
-                        }
-                    )
-                    return
                 parts = self.route_parts(parsed.path)
                 if parts[:2] == ["api", "adjudication"] and len(parts) == 4:
                     user = self.current_user(require_finalizer=True)
@@ -1180,30 +1080,6 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             names.get(candidate["expert_id"]) or candidate["expert_id"]
                         )
                     self.send_json(view)
-                    return
-                if parts[:2] == ["api", "comparisons"] and len(parts) == 3:
-                    user = self.current_user()
-                    self.send_json(application.comparisons.open(parts[2], user["id"]))
-                    return
-                if parts[:2] == ["api", "native-comparisons"] and len(parts) == 3:
-                    user = self.current_user()
-                    self.send_json(
-                        application.comparisons.open_native(parts[2], user["id"])
-                    )
-                    return
-                if parts[:2] == ["api", "pairwise-comparisons"] and len(parts) == 3:
-                    user = self.current_user()
-                    self.send_json(
-                        application.comparisons.open_pairwise(parts[2], user["id"])
-                    )
-                    return
-                if parts[:2] == ["api", "comparison-reveal"] and len(parts) == 3:
-                    self.current_user(require_admin=True)
-                    self.send_json(application.comparisons.reveal(parts[2]))
-                    return
-                if parts[:2] == ["api", "comparison-export"] and len(parts) == 3:
-                    self.current_user(require_admin=True)
-                    self.send_json(application.comparisons.export(parts[2]))
                     return
                 if parts[:2] == ["api", "reviewer-progress"] and len(parts) == 3:
                     user = self.current_user()
@@ -1341,9 +1217,7 @@ def make_handler(application: ReviewApplication, authenticator=None):
                             "application/pdf",
                         )
                     return
-                asset = review_app_asset(
-                    parsed.path, self.headers.get("Host", ""), comparison_hosts
-                )
+                asset = "index.html" if parsed.path == "/" else parsed.path.lstrip("/")
                 if asset not in {
                     "index.html",
                     "app.js",
@@ -1356,9 +1230,6 @@ def make_handler(application: ReviewApplication, authenticator=None):
                     "styles.css",
                     "adjudication.js",
                     "adjudication.css",
-                    "comparison.html",
-                    "comparison.js",
-                    "comparison.css",
                     "figure-census-proposals.json",
                 }:
                     self.send_error(HTTPStatus.NOT_FOUND)
@@ -1493,40 +1364,6 @@ def make_handler(application: ReviewApplication, authenticator=None):
                         reviewer_id=user["id"],
                     )
                     self.send_json(bundle, HTTPStatus.CREATED)
-                    return
-                if parsed.path == "/api/comparisons":
-                    self.current_user(require_admin=True)
-                    self.send_json(
-                        application.create_comparison(self.read_json()),
-                        HTTPStatus.CREATED,
-                    )
-                    return
-                if len(parts) == 3 and parts[:2] == ["api", "comparison-reviews"]:
-                    self.send_json(
-                        application.comparisons.save(
-                            parts[2], user["id"], self.read_json()
-                        ),
-                        HTTPStatus.CREATED,
-                    )
-                    return
-                if len(parts) == 3 and parts[:2] == ["api", "native-utility-reviews"]:
-                    self.send_json(
-                        application.comparisons.save_native(
-                            parts[2], user["id"], self.read_json()
-                        ),
-                        HTTPStatus.CREATED,
-                    )
-                    return
-                if len(parts) == 3 and parts[:2] == [
-                    "api",
-                    "pairwise-preference-reviews",
-                ]:
-                    self.send_json(
-                        application.comparisons.save_pairwise(
-                            parts[2], user["id"], self.read_json()
-                        ),
-                        HTTPStatus.CREATED,
-                    )
                     return
                 if len(parts) == 4 and parts[:2] == ["api", "mutations"]:
                     self.send_json(

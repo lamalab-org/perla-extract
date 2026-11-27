@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -9,15 +8,9 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 from review_workbench.api.index import (
-    BlobComparisonStorage,
     BlobReviewStateStorage,
     BlobStore,
     VercelReviewApplication,
-)
-from review_workbench.expert_comparison import (
-    NativeUtilityReview,
-    PairwisePreferenceReview,
-    build_comparison_source,
 )
 from review_workbench.review_storage import (
     ReviewPaperSource,
@@ -93,10 +86,7 @@ def test_vercel_application_retains_and_lists_uploaded_workbooks():
     blob = MemoryBlobStore()
     app = object.__new__(VercelReviewApplication)
     app.blob = blob
-    relative = Path(
-        "dev/10.0000--example/"
-        "00000002--event-1--reviewer-1--review.xlsx"
-    )
+    relative = Path("dev/10.0000--example/00000002--event-1--reviewer-1--review.xlsx")
 
     app._archive_workbook_submission(
         relative, b"xlsx", {"submission_id": "submission-1"}
@@ -124,7 +114,9 @@ class PagedBlobStore(BlobStore):
         if "cursor" not in query:
             return json.dumps(
                 {
-                    "blobs": [{"pathname": "workbench/review-sources/calibration/first.json"}],
+                    "blobs": [
+                        {"pathname": "workbench/review-sources/calibration/first.json"}
+                    ],
                     "hasMore": True,
                     "cursor": "page-2",
                 }
@@ -261,78 +253,6 @@ def test_blob_paper_heads_do_not_download_full_studies():
         ("paper-b", 1),
     ]
     assert blob.downloads == 0
-
-
-def test_blob_comparison_storage_keeps_sources_reviews_and_utility_separate():
-    blob = MemoryBlobStore()
-    storage = BlobComparisonStorage(blob)  # type: ignore[arg-type]
-    source = build_comparison_source(
-        comparison_id="comparison-1",
-        paper_id="paper-1",
-        title="Paper",
-        split="dev",
-        historical={"cells": []},
-        extracted={
-            "paper": {"title": "Paper", "doi": "10.0000/example"},
-            "device_families": [],
-            "individual_devices": [],
-            "performance_observations": [],
-            "population_statistics": [],
-            "stability_tests": [],
-            "unresolved_notes": [],
-        },
-        reviewer_ids=["ada"],
-        randomization_seed="secret",
-    )
-    storage.create(source)
-    assignment = source.assignments[0]
-    utility = NativeUtilityReview(
-        comparison_id=source.comparison_id,
-        reviewer_id=assignment.reviewer_id,
-        blind_label=assignment.blind_label,
-        candidate_sha256=source.candidates[assignment.blind_label].native_sha256,
-        submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
-        ratings={
-            "chemical_detail": 4,
-            "relationships": 4,
-            "verification_ease": 3,
-            "nomad_usefulness": 5,
-        },
-        suitable_as_curation_start="yes",
-    )
-    storage.save_utility(utility)
-    preference = PairwisePreferenceReview(
-        comparison_id=source.comparison_id,
-        reviewer_id=assignment.reviewer_id,
-        candidate_hashes={
-            label: candidate.native_sha256
-            for label, candidate in source.candidates.items()
-        },
-        submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
-        preferences={
-            "factual_correctness": "tie",
-            "coverage_completeness": "B",
-            "chemical_detail": "B",
-            "record_relationships": "B",
-            "evidence_traceability": "A",
-            "nomad_readiness": "B",
-            "curation_effort": "B",
-            "overall_preference": "B",
-        },
-        confidence=4,
-    )
-    storage.save_preference(preference)
-
-    assert storage.list_ids() == ["comparison-1"]
-    assert storage.load_source("comparison-1").source_hashes == {}
-    assert storage.load_utility("comparison-1", "ada") == utility
-    assert storage.load_preference("comparison-1", "ada") == preference
-    assert any(
-        path.startswith("workbench/comparison-utility/") for path in blob.objects
-    )
-    assert any(
-        path.startswith("workbench/comparison-preferences/") for path in blob.objects
-    )
 
 
 def test_blob_current_revision_does_not_download_immutable_source_again():

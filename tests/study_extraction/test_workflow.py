@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from perla_extract.study_extraction.candidate_selection import (
+from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
+from perla_extract.study_extraction.configuration import ExtractionConfig
+from perla_extract.study_extraction.correction_checks import (
     _gate_final_candidate_against_draft,
     _select_refinement_candidate,
 )
-from perla_extract.study_extraction.claims import ClaimLedger, ExperimentalObject
-from perla_extract.study_extraction.configuration import ExtractionConfig
 from perla_extract.study_extraction.extraction_prompts import (
     _claim_ledger_prompt,
     prompt_sha256,
@@ -215,6 +215,7 @@ def test_quality_pass_receives_grounded_claims_and_retains_draft(tmp_path):
         supplement=None,
         output_dir=tmp_path,
         parser="pymupdf",
+        use_refinement=True,
     )
 
     result, draft_result, errors = _run_model_calls(config, client, [block], ledger)
@@ -538,6 +539,8 @@ def test_direct_and_empty_reading_send_full_source_at_provider_boundary(
             pdf=FIXTURE,
             output_dir=output,
             use_claim_ledger=use_claim_ledger,
+            use_refinement=True,
+            max_model_calls=6,
             use_targeted_repair=False,
             use_enrichment=False,
             model_cache_dir=tmp_path / "cache",
@@ -795,7 +798,43 @@ def test_reader_dry_run_does_not_claim_unknown_assembly_input_fits(
     )
     monkeypatch.setattr(workflow, "parse_documents", lambda *a, **kw: ([block], []))
     report = run_extraction(
-        ExtractionConfig(pdf=FIXTURE, output_dir=tmp_path / "output", dry_run=True)
+        ExtractionConfig(
+            pdf=FIXTURE,
+            output_dir=tmp_path / "output",
+            dry_run=True,
+            use_claim_ledger=True,
+        )
     )
     assert report["status"] == "dry_run"
     assert report["request_feasibility"]["assembly"] == "conditional_on_reader_output"
+
+
+def test_dry_run_rejects_known_first_request_token_budget(tmp_path, monkeypatch):
+    from perla_extract.study_extraction import workflow
+
+    block = EvidenceBlock(
+        block_id="source",
+        source="main",
+        page=1,
+        kind="text",
+        text="Device was measured.",
+    )
+    monkeypatch.setattr(workflow, "parse_documents", lambda *a, **kw: ([block], []))
+    monkeypatch.setattr(
+        workflow,
+        "ModelClient",
+        lambda *a, **kw: pytest.fail("dry run must not construct a model client"),
+    )
+    report = run_extraction(
+        ExtractionConfig(
+            pdf=FIXTURE,
+            output_dir=tmp_path / "output",
+            dry_run=True,
+            max_total_tokens=1,
+        )
+    )
+    assert report["status"] == "failed"
+    assert report["request_feasibility"]["assembly"] == "infeasible"
+    assert "max_total_tokens=1" in " ".join(report["errors"])
+    assert report["budget"]["provider_requests"] == 0
+    assert report["budget"]["max_total_tokens"] == 1

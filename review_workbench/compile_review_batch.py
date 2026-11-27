@@ -18,7 +18,6 @@ from typing import Any
 
 import click
 from loguru import logger
-from pydantic import ValidationError
 
 from perla_extract.study_extraction.artifacts import write_json_atomic
 from perla_extract.study_extraction.evidence import source_contains_text
@@ -131,51 +130,6 @@ def _record_keys(study: StudyExtraction) -> list[tuple[str, str]]:
     ]
 
 
-def _load_review_compatible_study(
-    payload: object,
-) -> tuple[StudyExtraction, list[dict[str, str]]]:
-    """Apply only lossless relationship migrations needed to read an older seed.
-
-    A retained identifier already asserts the relationship. Updating an inconsistent
-    legacy ``link_status`` to describe that same identifier changes no scientific
-    content and remains visible in the draft manifest.
-    """
-
-    try:
-        return StudyExtraction.model_validate(payload), []
-    except ValidationError:
-        if not isinstance(payload, dict):
-            raise
-    migrated = json.loads(json.dumps(payload))
-    changes = []
-    for test in migrated.get("stability_tests", []):
-        if not isinstance(test, dict) or test.get("link_status") not in {
-            "stability_specimen_only",
-            "not_reported",
-        }:
-            continue
-        previous = str(test.get("link_status"))
-        replacement = (
-            "explicit_device_link"
-            if test.get("device_id")
-            else "explicit_family_link"
-            if test.get("family_id")
-            else previous
-        )
-        if replacement != previous:
-            test["link_status"] = replacement
-            changes.append(
-                {
-                    "record_id": str(test.get("test_id", "")),
-                    "field": "link_status",
-                    "before": previous,
-                    "after": replacement,
-                    "reason": "legacy status contradicted an already present identifier",
-                }
-            )
-    return StudyExtraction.model_validate(migrated), changes
-
-
 def _change_assessment(change: WorkbookChange) -> dict[str, Any]:
     """Flag source-verbatim edits that do not occur in their supplied evidence."""
 
@@ -249,7 +203,7 @@ def compile_workbook(
         document_payload = _json(run_dir / "document.json")
         source_info = {"kind": "extraction_run", "path": str(run_dir)}
         current_revision = metadata.base_revision
-    study, compatibility_migrations = _load_review_compatible_study(study_payload)
+    study = StudyExtraction.model_validate(study_payload)
     raw_blocks = (
         document_payload.get("blocks") if isinstance(document_payload, dict) else None
     )
@@ -262,7 +216,7 @@ def compile_workbook(
         review = read_review_workbook(
             workbook_data,
             # Optional schema defaults must not change the workbook's seed layout.
-            truth=study_payload if not compatibility_migrations else study.model_dump(mode="json"),
+            truth=study_payload,
             identifiers=RECORD_IDENTIFIERS,
             labels=RECORD_LABELS,
             paper_id=metadata.paper_id,
@@ -386,7 +340,6 @@ def compile_workbook(
         "split": metadata.split,
         "source": source_info,
         "workbook_match": workbook_match,
-        "compatibility_migrations": compatibility_migrations,
         "workbook_filename": workbook_path.name,
         "workbook_base_revision": metadata.base_revision,
         "workbook_schema_sha256": metadata.schema_sha256,

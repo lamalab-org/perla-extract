@@ -4,10 +4,10 @@ PERLA reads a paper and its supplement, builds records for the reported study, a
 checks those records against the parsed source. The result is `extraction.json`.
 Database interpretation and export happen afterward and do not rewrite that result.
 
-The [quick start](../getting-started.md) uses one direct extraction call. The Python
-API's defaults include two source readings and a second review of the complete
-draft. Extra stages are configurable attempts to improve recovery and attribution;
-compare them against the direct baseline rather than assuming more passes help.
+The CLI and Python API default to one direct extraction attempt with source checks.
+Reading, refinement, targeted repair and enrichment are opt-in. Enable a stage and
+raise `max_model_calls` together when testing additional passes. Extra stages are
+hypotheses to test against the direct baseline.
 
 ```text
 source = parse(main_paper, supplement)
@@ -93,13 +93,29 @@ chemical notation or a number's sign.
 
 For usable notes, assembly receives their supporting passages, one neighboring span
 on each side within the same block, and the main paper's opening page for metadata.
-This neighborhood is a cost-control heuristic. A distant table header, footnote, or
-cross-reference may still be needed to interpret a value. Facts omitted from both
+For a cited table, assembly keeps all its rows and Docling's explicitly linked
+caption/footnote blocks. Prose neighborhoods remain a cost-control heuristic;
+distant unlinked context may still be needed to interpret a value. Facts omitted from both
 the notes and selected text cannot reliably be recovered during draft review.
 
 With `--no-claims`, or when no usable notes remain, assembly and draft review receive
 **the complete parsed source, including SI**. Their citation schemas include the
 same complete source. This is the direct-extraction baseline.
+
+Docling rectangles use PDF points from the top-left corner; unavailable geometry
+stays absent. Table text comes from source cells, retaining separate header rows,
+decimal spelling and actual blank cells. An explicit spanning cell is repeated
+only over the positions it covers. `table_layout` records zero-based, half-open
+cell ranges and header roles; `context_block_ids` point to separately citable
+captions and footnotes. Structural indexes are not scientific values. Cache
+identity includes adapter code, Docling, docling-core and PyMuPDF versions.
+
+Measurement conditions can be stated separately from their outcomes. Extraction
+reads methods, headers and notes before attaching conditions to each explicitly
+covered measurement, citing both the condition and result passages. A shared J-V
+protocol does not supply conditions for EQE or aging tests; exceptions and
+conflicts remain explicit. The parser does not infer missing device-group labels
+from table row order.
 
 ## Context limits and model choice
 
@@ -143,9 +159,8 @@ explicit model and context settings; the applied choices are recorded in
 
 ## Choosing a configuration
 
-Use the current default when reproducing the existing method. To establish whether
-its extra stages help a new dataset, start with complete-source extraction and
-checks (`--no-claims --no-refinement --no-targeted-repair --no-enrichment`). Then
+Start with the direct default: complete-source extraction and deterministic source
+checks. To reproduce an older multi-stage method, use its saved configuration. Then
 compare one change at a time: conditional repair, one reading, a second reading,
 and complete-draft review. Keep source files, models, output allowances, reference
 annotations, and scoring rules fixed for the comparison under study.

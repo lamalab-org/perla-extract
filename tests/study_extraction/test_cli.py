@@ -96,6 +96,7 @@ def test_python_and_cli_resolve_the_same_scientific_defaults(monkeypatch, tmp_pa
     cli.extract_study(pdf)
     result = CliRunner().invoke(cli.main, ["--pdf", str(pdf)])
     assert result.exit_code == 0, result.output
+    assert captured[0].parser == "docling"
     assert captured[0].scientific_settings() == captured[1].scientific_settings()
     assert (
         captured[0].scientific_settings()
@@ -140,3 +141,38 @@ def test_explicit_missing_env_file_is_an_error(tmp_path):
     result = CliRunner().invoke(cli.main, ["--env-file", str(tmp_path / "missing")])
     assert result.exit_code != 0
     assert "environment file does not exist" in result.output
+
+
+def test_max_reasoning_is_shared_by_cli_and_toml(monkeypatch, tmp_path):
+    paper = tmp_path / "paper.pdf"
+    paper.touch()
+    settings = tmp_path / "method.toml"
+    settings.write_text(
+        '[stages.default]\nmodel="openai/gpt-6.2-astra"\nreasoning_effort="max"\n',
+        encoding="utf-8",
+    )
+    captured = []
+
+    def record(config):
+        captured.append(config)
+        return {"status": "dry_run"}
+
+    monkeypatch.setattr(cli, "run_extraction", record)
+    cli.extract_study(pdf=paper, config_file=settings, dry_run=True)
+    result = CliRunner().invoke(
+        cli.main,
+        [
+            "--pdf",
+            str(paper),
+            "--model",
+            "openai/gpt-6.2-astra",
+            "--reasoning-effort",
+            "max",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert len(captured) == 2
+    assert all(
+        config.stage_policy("assemble").reasoning_effort == "max" for config in captured
+    )

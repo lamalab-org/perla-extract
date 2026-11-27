@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 
+from .identity_text import identity_text, identity_tokens
 from .models import (
     DeviceFamily,
     IndividualDevice,
@@ -18,7 +19,6 @@ from .models import (
     StabilityTest,
     StudyExtraction,
 )
-from .scoring_claims import scientific_text
 from .scoring_context import (
     UnorderedContext,
     device_identity,
@@ -29,7 +29,11 @@ from .scoring_context import (
 )
 from .scoring_layers import ordered_layers, stack_similarity
 from .scoring_protocol import canonical_conditions
-from .scoring_vocabulary import material_name, material_stage, property_name
+from .scoring_vocabulary import (
+    material_name,
+    material_stage,
+    property_name,
+)
 
 
 def sample_code(
@@ -43,7 +47,8 @@ def sample_code(
     """
     codes = set()
     token = r"[A-Za-z0-9]+(?:[-_/][A-Za-z0-9]+)*"
-    for text in (record.label, getattr(record, "variant", None) or ""):
+    for raw in (record.label, getattr(record, "variant", None)):
+        text = identity_text(raw)
         candidates = re.findall(
             rf"\b(?:device|sample|cell|specimen|film)\s+({token})\b",
             text,
@@ -60,6 +65,18 @@ def sample_code(
 
 
 MeasurementUse = tuple[str, str | None]
+
+
+def family_label_features(families: list[DeviceFamily]) -> dict[str, set[str]]:
+    """Remove words shared by every design label before using labels to align arms.
+
+    Generic headings such as 'perovskite solar cell' must not choose between
+    otherwise indistinguishable designs. Use each study's own labels only; no
+    words are learned from the other study or from measurement outcomes.
+    """
+    words = {family.family_id: identity_tokens(family.label) for family in families}
+    common = set.intersection(*words.values()) if len(words) > 1 else set()
+    return {key: value - common for key, value in words.items()}
 
 
 def device_measurements(
@@ -143,14 +160,19 @@ def _jaccard(left: set[str], right: set[str]) -> float:
 
 
 def record_similarity(
-    left: object, right: object, relative: float, absolute: float
+    left: object,
+    right: object,
+    relative: float,
+    absolute: float,
+    *,
+    family_labels: tuple[set[str], set[str]] | None = None,
 ) -> float:
     """Compare declared identity and protocol, independently of measured outcomes."""
 
     # A family describes a design. Recipe completeness and measured properties
     # must not determine its identity or suppress credit for unchanged children.
     if isinstance(left, DeviceFamily) and isinstance(right, DeviceFamily):
-        structural = stack_similarity(left, right)
+        structural = stack_similarity(left, right, label_features=family_labels)
         if structural is not None:
             return structural
         return _jaccard(_family_features(left), _family_features(right))
@@ -212,7 +234,8 @@ def record_similarity(
 def _identity_features(record: object) -> set[str]:
     """Keep specimen labels and experimental protocol; exclude results and counts.
 
-    Complete field values preserve distinctions such as A/B versus B/A. Device
+    Literal device-label words allow reordered and partially paraphrased labels.
+    Internal separators preserve distinctions such as A/B versus B/A. Device
     properties, outcome metrics and population sizes are scored after pairing
     and cannot establish that pairing. Explicit protocols are compared separately
     with the same numeric tolerance used for fact credit.
@@ -220,7 +243,7 @@ def _identity_features(record: object) -> set[str]:
 
     fields: tuple[str, ...]
     if isinstance(record, IndividualDevice):
-        fields = ("label", "variant", "champion_status", "selection_basis")
+        fields = ("variant", "champion_status", "selection_basis")
     elif isinstance(record, PerformanceObservation):
         fields = ("measurement_type", "scan_direction")
     elif isinstance(record, PopulationStatistic):
@@ -232,11 +255,14 @@ def _identity_features(record: object) -> set[str]:
     else:
         raise TypeError(f"No record identity rule for {type(record).__name__}")
     features = {
-        f"{name}:{scientific_text(str(value))}"
+        f"{name}:{identity_text(str(value))}"
         for name in fields
         if (value := getattr(record, name)) not in (None, "", "not_reported")
+        and identity_text(str(value))
     }
     features.add(f"record_type:{type(record).__name__}")
+    if isinstance(record, IndividualDevice):
+        features.update(f"label:{token}" for token in identity_tokens(record.label))
     return features
 
 
@@ -269,13 +295,23 @@ def _protocol(record: object) -> tuple[tuple[object, ...], ...]:
 
 
 def family_pair_evidence(
-    left: DeviceFamily, right: DeviceFamily
+    left: DeviceFamily,
+    right: DeviceFamily,
+    label_features: tuple[set[str], set[str]] | None = None,
 ) -> dict[str, list[str]]:
     """Expose the ordered materials, or fallback features, used to pair a family."""
     left_code, right_code = sample_code(left), sample_code(right)
     codes = {
         "truth_sample_code": [left_code] if left_code else [],
         "prediction_sample_code": [right_code] if right_code else [],
+        "truth_label_tokens": sorted(identity_tokens(left.label)),
+        "prediction_label_tokens": sorted(identity_tokens(right.label)),
+        "truth_distinguishing_label_tokens": sorted(label_features[0])
+        if label_features
+        else [],
+        "prediction_distinguishing_label_tokens": sorted(label_features[1])
+        if label_features
+        else [],
     }
     left_order, right_order = ordered_layers(left), ordered_layers(right)
     if left_order is not None and right_order is not None:
@@ -284,9 +320,11 @@ def family_pair_evidence(
             "prediction_stack": [
                 material_name(layer.material) for _, layer in right_order
             ],
-            "truth_variant": [scientific_text(left.variant)] if left.variant else [],
-            "prediction_variant": [scientific_text(right.variant)]
-            if right.variant
+            "truth_variant": [identity_text(left.variant)]
+            if identity_text(left.variant)
+            else [],
+            "prediction_variant": [identity_text(right.variant)]
+            if identity_text(right.variant)
             else [],
             **codes,
         }
@@ -307,7 +345,7 @@ def _family_features(family: DeviceFamily) -> set[str]:
     source supplies it. These features select candidates, not scientific credit.
     """
 
-    values: list[object] = [family.variant]
+    values: list[object] = [identity_text(family.variant)]
     for layer in family.layers:
         values.append(layer.material)
         values.extend(
@@ -326,8 +364,8 @@ def _family_features(family: DeviceFamily) -> set[str]:
     features.update(
         f"material:{material_name(v)}" for v in values[1:] if isinstance(v, str)
     )
-    if family.variant:
-        features.add(f"variant:{scientific_text(family.variant)}")
+    if variant := identity_text(family.variant):
+        features.add(f"variant:{variant}")
     for layer in family.layers:
         if layer.sequence is not None:
             features.add(

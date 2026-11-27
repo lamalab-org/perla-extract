@@ -27,6 +27,8 @@ def write_summary(result: dict, path: Path) -> None:
         "## Compared settings",
         "",
     ]
+    if result.get("dataset_role"):
+        lines[2:2] = [f"Dataset role: **{result['dataset_role']}**.", ""]
     for name, values in sorted(study["factors"].items()):
         control, treatment = (
             json.dumps(values[arm], ensure_ascii=False)
@@ -271,9 +273,9 @@ def write_summary(result: dict, path: Path) -> None:
             "| Which fact groups changed? | [figure-data/group_scores.csv](figure-data/group_scores.csv): use `attributed` for primary quality and `recovery` for information found; inspect explanations for context errors |",
             "| Which specific fields changed? | [figure-data/subfield_scores.csv](figure-data/subfield_scores.csv): material identity, outcomes, protocol and processing breakdowns; filter `quality_available` for verified runs |",
             "| What did each attempt consume? | [figure-data/runs.csv](figure-data/runs.csv): scores, tokens, requests, time, cost and failures; empty cells mean unavailable |",
-            "| Which exact values were wrong? | `runs/paper-NNN/ARM-REPEAT/evaluation.json`: matched and unmatched field paths; `extraction.json` contains the prediction |",
-            "| Why did a run fail? | [errors.json](errors.json) and that run's `report.json` / `events.jsonl` |",
-            "| What was planned and scored? | [experiment.toml](experiment.toml), [runs.csv](runs.csv) (the planned roster), [inputs.json](inputs.json) (hashes), [comparison.json](comparison.json) (full result) |",
+            "| Which exact values were wrong? | Follow `run_dir` in [runs.csv](runs.csv) to `evaluation.json` for matched and unmatched field paths, and `extraction.json` for the prediction |",
+            "| Why did a run fail? | Follow `run_dir` in [runs.csv](runs.csv) to that run's `report.json` / `events.jsonl`; the campaign root retains `errors.json` |",
+            "| What was planned and scored? | [study.json](study.json) (paired design), [runs.csv](runs.csv) (planned roster), [comparison.json](comparison.json) (full result); the campaign root retains the experiment and input hashes |",
         ]
     )
     if result["issues"]:
@@ -283,3 +285,61 @@ def write_summary(result: dict, path: Path) -> None:
         if len(issues) > 10:
             lines.append(f"- {len(issues) - 10} further issues are in comparison.json.")
     write_bytes_exclusive(path, ("\n".join(lines) + "\n").encode("utf-8"))
+
+
+def write_campaign_summary(result: dict, path: Path, baseline: str) -> None:
+    """Explain named arms and count their shared baseline only once."""
+    spending = result["spending"]
+    cap = spending["cap_usd"]
+    lines = [
+        "# Experiment results",
+        "",
+        f"Dataset role: **{result.get('dataset_role') or 'unspecified'}**. Baseline: **{baseline}**. Unique planned runs: **{len(result['runs'])}**.",
+        "Primary and repeatability comparisons are separate; repeats are not independent papers.",
+        "",
+        "## Run coverage and cost",
+        "",
+        "| Arm | Completed / planned | Automatically scored | Known provider spend (USD) | Complete cost |",
+        "| --- | ---: | ---: | ---: | --- |",
+    ]
+    for arm, counts in result["accounting"].items():
+        scored = sum(
+            r.get("reference_agreement_available", False)
+            for r in result["runs"]
+            if r["arm"] == arm
+        )
+        lines.append(
+            f"| {arm} | {counts['complete_runs']} / {counts['planned_runs']} | {scored} | {counts['known_cost_usd']:.6f} | {'yes' if counts['cost_tracking_complete'] else 'no'} |"
+        )
+    lines += [
+        "",
+        "Costs include failures and count shared baseline attempts once. Execution failures are retained in `errors.json`.",
+        "",
+        f"New recorded provider cost: **${spending['known_run_cost_usd']:.6f}**. Unresolved attempt costs: **{spending['unresolved_attempts']}**.",
+        f"Committed spending, including prior spending and unknown-cost reservations: **${spending['committed_usd']:.6f}**. "
+        + (
+            f"Admission cap: **${cap:.2f}**."
+            if cap is not None
+            else "No campaign admission cap was declared."
+        ),
+        "",
+        "Reservations are estimates, not price guarantees. Details: `spending.json` and `accounting.json`.",
+        "",
+        "## Paired comparisons",
+        "",
+    ]
+    for name, comparison in result["comparisons"].items():
+        lines.append(
+            f"- [{name}](comparisons/{name}/summary.md): {comparison['reference_agreement']['status']}."
+        )
+    lines += [
+        "",
+        "## Read the plotting tables",
+        "",
+        "`figure-data/important_fields.csv`: key field scores by arm, paper and repeat. Paired reports label baseline/candidate as control/treatment.",
+        "",
+        "`scoring_diagnostics.csv`: value and context failures. `subfield_scores.csv` and `field_strata.csv`: domain and protocol breakdowns. Field counts retain malformed and literal claims.",
+        "",
+        "Paired reports contain intervals and denominators. Incomplete references measure annotation agreement, not validated accuracy. Empty cells mean unavailable.",
+    ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")

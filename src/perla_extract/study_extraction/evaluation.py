@@ -19,6 +19,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from .identity_text import identity_tokens
 from .models import (
     DeviceFamily,
     IndividualDevice,
@@ -27,7 +28,9 @@ from .models import (
     StudyExtraction,
     study_schema_sha256,
 )
+from .quantities import interpret_quantity, scientific_text
 from .reference_release import ReferenceRelease
+from .scoring_context import UnorderedContext, equal_value
 from .scoring_coverage import ReferenceCoverage
 from .scoring_diagnostics import (
     FactDiagnostic,
@@ -46,18 +49,16 @@ from .scoring_facts import (
     FactGroup,
     RecordReference,
     ScientificFact,
-    UnorderedContext,
     compare_facts,
-    equal_value,
     property_name,
     scientific_descriptor,
     scientific_facts,
-    scientific_text,
 )
 from .scoring_fields import FACT_GROUPS, FACT_SUBFIELDS, FactSubfield
 from .scoring_identity import (
     MeasurementUse,
     device_measurements,
+    family_label_features,
     family_pair_evidence,
     measurement_subject,
     measurement_use_similarity,
@@ -69,7 +70,10 @@ from .scoring_process import align_processes
 
 EVALUATION_FORMAT_VERSION: Final[Literal[17]] = 17
 MAX_FACT_CANDIDATES = 1_000_000
-MATCHER_VERSION: Final[Literal["rich-study-hungarian-v22"]] = "rich-study-hungarian-v22"
+MATCHER_VERSION: Final[Literal["rich-study-hungarian-v27"]] = "rich-study-hungarian-v27"
+FACT_PROFILE_VERSION: Final[Literal["core-scientific-facts-v24"]] = (
+    "core-scientific-facts-v24"
+)
 RecordKind = Literal[
     "device_families",
     "individual_devices",
@@ -268,7 +272,10 @@ class EvaluationValidationIssue(StrictModel):
 
     path: str
     reason: str
-    category: Literal["structural", "citation", "unspecified"] = "unspecified"
+    category: Literal["structural", "citation", "quantity", "unspecified"] = (
+        "unspecified"
+    )
+    code: str | None = None
 
 
 class PredictionValidation(StrictModel):
@@ -387,6 +394,7 @@ class ScoringIssue(StrictModel):
         "ambiguous_scope",
         "unmatched_records",
         "conflicting_representations",
+        "quantity_conflict",
     ]
     side: Literal["truth", "prediction"]
     paths: list[str]
@@ -396,7 +404,7 @@ class ScoringIssue(StrictModel):
 class CoreFactScore(FactScoreView):
     """Correctly attributed claims, with recovery over the identical fact inventory."""
 
-    profile: Literal["core-scientific-facts-v19"] = "core-scientific-facts-v19"
+    profile: Literal["core-scientific-facts-v24"] = FACT_PROFILE_VERSION
     recovery: FactScoreView
     scoring_status: Literal["ready", "needs_review"]
     issues: list[ScoringIssue]
@@ -465,7 +473,7 @@ class EvaluationReport(StrictModel):
     """Represent a reproducible score without collapsing distinct error modes."""
 
     format_version: Literal[17] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v22"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v27"] = MATCHER_VERSION
     study_schema_sha256: str
     truth_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     prediction_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -557,7 +565,7 @@ class DatasetEvaluationReport(StrictModel):
     """Aggregate immutable paper reports without rerunning their record matcher."""
 
     format_version: Literal[17] = EVALUATION_FORMAT_VERSION
-    matcher_version: Literal["rich-study-hungarian-v22"] = MATCHER_VERSION
+    matcher_version: Literal["rich-study-hungarian-v27"] = MATCHER_VERSION
     study_schema_sha256: str
     config: EvaluationConfig
     bootstrap_samples: int = Field(ge=0)
@@ -812,6 +820,7 @@ def _record_pairs(
         dict[str, frozenset[MeasurementUse]], dict[str, frozenset[MeasurementUse]]
     ]
     | None = None,
+    family_labels: tuple[dict[str, set[str]], dict[str, set[str]]] | None = None,
 ) -> list[tuple[int, int, float, bool]]:
     """Prefer established parent and protocol context over coincidentally equal numbers.
 
@@ -846,9 +855,18 @@ def _record_pairs(
                 and left_code != right_code
             ):
                 return 0
-        content = _record_similarity(left, right, relative, absolute)
+        labels = (
+            (family_labels[0][left.family_id], family_labels[1][right.family_id])
+            if family_labels is not None
+            and isinstance(left, DeviceFamily)
+            and isinstance(right, DeviceFamily)
+            else None
+        )
+        content = _record_similarity(
+            left, right, relative, absolute, family_labels=labels
+        )
         if (
-            kind == "device_families"
+            kind in {"device_families", "individual_devices"}
             and left_code is not None
             and left_code == right_code
         ):
@@ -869,8 +887,6 @@ def _record_pairs(
         # equal weight. Missing parents add no evidence; contradictory required
         # context is still rejected when facts are compared.
         content = (content + 1.0) / 2 if compatible else content
-        if content < threshold:
-            return 0
         if (
             kind == "individual_devices"
             and compatible
@@ -884,6 +900,11 @@ def _record_pairs(
                 b = measurement_uses[1].get(right.device_id, frozenset())
                 overlap = measurement_use_similarity(a, b)
                 content = (content + overlap) / 2
+        # Apply the documented cutoff to all identity evidence. Otherwise the
+        # parent-priority bonus below can admit a specimen whose corroborated
+        # score fell below the threshold (e.g. unrelated measurement roles).
+        if content < threshold:
+            return 0
         protocol = all(
             getattr(left, field, None) == getattr(right, field, None)
             for field in (
@@ -1054,6 +1075,19 @@ def _core_fact_score(
         ),
     ]
     issues: list[ScoringIssue] = []
+    for side, projection in zip(("truth", "prediction"), projections):
+        for fact in projection.facts:
+            if isinstance(fact.value, ReportedValue):
+                interpretation = interpret_quantity(fact.value)
+                if interpretation.status == "contradiction":
+                    issues.append(
+                        ScoringIssue(
+                            kind="quantity_conflict",
+                            side=side,
+                            paths=[fact.path],
+                            reason=f"Explicit quantity contradiction: {interpretation.reason}. The claim remains counted but cannot earn numerical credit.",
+                        )
+                    )
     for kind in RECORD_KINDS:
         if (
             getattr(truth, kind)
@@ -1381,7 +1415,6 @@ def evaluate_study(
     truth: StudyExtraction,
     prediction: StudyExtraction,
     *,
-    ignored_truth_record_keys: Iterable[str] = (),
     benchmark: BenchmarkProvenance | None = None,
     prediction_validation: PredictionValidation | None = None,
     run_efficiency: RunEfficiency | None = None,
@@ -1392,9 +1425,8 @@ def evaluate_study(
 ) -> EvaluationReport:
     """Compare every reference record without prediction-dependent exclusions.
 
-    Reviewer uncertainty must be resolved before benchmark export. The legacy
-    exclusion argument is accepted only when empty so older callers fail explicitly
-    instead of silently changing which facts contribute to a score.
+    Reviewer uncertainty must be resolved before benchmark export. Every supplied
+    reference fact contributes to the inventory; predictions cannot filter it.
     """
 
     config = config or EvaluationConfig()
@@ -1445,11 +1477,6 @@ def evaluate_study(
                     f"{side}.{kind} contains duplicate record IDs: {', '.join(duplicates)}; "
                     "resolve the identities before scoring"
                 )
-    if tuple(ignored_truth_record_keys):
-        raise ValueError(
-            "reference exclusions are no longer supported; resolve uncertain records "
-            "and export a finalized reference before scoring"
-        )
     inventory: dict[RecordKind, PRF] = {}
     matches: list[RecordMatch] = []
     unmatched_truth: list[str] = []
@@ -1461,6 +1488,10 @@ def evaluate_study(
     total_truth_values = 0
     total_prediction_values = 0
     measurement_uses = (device_measurements(truth), device_measurements(prediction))
+    family_labels = (
+        family_label_features(truth.device_families),
+        family_label_features(prediction.device_families),
+    )
 
     for kind in RECORD_KINDS:
         truth_records = list(getattr(truth, kind))
@@ -1469,11 +1500,20 @@ def evaluate_study(
             kind,
             truth_records,
             prediction_records,
-            identity_pairs,
+            # A selected edge in a tied parent assignment is not an established
+            # identity. Let independent child evidence work without inheriting
+            # that arbitrary choice or its parent-priority bonus.
+            [
+                (parent, left, right)
+                for parent, left, right in identity_pairs
+                if f"{parent}:{left}" not in ambiguous_truth
+                and f"{parent}:{right}" not in ambiguous_prediction
+            ],
             config.minimum_record_similarity,
             config.numeric_relative_tolerance,
             config.numeric_absolute_tolerance,
             measurement_uses=measurement_uses,
+            family_labels=family_labels,
         )
         total_truth_values += sum(
             len(_reported_values(record)) for record in truth_records
@@ -1515,10 +1555,23 @@ def evaluate_study(
                     predicted_id=_record_id(kind, predicted_record),
                     similarity=similarity,
                     ambiguous=ambiguous,
-                    family_features=family_pair_evidence(truth_record, predicted_record)
+                    family_features=family_pair_evidence(
+                        truth_record,
+                        predicted_record,
+                        (
+                            family_labels[0][truth_record.family_id],
+                            family_labels[1][predicted_record.family_id],
+                        ),
+                    )
                     if kind == "device_families"
                     else None,
                     identity_evidence={
+                        "truth_label_tokens": sorted(
+                            identity_tokens(truth_record.label)
+                        ),
+                        "prediction_label_tokens": sorted(
+                            identity_tokens(predicted_record.label)
+                        ),
                         "truth_sample_code": [sample_code(truth_record)]
                         if sample_code(truth_record)
                         else [],
@@ -1601,6 +1654,23 @@ def evaluate_study(
         total_truth_values,
         matched_value_count,
     )
+    core_facts = _core_fact_score(
+        truth,
+        prediction,
+        identity_pairs,
+        config,
+        ambiguous_truth,
+        ambiguous_prediction,
+        _explanation,
+    )
+    warnings = _input_warnings(truth, prediction, benchmark, run_manifest_sha256)
+    if any(
+        issue.kind == "quantity_conflict" and issue.side == "truth"
+        for issue in core_facts.issues
+    ):
+        warnings.append(
+            "Reference quantity metadata contains explicit contradictions. These facts remain counted; resolve the reference issues before claiming quantitative accuracy."
+        )
     return EvaluationReport(
         interpretation="reviewed_scope"
         if benchmark and benchmark.coverage.complete()
@@ -1613,19 +1683,9 @@ def evaluate_study(
         benchmark=benchmark,
         prediction_validation=prediction_validation,
         run_efficiency=run_efficiency,
-        input_warnings=_input_warnings(
-            truth, prediction, benchmark, run_manifest_sha256
-        ),
+        input_warnings=warnings,
         config=config,
-        core_facts=_core_fact_score(
-            truth,
-            prediction,
-            identity_pairs,
-            config,
-            ambiguous_truth,
-            ambiguous_prediction,
-            _explanation,
-        ),
+        core_facts=core_facts,
         inventory=inventory,
         micro_inventory=_prf(micro_predicted, micro_truth, micro_matched),
         field_agreement=FieldAgreement(

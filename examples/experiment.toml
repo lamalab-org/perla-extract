@@ -1,4 +1,4 @@
-# Copy to the repository root as my-experiment.toml; set the source paths.
+# Copy to the repository root and use your separate model-labeled development papers.
 # Question: does one refinement call improve a direct extraction?
 output = "results/refinement"
 repeats = 1
@@ -9,19 +9,18 @@ reasoning_effort = "medium"
 max_output_tokens = 40000
 
 [extraction]
-parser = "pymupdf"
 use_claim_ledger = false
 use_targeted_repair = false
 use_enrichment = false
 max_model_calls = 2
 
-[control]
+[arms.control]
 use_refinement = false
 
-[treatment]
+[arms.treatment]
 use_refinement = true
 
 [[papers]]
-pdf = "papers/10.1002--adfm.201904856.pdf"
-supplement = "papers/10.1002--adfm.201904856-SI.pdf"
-reference = "data/study_extraction/ground_truth/v2/dev/10.1002--adfm.201904856"
+pdf = "papers/dev-paper.pdf"
+supplement = "papers/dev-paper-SI.pdf"
+reference = "references/dev-paper"

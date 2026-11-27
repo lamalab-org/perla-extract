@@ -3,6 +3,7 @@
 The first configuration fits its declared input/context allowance. The second
 reserves too little space for the same scientific request. Both save ordinary run
 artifacts so a maintainer can trace a limit from configuration to reported outcome.
+This synthetic offline demonstration explicitly uses PyMuPDF to avoid parsing-model downloads.
 """
 
 from __future__ import annotations

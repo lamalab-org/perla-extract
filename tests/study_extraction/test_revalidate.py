@@ -1,9 +1,11 @@
 import json
 
+import pytest
 from click.testing import CliRunner
 
 from perla_extract.study_extraction.models import PaperMetadata, StudyExtraction
 from perla_extract.study_extraction.revalidate import main, revalidate_run
+from perla_extract.study_extraction.run_artifacts import write_run_manifest
 
 
 def write_json(path, value):
@@ -34,6 +36,8 @@ def test_revalidation_refreshes_only_derived_run_artifacts(tmp_path):
             "usage": {"cost": 1.25},
         },
     )
+    write_json(run_dir / "run_configuration.json", {})
+    write_run_manifest(run_dir)
 
     original = (run_dir / "report.json").read_bytes()
     report = revalidate_run(run_dir)
@@ -60,8 +64,17 @@ def test_revalidation_command_reports_bad_run_without_hiding_it(tmp_path):
     run_dir = tmp_path / "paper"
     run_dir.mkdir()
     (run_dir / "extraction.json").write_text("not json", encoding="utf-8")
+    write_json(run_dir / "report.json", {"status": "complete_needs_review"})
+    write_json(run_dir / "run_configuration.json", {})
+    write_run_manifest(run_dir)
 
     result = CliRunner().invoke(main, ["--runs-dir", str(tmp_path)])
 
     assert result.exit_code == 1
     assert "paper: cannot read" in result.output
+
+
+def test_revalidation_rejects_an_unsealed_input_without_creating_output(tmp_path):
+    with pytest.raises(ValueError, match="Cannot verify run"):
+        revalidate_run(tmp_path)
+    assert not list(tmp_path.glob("revalidation-*"))

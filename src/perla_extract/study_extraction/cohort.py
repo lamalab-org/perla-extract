@@ -124,7 +124,9 @@ def _paper_config(
         **parse_settings({"stages": manifest.stages}, Path.cwd()),
         "parser": manifest.parser,
         "claim_recall_passes": manifest.claim_recall_passes,
-        "max_model_calls": manifest.max_model_calls_per_paper,
+        "max_model_calls": manifest.max_model_calls_per_paper
+        if manifest.max_model_calls_per_paper is not None
+        else default("max_model_calls"),
         "max_cost_usd": manifest.max_cost_usd_per_paper,
     }
     file_settings = load_settings(config_file)

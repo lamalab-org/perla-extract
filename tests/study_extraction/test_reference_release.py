@@ -1,4 +1,4 @@
-"""Keep the public expert-reviewed release intact and usable by the real scorer."""
+"""Preserve published reference bytes and score the active human-reference release."""
 
 import json
 import os
@@ -19,20 +19,26 @@ from perla_extract.study_extraction.reference_io import (
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 ROOT = Path(__file__).resolve().parents[2] / "data/study_extraction/ground_truth"
-RELEASES = [
+ARCHIVES = [
     (path.parent, json.loads(path.read_text(encoding="utf-8")))
     for path in sorted(ROOT.glob("v*/release.json"))
 ]
+RELEASES = [entry for entry in ARCHIVES if entry[0].name == "v2"]
 PAPERS = [
     pytest.param(release, index, paper, id=f"{release.name}/{paper['paper_id']}")
     for release, index in RELEASES
+    for paper in index["papers"]
+]
+ARCHIVED_PAPERS = [
+    pytest.param(release, index, paper, id=f"{release.name}/{paper['paper_id']}")
+    for release, index in ARCHIVES
     for paper in index["papers"]
 ]
 
 
 @pytest.mark.parametrize(
     "release,index",
-    RELEASES,
+    ARCHIVES,
     ids=lambda item: item.name if isinstance(item, Path) else item["release"],
 )
 def test_release_roster_is_complete(release, index):
@@ -50,7 +56,7 @@ def test_release_roster_is_complete(release, index):
     }
 
 
-@pytest.mark.parametrize("release,index,paper", PAPERS)
+@pytest.mark.parametrize("release,index,paper", ARCHIVED_PAPERS)
 def test_public_reference_preserves_hashes_and_excludes_private_metadata(
     release, index, paper
 ):
@@ -83,9 +89,6 @@ def test_public_reference_preserves_hashes_and_excludes_private_metadata(
         r"internal_[0-9a-f]+|/Users/|/home/|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}",
         manifest_text + truth_text,
     )
-    _, provenance = load_reference(directory)
-    assert provenance is not None
-    assert provenance.ground_truth_sha256 == paper["ground_truth_sha256"]
 
 
 def _rename_and_reorder(value, field=""):
@@ -124,13 +127,35 @@ def test_reference_score_invariance_and_negative_controls(release, index, paper)
     # rewrite a frozen reference just to change that historical metadata.
     assert index["matcher_version"] == "rich-study-hungarian-v6"
     assert index["fact_profile"] == "core-scientific-facts-v4"
-    assert same.matcher_version == "rich-study-hungarian-v22"
-    assert same.core_facts.profile == "core-scientific-facts-v19"
+    assert same.matcher_version == "rich-study-hungarian-v27"
+    assert same.core_facts.profile == "core-scientific-facts-v24"
     # Repeated observations of the same known device are a fact multiset. Their
     # generated record IDs need no unique pairing; scientific subjects still do.
-    assert same.core_facts.micro.f1 == 1
-    assert same.core_facts.recovery.micro.f1 == 1
-    assert not same.core_facts.issues
+    # Four archived area annotations carry inverse-area units. They remain
+    # counted and flagged; no other self-comparison loss is acceptable.
+    expected = {
+        f"/individual_devices/{i}/reported_properties/{j}"
+        for i, device in enumerate(truth.individual_devices)
+        for j, value in enumerate(device.reported_properties)
+        if (value.name, value.raw_value, value.value_number, value.unit)
+        == ("active area", "0.06 cm -2", 0.06, "cm -2")
+    }
+    observed = {
+        (issue.side, path)
+        for issue in same.core_facts.issues
+        for path in issue.paths
+        if issue.kind == "quantity_conflict"
+    }
+    assert observed == {
+        (side, path) for side in ("truth", "prediction") for path in expected
+    }
+    assert all(issue.kind == "quantity_conflict" for issue in same.core_facts.issues)
+    for view in (same.core_facts, same.core_facts.recovery):
+        assert set(view.unmatched_truth_paths) == expected
+        assert set(view.unmatched_prediction_paths) == expected
+        assert view.micro.truth == view.micro.predicted
+        assert view.micro.matched == view.micro.truth - len(expected)
+
     reordered = StudyExtraction.model_validate(
         _rename_and_reorder(truth.model_dump(mode="json"))
     )

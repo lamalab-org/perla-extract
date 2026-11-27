@@ -1,8 +1,8 @@
 """Conservative unit conversion shared by downstream projections.
 
-Pint versions supported on older Python releases can raise AssertionError for
-malformed expressions such as ``Ω/``. Catch it only at these conversion boundaries,
-like other parser errors, so callers retain the source label instead of aborting.
+Malformed expressions such as ``Ω/`` can raise parser errors, including
+AssertionError. Catch them only at conversion boundaries so callers retain the
+source label instead of aborting a paper's extraction or score.
 """
 
 from __future__ import annotations
@@ -12,7 +12,16 @@ import re
 from functools import lru_cache
 from tokenize import TokenError
 
-from .models import ReportedValue
+from .quantity_specs import basis_percent_unit
+
+_UNIT_MINUS_SIGNS = str.maketrans(
+    {
+        "\u2212": "-",  # Mathematical minus.
+        "\u2012": "-",  # Figure dash used in PDF unit exponents.
+        "\u2013": "-",  # En dash used in PDF unit exponents.
+        "\uf02d": "-",  # Legacy Symbol-font minus.
+    }
+)
 
 
 def _unit_key(unit: str) -> str:
@@ -35,13 +44,14 @@ def _unit_registry():
 def _pint_unit(unit: str) -> str:
     """Translate OCR typography, not scientific meaning, before unit parsing.
 
-    PDF text occasionally contains C0 control characters where a mathematical glyph
-    failed to decode. They carry no safely recoverable unit meaning, so replacing them
-    with spaces lets Pint reject the unit without allowing malformed OCR to crash the
-    extraction run.
+    Ordinary layout whitespace is harmless. Undecodable control characters are
+    rejected: erasing one may turn a lost minus into a positive exponent. A space
+    after the explicit micro-prefix glyph is typography, not multiplication.
     """
 
     superscript = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+")
+    if any(ord(character) < 32 and not character.isspace() for character in unit):
+        raise ValueError("Undecodable control character in unit")
     printable_unit = "".join(
         " " if ord(character) < 32 else character for character in unit
     )
@@ -51,10 +61,9 @@ def _pint_unit(unit: str) -> str:
         .replace("°C", "degree_Celsius")
         .replace("° C", "degree_Celsius")
         .replace("·", " * ")
-        .replace("−", "-")
-        .replace("–", "-")
-        .replace("\uf02d", "-")
+        .translate(_UNIT_MINUS_SIGNS)
     )
+    value = re.sub(r"([µμ])\s+(?=[A-Za-z])", r"\1", value)
     value = re.sub(
         r"[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+",
         lambda match: "**" + match.group(0).translate(superscript),
@@ -86,43 +95,6 @@ def _pint_unit(unit: str) -> str:
     return value
 
 
-def convert_reported_value(value: ReportedValue, target_unit: str) -> float | None:
-    """Convert only an explicit number carrying an explicit compatible unit."""
-
-    from pint.errors import PintError
-
-    if value.value_number is None or value.unit is None:
-        return None
-    unit = value.unit.strip()
-    if not unit or not target_unit.strip():
-        return None
-    try:
-        source, target = _pint_unit(unit), _pint_unit(target_unit)
-        if target_unit == "percent":
-            return (
-                value.value_number
-                if _unit_key(unit) in {"percent", "percentage"} or unit == "%"
-                else None
-            )
-        quantity = _unit_registry().Quantity(value.value_number, source)
-        return float(quantity.to(target).magnitude)
-    except (PintError, TokenError, AssertionError, TypeError, ValueError):
-        return None
-
-
-def canonical_reported_quantity(value: ReportedValue) -> tuple[float, str] | None:
-    """Put explicit quantities in base units for representation-independent scoring.
-
-    Unlike export conversion this has no destination-field conventions: percentages
-    become fractions and absolute temperatures become Kelvin. The caller must first
-    check that the raw claim is a plain number, not a range or qualified value.
-    """
-
-    if value.value_number is None or value.unit is None:
-        return None
-    return canonical_quantity(value.value_number, value.unit)
-
-
 def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
     """Convert an explicit magnitude; callers retain bounds and other qualifiers."""
 
@@ -142,6 +114,30 @@ def canonical_quantity(number: float, unit: str) -> tuple[float, str] | None:
         TypeError,
         ValueError,
         OverflowError,
+        ZeroDivisionError,
+    ):
+        return None
+
+
+def convert_quantity(number: float, unit: str, target_unit: str) -> float | None:
+    """Convert an explicit physical quantity, preserving scale and temperature offsets."""
+
+    from pint.errors import PintError
+
+    if not unit.strip() or not target_unit.strip() or not math.isfinite(number):
+        return None
+    try:
+        quantity = _unit_registry().Quantity(number, _pint_unit(unit))
+        converted = float(quantity.to(_pint_unit(target_unit)).magnitude)
+        return converted if math.isfinite(converted) else None
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        OverflowError,
+        ZeroDivisionError,
     ):
         return None
 
@@ -177,6 +173,7 @@ def equivalent_unit_spelling(left: str, right: str) -> bool:
         TypeError,
         ValueError,
         OverflowError,
+        ZeroDivisionError,
     ):
         return False
 
@@ -188,6 +185,8 @@ def is_concentration_unit(unit: str | None) -> bool:
 
     if unit is None:
         return False
+    if basis_percent_unit(unit) is not None:
+        return True
     try:
         source = _pint_unit(unit)
         compact = _unit_key(unit)
@@ -205,5 +204,12 @@ def is_concentration_unit(unit: str | None) -> bool:
             quantity.is_compatible_with(target)
             for target in ("mole / liter", "gram / liter")
         )
-    except (PintError, TokenError, AssertionError, TypeError, ValueError):
+    except (
+        PintError,
+        TokenError,
+        AssertionError,
+        TypeError,
+        ValueError,
+        ZeroDivisionError,
+    ):
         return False

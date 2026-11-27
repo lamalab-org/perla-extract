@@ -1,9 +1,8 @@
 """Evidence-backed records for extracting a complete photovoltaic study.
 
-These models preserve distinctions that the historical flat PERLA schema cannot
-represent, especially device identity, measurement protocol, population results,
-and multiple stability experiments. They deliberately contain generic reported values
-instead of one field per possible processing or material property.
+These models separate device identity, measurement protocol, population results
+and stability experiments. Generic reported values preserve source detail without
+requiring one schema field per possible processing or material property.
 """
 
 from __future__ import annotations
@@ -218,85 +217,6 @@ class DeviceFamily(StrictModel):
     processing_steps: Annotated[list[ProcessingStep], Field(max_length=150)]
     evidence: Annotated[list[EvidenceCitation], Field(min_length=1, max_length=15)]
 
-    @model_validator(mode="before")
-    @classmethod
-    def migrate_unscoped_absorber(cls, value: object) -> object:
-        """Read version-1 records without exposing legacy fields in the new schema.
-
-        Migration is deliberately lossless but not interpretive: all former absorber
-        claims become one unscoped component. Splitting a historical tandem record
-        still requires source review because doing so deterministically would invent
-        which constituent belongs to which subcell.
-        """
-
-        if not isinstance(value, dict):
-            return value
-        legacy_keys = (
-            "absorber_formula",
-            "absorber_properties",
-            "absorber_constituents",
-        )
-        if not any(key in value for key in legacy_keys):
-            return value
-        data = dict(value)
-        formula = data.pop("absorber_formula", None)
-        properties = data.pop("absorber_properties", [])
-        constituents = data.pop("absorber_constituents", [])
-        if "absorbers" in data:
-            if formula is not None or properties or constituents:
-                raise ValueError("cannot mix scoped and legacy absorber fields")
-            return data
-        if formula is None and not properties and not constituents:
-            data["absorbers"] = []
-            return data
-
-        citations: list[dict[str, object]] = []
-        for claim in [formula, *properties, *constituents]:
-            claim_data = (
-                claim.model_dump(mode="json") if isinstance(claim, BaseModel) else claim
-            )
-            if isinstance(claim_data, dict):
-                citations.extend(
-                    item
-                    for item in claim_data.get("evidence", [])
-                    if isinstance(item, dict)
-                )
-        if not citations:
-            citations.extend(
-                item.model_dump(mode="json") if isinstance(item, BaseModel) else item
-                for item in data.get("evidence", [])
-                if isinstance(item, (dict, BaseModel))
-            )
-        unique_citations = list(
-            {
-                (str(item.get("block_id")), str(item.get("quote"))): item
-                for item in citations
-            }.values()
-        )[:15]
-        absorber_layers = [
-            layer.model_dump(mode="json") if isinstance(layer, BaseModel) else layer
-            for layer in data.get("layers", [])
-            if (
-                layer.role == "absorber"
-                if isinstance(layer, Layer)
-                else isinstance(layer, dict) and layer.get("role") == "absorber"
-            )
-        ]
-        layer = absorber_layers[0] if len(absorber_layers) == 1 else None
-        family_id = str(data.get("family_id", "family"))
-        data["absorbers"] = [
-            {
-                "absorber_id": f"{family_id[:188]}-absorber-1",
-                "layer_id": layer.get("layer_id") if layer else None,
-                "label": str(layer.get("material")) if layer else "Unscoped absorber",
-                "formula": formula,
-                "properties": properties,
-                "constituents": constituents,
-                "evidence": unique_citations,
-            }
-        ]
-        return data
-
 
 class SubjectContext(StrictModel):
     """Source-backed treatment identity, independent of the measured outcome.
@@ -508,24 +428,6 @@ class StudyExtraction(StrictModel):
     stability_tests: list[StabilityTest]
     unresolved_notes: list[ShortText]
 
-    @model_validator(mode="before")
-    @classmethod
-    def accept_empty_legacy_identity_links(cls, value: object) -> object:
-        """Load older empty-link artifacts without retaining a retired abstraction.
-
-        Claim-first extraction no longer emits partial schema candidates, so there is
-        nothing to link after assembly. A non-empty legacy link is rejected rather than
-        silently discarded because it may encode unresolved scientific identity.
-        """
-
-        if not isinstance(value, dict) or "identity_links" not in value:
-            return value
-        if value["identity_links"] not in (None, []):
-            raise ValueError("non-empty legacy identity_links require manual migration")
-        migrated = dict(value)
-        migrated.pop("identity_links")
-        return migrated
-
 
 def _schema_contract(value: object) -> object:
     """Remove JSON Schema prose while preserving fields, constraints and defaults."""
@@ -559,8 +461,9 @@ def study_schema_sha256() -> str:
     """Identify the data contract independently of explanatory schema prose.
 
     Field names, required fields, types, bounds, defaults and validators represented
-    in JSON Schema remain significant. A contract change requires explicit reference
-    compatibility handling; editing descriptions alone does not invalidate truth.
+    in JSON Schema remain significant. Payloads are always checked against the
+    current model; this fingerprint records the producer contract without acting
+    as an old-format allowlist.
     """
 
     encoded = json.dumps(
@@ -578,22 +481,3 @@ def study_schema_prose_sha256() -> str:
         StudyExtraction.model_json_schema(), sort_keys=True, separators=(",", ":")
     ).encode()
     return hashlib.sha256(encoded).hexdigest()
-
-
-# Schemas 7 and 8 only add optional context fields with explicit unknown defaults.
-# Archived schema-6 inputs can be read losslessly, without inventing that context.
-# There is one current evaluator; this is data compatibility, not legacy scoring.
-_SCHEMA_6_CONTRACT = "5703bf0addcf3ba8d20104de05673184efb05f33324f6d04c1e6c6f7dacc8e33"
-_SCHEMA_6_ARCHIVED = "0f242f5cb719b47ae6bbcd1818ce8bd382b358136334ecc2abfb9de9db011413"
-_SCHEMA_7_CONTRACT = "073f012a95389a7fd4f9b17d3ff3702e72eac868cb5f545b937715c25117fef3"
-
-
-_SCHEMA_8_CONTRACT = "8c907b376309579bbb73d5137453107abdd508a12185c936bba9cbc678534364"
-
-
-def compatible_study_schema(fingerprint: object) -> bool:
-    current = study_schema_sha256()
-    return fingerprint == current or (
-        current == _SCHEMA_8_CONTRACT
-        and fingerprint in (_SCHEMA_6_CONTRACT, _SCHEMA_6_ARCHIVED, _SCHEMA_7_CONTRACT)
-    )

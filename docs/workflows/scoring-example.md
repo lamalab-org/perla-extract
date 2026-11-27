@@ -19,7 +19,7 @@ PYTHONPATH=.:src python -m examples.scoring.run --output /tmp/perla-scoring-exam
 ```
 
 Choose a new output directory for each run. An existing directory is refused to
-protect review history. The final line should say `PASS: four synthetic cases`.
+protect review history. The result should say `PASS: 5 synthetic cases`.
 The same command also writes `study.json`, `runs.csv`, `comparison.json`, and plotting CSVs in
 `figure-data/` through the normal comparison command. No extra command or roster
 editing is needed for this first demonstration.
@@ -35,24 +35,35 @@ and a discarded estimate of 21%. The seed incorrectly puts DMF in the stack, use
 21% as the final PCE and omits FF.
 
 The script saves three corrections through the normal review store, completes the
-simulated review stages, and exports a format-4 reference. It then scores four
+simulated review stages, and exports a format-4 reference. It then scores five
 unchanged candidates against that reference:
 
-| Candidate | Correct stack facts / predicted / reference | Correct performance facts / predicted / reference |
-| --- | --- | --- |
-| Original seed | 0 / 1 / 1 | 0 / 1 / 2 |
-| Corrected extraction | 1 / 1 / 1 | 2 / 2 / 2 |
-| PCE expressed as an explicit fraction, 0.20 | 1 / 1 / 1 | 2 / 2 / 2 |
-| Correct values assigned to a forward scan | 1 / 1 / 1 | 0 / 2 / 2 |
+| Candidate | Correct stack / predicted / reference | Attributed performance / predicted / reference | Recovered performance |
+| --- | --- | --- | --- |
+| Original seed | 0 / 1 / 1 | 0 / 1 / 2 | 0 |
+| Corrected extraction | 1 / 1 / 1 | 2 / 2 / 2 | 2 |
+| PCE expressed as an explicit fraction, 0.20 | 1 / 1 / 1 | 2 / 2 / 2 | 2 |
+| Correct values assigned to a forward scan | 1 / 1 / 1 | 0 / 2 / 2 | 2 |
+| Raw PCE `20%`, parsed number `2` | 1 / 1 / 1 | 1 / 2 / 2 | 1 |
 
 The stack is deliberately represented by one raw stack string to exercise the
 fallback for absent structured layers. It therefore counts as one stack fact,
 not one fact per material. The performance facts are PCE and FF. Other scientific
 groups are empty, not counted as successes.
+Recovery counts compatible values without establishing ownership: the wrong-scan
+case still recovers both values while receiving no attributed performance credit.
 
-All candidates can pass literal evidence validation: even 21% occurs in the source.
+All candidates can pass literal evidence grounding: even 21% occurs in the source.
 The wrong-scan and wrong-value cases illustrate why citation validity is not
 scientific correctness. The unit-equivalent candidate uses the same source document.
+The fifth case preserves the correct source wording but corrupts its convenience
+number. Source grounding still finds both PCE and FF; quantity validation reports
+one contradiction. PCE remains counted but loses credit, while FF stays correct.
+
+Each candidate is also exported to NOMAD. The explicit fractional PCE becomes 20%,
+and the contradictory PCE is withheld rather than exported as 2% or silently repaired.
+The raw metric and its interpretation remain in archive notes. `summary.json` checks
+these outcomes against independently written expectations as well as score counts.
 
 ## Inspect the outputs
 
@@ -75,6 +86,7 @@ perla-scoring-example/
     document.json
     report.json                       # No-model-call accounting
     evaluation.json                   # Full scorer output, including field paths
+    nomad_export.json                 # Scalar projection, retained raw values and issues
 ```
 
 The example uses the normal four-file export and adds its invented evidence
@@ -83,6 +95,12 @@ calls and cost; elapsed time measures local fixture writing, not model latency.
 Review timestamps and hashes vary between runs. The fact counts and scoring settings
 must stay the same. The tests compare them with separately written expectations in
 `examples/scoring/expected.json`.
+
+For a failure, start with `summary.json`: compare `actual` with `expected` for credit,
+then `checks` with `expected_checks` for grounding, conflicts and scalar export.
+Open the corresponding prediction's `evaluation.json` for affected paths and
+`nomad_export.json` for retained raw values. A higher score is not the test's goal;
+the declared scientific behavior must agree in every case.
 
 Re-run the ordinary scorer on the generated seed:
 

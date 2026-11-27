@@ -75,3 +75,26 @@ def test_reader_prompt_context_and_primary_share_one_decode_catalog():
     )
     assert json.loads(left)[0]["spans"] == {"1": "Context statement."}
     assert json.loads(right)[0]["spans"] == {"2": "Primary result."}
+
+
+def test_payload_reports_missing_context_instead_of_silently_hiding_it():
+    table = block("Device | PCE\nA | 20", "table").model_copy(
+        update={"metadata": {"context_block_ids": ["missing-note"]}}
+    )
+    payload = evidence_payload([table])
+    assert payload[0]["context_block_ids"] == []
+    assert payload[0]["unresolved_context_block_ids"] == ["missing-note"]
+    assert table.metadata["context_block_ids"] == ["missing-note"]
+
+
+def test_separate_primary_payload_keeps_context_links_in_the_combined_catalog():
+    context = block("All values use reverse scans.").model_copy(
+        update={"block_id": "note"}
+    )
+    primary = block("A | 20", "table").model_copy(
+        update={"metadata": {"context_block_ids": ["note"]}}
+    )
+    spans = build_evidence_spans([context, primary])
+    payload = evidence_payload([primary], spans)
+    assert payload[0]["context_block_ids"] == ["note"]
+    assert "unresolved_context_block_ids" not in payload[0]

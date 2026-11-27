@@ -1,0 +1,40 @@
+# Final human-test evaluation: freeze models, prompts and scorer on separate dev papers first.
+# Update budget carry with all development spending/holds before execution.
+output = "../../results/human-test"
+config = "../development/astra.toml"
+dataset = "papers.json"
+sources = "../../papers"
+baseline = "astra"
+repeat_subset = true
+order_seed = 20261122
+
+# Includes all spending and unresolved holds from the earlier campaign.
+[budget]
+max_cost_usd = 150
+prior_known_cost_usd = 11.38294587
+prior_unknown_reservation_usd = 17.45
+
+[arms.astra]
+reservation_usd = 3.50
+
+[arms.terra]
+reservation_usd = 0.50
+[arms.terra.stages.default]
+model = "openai/gpt-6.1-terra"
+api_key_env = "OPENAI_API_KEY"
+service_tier = "default"
+reasoning_effort = "medium"
+context_tokens = 262144
+max_input_tokens = 180000
+max_output_tokens = 40000
+
+[arms.luna]
+reservation_usd = 0.05
+[arms.luna.stages.default]
+model = "openai/gpt-6-luna"
+api_key_env = "OPENAI_API_KEY"
+service_tier = "default"
+reasoning_effort = "medium"
+context_tokens = 262144
+max_input_tokens = 180000
+max_output_tokens = 40000

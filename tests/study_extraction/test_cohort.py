@@ -122,7 +122,7 @@ def test_resume_checks_actual_sources_configuration_and_valid_artifacts(
     elif change == "supplement":
         supplement.write_bytes(b"supplement two")
     elif change == "settings":
-        value = value.model_copy(update={"claim_recall_passes": 1})
+        value = value.model_copy(update={"max_model_calls_per_paper": 2})
     elif change == "parser":
         monkeypatch.setattr(
             cohort, "_parser_dependency_versions", lambda _: {"changed": "version"}

@@ -7,10 +7,6 @@ from contextlib import nullcontext
 from typing import Any
 
 from .artifacts import write_json_atomic
-from .candidate_selection import (
-    _gate_final_candidate_against_draft,
-    _select_refinement_candidate,
-)
 from .claims import (
     ClaimLedger,
     assembly_blocks,
@@ -21,6 +17,10 @@ from .claims import (
 from .client import ModelCallError, ModelClient, summarize_calls
 from .configuration import (
     ExtractionConfig,
+)
+from .correction_checks import (
+    _gate_final_candidate_against_draft,
+    _select_refinement_candidate,
 )
 from .deployment import (
     estimate_request_input,
@@ -247,9 +247,7 @@ def run_extraction(config: ExtractionConfig) -> dict[str, object]:
         dry_run=config.dry_run,
         paper=config.pdf.name,
         supplement=config.supplement.name if config.supplement else None,
-        models={
-            stage: policy.model for stage, policy in config.stage_policies().items()
-        },
+        models=config.scientific_settings()["effective_models"],
         readings=config.claim_recall_passes if config.use_claim_ledger else 0,
     )
     state = RunState()

@@ -4,6 +4,9 @@
 ### Data ###
 *.csv
 !src/perla_extract/allowed_journals.csv
+!benchmarks/test/pilot-rescore.csv
+!benchmarks/test/replays/*/field-summary.csv
+!benchmarks/test/replays/*/provenance.csv
 *.dat
 *.efx
 *.gbr

@@ -1,5 +1,7 @@
 # Maintain the codebase
 
+See the [readiness review](readiness.md) for the remaining study blockers.
+
 Start with the [offline scoring example](../workflows/scoring-example.md): change
 one reported value and follow its lost credit. Then try the request-planning exercise
 below. Both use invented data and need no provider key. Run commands from the
@@ -15,23 +17,29 @@ The paths below are relative to the repository root.
 
 | Responsibility | Start reading | Boundary to preserve |
 | --- | --- | --- |
-| Experiment design and execution | `src/perla_extract/study_extraction/experiment.py` | Freeze the complete roster before calls; keep failed attempts |
+| Experiment inputs and design | `src/perla_extract/study_extraction/experiment_plan.py`, `reference_dataset.py` | Verify sources and references before creating output |
+| Experiment execution and resumption | `study_extraction/experiment.py` → `experiment_state.py` | Preflight all inputs; reserve before requests; retain failed and uncertain slots |
 | Extraction stages | `study_extraction/workflow.py` under the same package | Each stage records its result and fallback |
 | Scientific record structure | `study_extraction/models.py` | Preparation, measurement and aging are different contexts |
 | Models, limits and provider requests | `study_extraction/configuration.py` → `request_policy.py` → `client.py` | Resolve one policy for planning and execution; missing usage stays unknown |
 | PDF text and evidence | `study_extraction/source.py` → `spans.py`, `transport.py` | Source IDs and quotations remain traceable to the supplied PDFs |
 | Scientific scoring | [Scoring maintainer guide](scoring.md), then `study_extraction/evaluation.py` | Match owners separately from values; use one credit ledger for all summaries |
 | Experiment results | `study_extraction/comparison.py` → `figure_data.py`, `experiment_summary.py` | Present saved scores without implementing another scorer |
-| Export | `study_extraction/nomad.py`, `compatibility.py` | Project supported fields; retain other context in notes and report conversion losses |
+| Export | `study_extraction/nomad.py` | Project supported fields; retain other context in notes and report conversion losses |
 | Reference review | [Reviewer guide](reviewer-ui.md), then `review_workbench/study_review.py` | Keep drafts, saved revisions and reference exports distinct |
 | Paper discovery | `src/perla_extract/papersbot/cli.py` → `bot.py` | Discovery and acquisition do not establish extraction accuracy |
-| Historical flat schema | `src/perla_extract/pydantic_model_reduced.py` | Compatibility consumer only; new extraction uses `StudyExtraction` |
 
 `tests/` checks the Python package; `review_workbench/tests/` also exercises browser
 modules. `data/study_extraction/ground_truth/` contains frozen references, while
 `examples/` contains runnable demonstrations. The reference directory name `v2` is
 a historical path, not a choice of scoring algorithm. Use the current format and
 read the manifest for each reference's coverage and provenance.
+
+The normal method is a direct call followed by source checks. Optional reading,
+refinement, repair and enrichment require an explicit switch and a larger request
+budget. `configuration.py` resolves this once for both Python and CLI users.
+`scientific_settings()` projects enabled stages for comparison; the complete raw
+configuration still appears in each run for debugging and provenance.
 
 ## Trace one request limit
 
@@ -78,7 +86,9 @@ those integer references back to exact public block IDs and quotations. Selected
 catalogs can have gaps, so decoding checks membership as well as numeric bounds.
 Keep this mapping mechanical and reject unknown references.
 `source_reading.py` fits windows and combines repeated notes with provenance.
-`candidate_selection.py` owns the refinement acceptance rule. `study_outputs.py`
+`correction_checks.py` owns correction selection and source-claim retention. `quantities.py` interprets complete reported quantities
+for validation, scoring and export; `quantity_specs.py` holds their checked names
+and conventions. `study_outputs.py`
 keeps optional interpretations separate from reported facts. `run_reporting.py`
 serializes existing decisions rather than running scientific checks again.
 
@@ -181,6 +191,3 @@ Run the full checks in [CONTRIBUTING.md](https://github.com/lamalab-org/perla-ex
 before submitting. Repeat the actual browser journey for UI changes: module tests
 do not establish visual usability. These exercises are an onboarding contract to
 try with new maintainers, not evidence that a human onboarding study has happened.
-
-The [maintainer audit](maintainability-audit.md) records the exercised paths, saved-data
-parity checks and remaining areas of complexity.

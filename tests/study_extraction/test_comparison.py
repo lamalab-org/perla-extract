@@ -313,6 +313,86 @@ def test_factor_check_rejects_unrelated_intervention(roster):
     assert any("undeclared configuration" in issue for issue in result["issues"])
 
 
+def reseal_configuration(directory, **updates):
+    """Bind a synthetic method change without breaking unrelated integrity checks."""
+    path = directory / "run_configuration.json"
+    configuration = json.loads(path.read_text())
+    configuration.update(updates)
+    path.write_text(json.dumps(configuration))
+    (directory / "run_manifest.json").unlink()
+    write_run_manifest(directory)
+    score_path = directory / "evaluation.json"
+    score = json.loads(score_path.read_text())
+    score["run_manifest_sha256"] = verify_run_manifest(directory)[1]
+    score_path.write_text(json.dumps(score))
+
+
+@pytest.fixture
+def parser_roster(roster):
+    for directory in roster.parent.glob("paper-*/*/*"):
+        treatment = directory.parent.name == "treatment"
+        dependencies = {"PyMuPDF": "1.27.2"}
+        if treatment:
+            dependencies["docling"] = "2.150.0"
+        reseal_configuration(
+            directory,
+            claim_recall_passes=2,
+            parser="docling" if treatment else "pymupdf",
+            parser_dependencies=dependencies,
+            evidence_spans_sha256=("d" if treatment else "c") * 64,
+        )
+    path = roster.with_suffix(".study.json")
+    study = json.loads(path.read_text())
+    study["factors"] = {"parser": {"control": "pymupdf", "treatment": "docling"}}
+    path.write_text(json.dumps(study))
+    return roster
+
+
+def test_declared_parser_comparison_uses_same_pdfs_with_different_evidence(
+    parser_roster,
+):
+    result = summarize(parser_roster, study=parser_roster.with_suffix(".study.json"))
+    assert result["quality_status"] == "ready"
+    assert result["reference_agreement"]["status"] == "complete_roster"
+    assert all(
+        d["fields"]["parser_dependencies.docling"]["treatment"] == "2.150.0"
+        for d in result["configuration_differences"]
+    )
+
+
+@pytest.mark.parametrize(
+    "updates,expected",
+    [
+        ({"evidence_spans_sha256": None}, "evidence fingerprint"),
+        ({"parser_dependencies": {}}, "dependency fingerprints"),
+        (
+            {"parser_dependencies": {"PyMuPDF": "changed", "docling": "2.150.0"}},
+            "undeclared configuration",
+        ),
+        ({"prompt_sha256": "changed"}, "undeclared configuration"),
+        ({"source_sha256": ["e" * 64]}, "source"),
+    ],
+)
+def test_parser_contrast_preserves_other_integrity_checks(
+    parser_roster, updates, expected
+):
+    reseal_configuration(parser_roster.parent / "paper-a/treatment/1", **updates)
+    result = summarize(parser_roster, study=parser_roster.with_suffix(".study.json"))
+    assert result["quality"] is None
+    assert result["reference_agreement"]["status"] == "blocked"
+    assert any(expected in issue.lower() for issue in result["issues"])
+
+
+def test_distinct_parsed_evidence_requires_a_declared_parser_factor(parser_roster):
+    path = parser_roster.with_suffix(".study.json")
+    study = json.loads(path.read_text())
+    study["factors"] = {}
+    path.write_text(json.dumps(study))
+    result = summarize(parser_roster, study=path)
+    assert result["reference_agreement"]["status"] == "blocked"
+    assert any("same evidence_spans_sha256" in issue for issue in result["issues"])
+
+
 def wrong_factor(roster):
     path = roster.with_suffix(".study.json")
     study = json.loads(path.read_text())

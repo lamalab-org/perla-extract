@@ -1,7 +1,7 @@
 {
   "format_version": 17,
-  "matcher_version": "rich-study-hungarian-v22",
-  "profile": "core-scientific-facts-v19",
+  "matcher_version": "rich-study-hungarian-v27",
+  "profile": "core-scientific-facts-v24",
   "config": {
     "minimum_record_similarity": 0.35,
     "numeric_relative_tolerance": 0.01,
@@ -30,6 +30,62 @@
     "wrong_scan": {
       "material_device_identity": {"truth": 1, "predicted": 1, "matched": 1},
       "performance": {"truth": 2, "predicted": 2, "matched": 0}
+    },
+    "raw_parsed_conflict": {
+      "material_device_identity": {"truth": 1, "predicted": 1, "matched": 1},
+      "performance": {"truth": 2, "predicted": 2, "matched": 1}
+    }
+  },
+  "checks": {
+    "seed": {
+      "source_verified_values": 1,
+      "recovered_performance": 0,
+      "quantity_conflicts": 0,
+      "scoring_issue_kinds": [],
+      "nomad_pce": 21,
+      "nomad_ff": null,
+      "nomad_metric_issue_codes": [],
+      "raw_metrics_preserved": true
+    },
+    "corrected": {
+      "source_verified_values": 2,
+      "recovered_performance": 2,
+      "quantity_conflicts": 0,
+      "scoring_issue_kinds": [],
+      "nomad_pce": 20,
+      "nomad_ff": 80,
+      "nomad_metric_issue_codes": [],
+      "raw_metrics_preserved": true
+    },
+    "equivalent_units": {
+      "source_verified_values": 2,
+      "recovered_performance": 2,
+      "quantity_conflicts": 0,
+      "scoring_issue_kinds": [],
+      "nomad_pce": 20,
+      "nomad_ff": 80,
+      "nomad_metric_issue_codes": [],
+      "raw_metrics_preserved": true
+    },
+    "wrong_scan": {
+      "source_verified_values": 2,
+      "recovered_performance": 2,
+      "quantity_conflicts": 0,
+      "scoring_issue_kinds": [],
+      "nomad_pce": 20,
+      "nomad_ff": 80,
+      "nomad_metric_issue_codes": [],
+      "raw_metrics_preserved": true
+    },
+    "raw_parsed_conflict": {
+      "source_verified_values": 2,
+      "recovered_performance": 1,
+      "quantity_conflicts": 1,
+      "scoring_issue_kinds": ["quantity_conflict"],
+      "nomad_pce": null,
+      "nomad_ff": 80,
+      "nomad_metric_issue_codes": ["incompatible_metric"],
+      "raw_metrics_preserved": true
     }
   }
 }

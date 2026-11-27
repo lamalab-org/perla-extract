@@ -192,17 +192,11 @@ def _merge_records(records: Iterable[PaperRecord]) -> list[PaperRecord]:
 
 
 def _merge_previous(state: BotState, record: PaperRecord) -> PaperRecord | None:
-    """Find prior state by DOI and migrate older feed identifiers transparently."""
+    """Carry retained metadata forward for the same canonical paper identity."""
 
-    previous_key = record.identifier if record.identifier in state.papers else None
-    if previous_key is None and record.doi:
-        previous_key = next(
-            (key for key, item in state.papers.items() if item.doi == record.doi),
-            None,
-        )
-    if previous_key is None:
+    previous = state.papers.get(record.identifier)
+    if previous is None:
         return None
-    previous = state.papers[previous_key]
     record.sources = list(dict.fromkeys([*previous.sources, *record.sources]))
     record.topic_ids = list(dict.fromkeys([*previous.topic_ids, *record.topic_ids]))
     record.attempts = previous.attempts
@@ -222,8 +216,6 @@ def _merge_previous(state: BotState, record: PaperRecord) -> PaperRecord | None:
     record.documents = [
         document.model_copy(deep=True) for document in previous.documents
     ]
-    if previous_key != record.identifier:
-        del state.papers[previous_key]
     return previous
 
 
@@ -324,24 +316,22 @@ def _clear_stale_download(record: PaperRecord, output_path: Path) -> None:
 
 
 def load_state(path: Path) -> BotState:
-    """Load older state safely and refuse a format this code cannot understand."""
+    """Read current state without upgrading, dropping fields or resetting history."""
 
     if not path.exists():
         return BotState()
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError(f"PapersBot state must be a JSON object: {path}")
-    version = payload.get("format_version", 1)
-    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
-        raise ValueError(f"Invalid PapersBot state format_version: {version!r}")
-    if version > PAPERSBOT_FORMAT_VERSION:
+    version = payload.get("format_version")
+    if type(version) is not int or version != PAPERSBOT_FORMAT_VERSION:
         raise ValueError(
-            f"PapersBot state format {version} is newer than supported format "
-            f"{PAPERSBOT_FORMAT_VERSION}; upgrade perla-extract before running"
+            f"PapersBot state requires format {PAPERSBOT_FORMAT_VERSION}; "
+            f"found {version!r} in {path}"
         )
-    state = BotState.model_validate(payload)
-    state.format_version = PAPERSBOT_FORMAT_VERSION
-    return state
+    if not isinstance(payload.get("papers"), dict):
+        raise ValueError(f"PapersBot state requires a papers dictionary: {path}")
+    return BotState.model_validate(payload)
 
 
 def _write_model(path: Path, model: BotState | BotResult) -> None:

@@ -20,7 +20,10 @@ jobs:
         env:
           PYTHONPATH: .:src
           PERLA_RUN_REFERENCE_RELEASE_TESTS: "1"
-        run: python -m pytest -q tests/study_extraction/test_reference_release.py
+        run: >-
+          python -m pytest -q
+          tests/study_extraction/test_reference_release.py
+          tests/study_extraction/test_reference_dataset.py
       - name: Audit finalized references and declared review coverage
         env:
           PYTHONPATH: .:src
@@ -109,18 +112,56 @@ jobs:
       - name: Type-check extraction contracts
         run: python -m mypy src/perla_extract/study_extraction
 
+  docling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LITELLM_LOCAL_MODEL_COST_MAP: "True"
+      HF_HOME: ${{ github.workspace }}/.parser-models/huggingface
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install parser test environment
+        run: python -m pip install ".[dev]"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.HF_HOME }}
+          key: ${{ runner.os }}-docling-${{ hashFiles('pyproject.toml') }}
+      - name: Prepare local parser weights using invented PDFs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+          from tests.study_extraction.test_docling_integration import _authored_table_pdf
+          from perla_extract.study_extraction.source import parse_pdf
+          with TemporaryDirectory() as directory:
+              for rasterized in (False, True):
+                  path = Path(directory) / f"authored-{rasterized}.pdf"
+                  _authored_table_pdf(path, rasterized=rasterized)
+                  parse_pdf(path, "main", parser="docling", heartbeat_seconds=0)
+          PY
+      - name: Test native and OCR content with network forbidden
+        env:
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
+          PERLA_RUN_DOCLING_TESTS: "1"
+          PERLA_RUN_DOCLING_OCR_TESTS: "1"
+        run: python -m pytest -q -ra tests/study_extraction/test_docling_integration.py
+
   test:
+    name: test (${{ matrix.os }}, 3.12)
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -128,21 +169,6 @@ jobs:
         run: python -m pip install ".[dev]"
       - name: Test
         run: python -m pytest -q
-
-  docling:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install Docling integration
-        run: python -m pip install ".[dev]"
-      - name: Test Docling parser contract
-        env:
-          PERLA_RUN_DOCLING_TESTS: "1"
-        run: python -m pytest -q tests/study_extraction/test_docling_integration.py
 
   nomad:
     runs-on: ubuntu-latest

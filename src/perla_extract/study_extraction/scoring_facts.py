@@ -11,6 +11,7 @@ import sys
 from dataclasses import dataclass, field, replace
 from typing import Literal
 
+from .identity_text import identity_text
 from .models import (
     DeviceFamily,
     IndividualDevice,
@@ -22,35 +23,19 @@ from .models import (
     StudyExtraction,
     SubjectContext,
 )
-from .scoring_claims import (
-    compound_quantity as compound_quantity,
-)
-from .scoring_claims import (
-    is_plain_number as is_plain_number,
-)
-from .scoring_claims import (
-    scientific_text as scientific_text,
-)
-from .scoring_claims import (
-    scientific_value_text as scientific_value_text,
-)
 from .scoring_context import (
     CohortSize,
     ContextComponent,
     ContextDifference,
     FactContext,
     RecordReference,
+    UnorderedContext,
     device_identity,
     device_treatment,
+    equal_value,
     has_subject_identity,
     missing_requirement,
     subject_context,
-)
-from .scoring_context import (
-    UnorderedContext as UnorderedContext,
-)
-from .scoring_context import (
-    equal_value as equal_value,
 )
 from .scoring_fields import FactGroup, FactSubfield, fact_group, fact_subfield
 from .scoring_identity import measurement_subject, sample_code
@@ -70,6 +55,7 @@ from .scoring_vocabulary import (
     material_name,
     material_role,
     material_stage,
+    processing_name,
     property_name,
     scientific_concept,
     scoped_property_name,
@@ -105,9 +91,9 @@ def scientific_descriptor(record: object) -> str | None:
             return "sample:" + code
         if record.subjects and all(has_subject_identity(s) for s in record.subjects):
             return None
-        return scientific_text(record.label)
+        return identity_text(record.label) or None
     if isinstance(record, StabilityTest) and record.device_id is None:
-        return scientific_text(record.specimen_label)
+        return identity_text(record.specimen_label) or None
     return None
 
 
@@ -946,7 +932,7 @@ class _FactProjector:
         context = FactContext.of(
             path,
             family_id=self.reference("device_families", record.family_id),
-            variant=record.variant,
+            variant=identity_text(record.variant) or None,
         )
         for j, value in enumerate(record.reported_properties):
             name = treatment_condition_name(value.name)
@@ -958,7 +944,9 @@ class _FactProjector:
                 "processing",
                 f"{path}/reported_properties/{j}",
                 owner,
-                "treatment:" + name if name is not None else property_name(value.name),
+                "treatment:" + name
+                if name is not None
+                else processing_name(value.name),
                 value,
                 value_context,
             )

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Literal, Sequence
 from pydantic import Field
 
 from .models import ReportedValue, StrictModel
-from .scoring_claims import normalize_claim
+from .quantities import normalize_claim
 from .scoring_facts import FactComparison, FactGroup, ScientificFact
 from .scoring_fields import FactSubfield
 from .scoring_requirements import requirements_for

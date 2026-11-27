@@ -1,12 +1,12 @@
 import pytest
 
-from perla_extract.study_extraction.candidate_selection import (
-    _select_refinement_candidate,
-)
 from perla_extract.study_extraction.claims import (
     ClaimLedger,
     ExperimentalObject,
     audit_claim_coverage,
+)
+from perla_extract.study_extraction.correction_checks import (
+    _select_refinement_candidate,
 )
 from perla_extract.study_extraction.models import (
     DeviceFamily,

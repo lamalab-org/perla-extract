@@ -22,7 +22,6 @@ _EXPORTS = {
     "DatasetEvaluationReport": ("evaluation", "DatasetEvaluationReport"),
     "ClaimLedger": ("claims", "ClaimLedger"),
     "NOMADExport": ("nomad", "NOMADExport"),
-    "ReducedExport": ("compatibility", "ReducedExport"),
     "StudyExtraction": ("models", "StudyExtraction"),
     "audit_claim_coverage": ("claims", "audit_claim_coverage"),
     "evaluate_study": ("evaluation", "evaluate_study"),
@@ -30,8 +29,6 @@ _EXPORTS = {
     "plan_evidence_windows": ("partitioning", "plan_evidence_windows"),
     "run_enrichment": ("enrichment", "run_enrichment"),
     "to_nomad_with_report": ("nomad", "to_nomad_with_report"),
-    "to_reduced": ("compatibility", "to_reduced"),
-    "to_reduced_with_report": ("compatibility", "to_reduced_with_report"),
 }
 
 __all__ = sorted(_EXPORTS)

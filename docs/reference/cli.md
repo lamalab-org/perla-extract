@@ -18,7 +18,6 @@ final report to stdout and writes progress logs to stderr.
 | `--supplement PATH` | none | Supporting Information PDF |
 | `--output-dir DIRECTORY` | `study_extraction` | New or empty artifact directory |
 | `--env-file PATH` | `.env.local` when present | Provider environment variables to load |
-| `--reduced-export` | off | Also write historical reduced-schema compatibility files |
 
 Variables already present in the process environment take precedence over the env
 file. Provider credentials are consumed by LiteLLM and are not written to
@@ -33,12 +32,12 @@ file. Provider credentials are consumed by LiteLLM and are not written to
 | `--single-call-max-input-tokens INTEGER` | `90000` | Claim-input estimate at which auto mode uses windows |
 | `--claim-window-input-tokens INTEGER` | `60000` | Request budget used to size claim-reading windows |
 | `--dry-run` | off | Parse, plan, and write an estimate without a model call |
-| `--claims / --no-claims` | claims | Collect and ground objects and atomic source claims before assembly |
+| `--claims / --no-claims` | no claims | Collect and ground objects and atomic source claims before assembly |
 | `--claim-recall-passes INTEGER` | `2` | Independent complete readings of every claim document/window |
 | `--assembly-max-input-tokens INTEGER` | `180000` | Default input cap for assembly, revision, repair and enrichment; stage limits can lower it |
-| `--enrichment / --no-enrichment` | enrichment | Run the audited composition and processing interpretation stage |
-| `--refinement / --no-refinement` | refinement | Re-read the same evidence to correct the extraction draft |
-| `--targeted-repair / --no-targeted-repair` | targeted repair | Retry only gaps exposed by coverage and validation audits |
+| `--enrichment / --no-enrichment` | no enrichment | Run the audited composition and processing interpretation stage |
+| `--refinement / --no-refinement` | no refinement | Re-read the same evidence to correct the extraction draft |
+| `--targeted-repair / --no-targeted-repair` | no targeted repair | Retry only gaps exposed by coverage and validation audits |
 
 Docling is the default parser. PyMuPDF is an explicit lightweight
 alternative; parser failures never silently change backends. Complete parser results
@@ -64,9 +63,9 @@ layer. See the [mixed-provider example](../workflows/open-models.md#configure-a-
 | `--model TEXT` | `openai/gpt-5.2` | Select `stages.default.model`; resets its connection and model-specific settings |
 | `--base-url URL` | omitted | Default endpoint; specify its model alongside it |
 | `--api-key-env NAME` | provider convention | Environment variable containing the default endpoint key |
-| `--reasoning-effort [omit|none|minimal|low|medium|high|xhigh]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
+| `--reasoning-effort [omit|none|minimal|low|medium|high|xhigh|max]` | `omit` | Reasoning setting; `omit` removes the parameter for models that do not support it |
 | `--max-output-tokens INTEGER` | per-stage defaults | Set the default deployment output allowance; stage tables can override it |
-| `--max-model-calls INTEGER` | omitted | Maximum provider requests, including retries and validation repair |
+| `--max-model-calls INTEGER` | `1` | Maximum provider requests, including retries and validation repair |
 | `--max-cost-usd FLOAT` | omitted | Stop before the next call after adapter-reported cost reaches this limit |
 | `--max-total-tokens INTEGER` | omitted | Token budget for starting further provider requests |
 | `--max-elapsed-seconds FLOAT` | omitted | Elapsed-time budget for starting further provider requests |
@@ -187,9 +186,14 @@ in the TOML to also upload full prompts, model responses and the final extractio
 ```bash
 perla-experiment experiment.toml --check
 perla-experiment experiment.toml
+perla-experiment experiment.toml --resume
 ```
 
-The single TOML defines shared `[extraction]` settings, `[control]` and `[treatment]`
+Without `--resume`, output must be new. Resume verifies the frozen method, inputs,
+implementation and runtime; it reuses sealed attempts and never retries a reserved slot.
+A terminal failure stays in the roster. An uncertain attempt keeps its cost reservation.
+
+The single TOML defines shared `[extraction]` settings, `[arms.control]` and `[arms.treatment]`
 overrides, and `[[papers]]` with `pdf`, optional `supplement`, and `reference` paths.
 Each paper block explicitly links the main article, its SI, and the reviewed
 ground-truth directory for both sources. Filenames need not share a stem. The
@@ -197,15 +201,23 @@ reference manifest supplies the paper ID; source hashes verify the file set,
 while the TOML fields assign the main/SI roles.
 Paths are relative to the TOML file. `output` names a new results directory;
 `repeats` defaults to 1 and `order_seed` to 0. Shared `[stages]` and `[tracing]` use
-the extraction configuration format, including `[stages.default]`; `[control.stages.NAME]` or
-`[treatment.stages.NAME]` override a stage in one arm.
+the extraction configuration format, including `[stages.default]`; `[arms.control.stages.NAME]` or
+`[arms.treatment.stages.NAME]` override a stage in one arm.
+
+To compare parsers, set `parser = "pymupdf"` in `[arms.control]` and
+`parser = "docling"` in `[arms.treatment]`. Both arms must use the same PDF/SI files
+and references. Their parsed-evidence fingerprints may differ; both are retained.
+Backend-specific dependencies are recorded, while shared dependency versions,
+instructions, implementation and scoring remain subject to the usual checks.
 
 `--check` prints the validated paper/SI/reference mapping and checks every source/reference hash and setting without parsing PDFs,
 creating outputs or making model calls. Running freezes the intended roster before
 extraction, assigns independent response caches, scores each usable result and
-writes `summary.md` (read first), `comparison.json`, and figure data. Failed attempts remain visible and prevent a complete
-quality result. Existing output directories are refused; there is no automatic
-campaign retry or resume. See [Run an experiment](../workflows/extraction-ablations.md).
+writes campaign accounting in `summary.md` (read first) and `comparison.json`.
+Paired results and figure data live under `comparisons/CANDIDATE-vs-BASELINE/primary/`.
+Failed attempts remain visible and prevent a complete quality result. Use explicit
+`--resume` to continue an interrupted campaign; failed slots are never retried.
+See [Run an experiment](../workflows/extraction-ablations.md).
 
 ## Compare externally executed runs
 
@@ -263,3 +275,13 @@ For unattended use, ordinary options use the `PAPERSBOT_` environment prefix:
 examples. Zotero credentials retain the explicit `ZOTERO_` names documented in the
 workflow guide. `OPENALEX_API_KEY` and `ZOTERO_API_KEY` are never written to bot
 artifacts. Command-line values take precedence.
+
+For named model arms and a pinned dataset, use
+[`benchmarks/test/study.toml`](https://github.com/lamalab-org/perla-extract/blob/main/benchmarks/test/study.toml).
+`baseline` names the reused control, `[arms.NAME]` supplies overrides and
+`reservation_usd`, and `[budget]` caps campaign admission including prior spending
+and unknown reservations. `config` loads an ordinary extraction TOML.
+`dataset` plus `sources` replaces inline `[[papers]]` and verifies article/SI roles.
+`repeat_subset = true` adds one repeat on the dataset's fixed subset. Execution
+parses and preflights the complete roster before reserving or dispatching requests.
+Reservations and per-run cost stops cannot guarantee a provider response's final price.

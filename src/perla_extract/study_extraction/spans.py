@@ -131,6 +131,41 @@ def evidence_spans_sha256(spans: Iterable[EvidenceSpan]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def linked_context_ids(block: EvidenceBlock) -> list[str]:
+    """Read explicit parser links; unknown or malformed metadata supplies no links."""
+    context = block.metadata.get("context_block_ids", [])
+    return (
+        [value for value in context if isinstance(value, str)]
+        if isinstance(context, list)
+        else []
+    )
+
+
+def linked_context_closure(
+    blocks: Iterable[EvidenceBlock], identifiers: Iterable[str]
+) -> set[str]:
+    """Keep explicit linked context transitively without guessing from proximity.
+
+    The visited set handles repeated links and cycles. Missing targets remain in
+    the result so selection never turns an unresolved link into a valid one;
+    serialization reports those unavailable targets separately.
+    """
+
+    by_id = {block.block_id: block for block in blocks}
+    retained = set(identifiers)
+    pending = list(retained)
+    while pending:
+        identifier = pending.pop()
+        block = by_id.get(identifier)
+        if block is None:
+            continue
+        for target in linked_context_ids(block):
+            if target not in retained:
+                retained.add(target)
+                pending.append(target)
+    return retained
+
+
 def evidence_payload(
     blocks: Iterable[EvidenceBlock], spans: Iterable[EvidenceSpan] | None = None
 ) -> list[dict[str, object]]:
@@ -144,7 +179,7 @@ def evidence_payload(
     spans_by_block: dict[str, list[EvidenceSpan]] = {}
     for span in build_evidence_spans(block_list) if spans is None else spans:
         spans_by_block.setdefault(span.block_id, []).append(span)
-    return [
+    payload: list[dict[str, object]] = [
         {
             "block_id": block.block_id,
             "source": block.source,
@@ -158,3 +193,21 @@ def evidence_payload(
         }
         for block in block_list
     ]
+    # Primary/context displays can be serialized separately against one combined
+    # catalog. A target in that catalog remains available to the model even when
+    # it is absent from this display's block subset.
+    present = set(spans_by_block)
+    for block, entry in zip(block_list, payload):
+        if block.kind == "table":
+            entry["table_layout"] = block.metadata.get("table_layout", [])
+        context = linked_context_ids(block)
+        if block.kind == "table" or context:
+            entry["context_block_ids"] = [
+                identifier for identifier in context if identifier in present
+            ]
+            missing = [
+                identifier for identifier in context if identifier not in present
+            ]
+            if missing:
+                entry["unresolved_context_block_ids"] = missing
+    return payload

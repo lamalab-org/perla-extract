@@ -2,10 +2,11 @@
 
 For the normal starting path, use [Run an experiment](../workflows/extraction-ablations.md). The experiment command creates these records automatically. This page is for inspecting them or comparing runs executed outside that command.
 
-For `perla-experiment`, read the generated `summary.md` first. It explains the
-quality difference and uncertainty, separates scored-run coverage from cost
-availability, and links to the plotting tables and per-run diagnostics.
-The summary displays `comparison.json`; it does not recompute scores.
+For `perla-experiment`, read the root `summary.md` first for campaign coverage,
+cost and links to each paired comparison. The paired summaries under
+`comparisons/CANDIDATE-vs-BASELINE/primary/` explain the quality difference,
+uncertainty and per-run diagnostics. Each summary displays its corresponding
+`comparison.json`; it does not recompute scores.
 
 ## Compare externally executed runs
 

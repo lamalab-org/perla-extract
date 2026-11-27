@@ -3,23 +3,24 @@
 import pytest
 
 from perla_extract.study_extraction.models import EvidenceCitation, ReportedValue
+from perla_extract.study_extraction.quantities import convert_reported_value
 from perla_extract.study_extraction.units import (
     canonical_quantity,
-    convert_reported_value,
+    convert_quantity,
     equivalent_unit_spelling,
     is_concentration_unit,
 )
 
 
 def _reported_value(unit: str) -> ReportedValue:
-    """Build the smallest source-backed value needed to exercise conversion."""
+    """Build a scalar for unit tests; workflow tests check source grounding."""
 
     return ReportedValue(
         name="illumination intensity",
         raw_value=f"70 {unit}",
         value_number=70.0,
         unit=unit,
-        evidence=[EvidenceCitation(block_id="main-p1-b1", quote="70 mW cm-2")],
+        evidence=[EvidenceCitation(block_id="main-p1-b1", quote=f"70 {unit}")],
     )
 
 
@@ -33,6 +34,28 @@ def test_control_character_in_unit_is_unparseable_instead_of_fatal() -> None:
         is None
     )
     assert not is_concentration_unit(malformed_unit)
+
+
+def test_lost_unit_exponent_sign_is_not_erased_into_a_valid_positive_power():
+    corrupted = "mA cm\x00 2"
+    assert canonical_quantity(20, corrupted) is None
+    assert convert_reported_value(_reported_value(corrupted), "mA/cm2") is None
+
+
+@pytest.mark.parametrize("unit", ["V/0", "V/(0)"])
+def test_division_by_zero_in_unit_arithmetic_is_unparseable(unit):
+    assert canonical_quantity(1, unit) is None
+    assert convert_quantity(1, unit, "V") is None
+    assert convert_quantity(1, "V", unit) is None
+    assert not equivalent_unit_spelling(unit, unit)
+    assert not is_concentration_unit(unit)
+
+
+@pytest.mark.parametrize(
+    "unit", ["wt%", "wt percent", "weight percent", "vol%", "volume percent"]
+)
+def test_basis_percent_aliases_remain_concentration_units(unit):
+    assert is_concentration_unit(unit)
 
 
 @pytest.mark.parametrize("unit", ["#", "#count", "mW # comment", "wt%#comment"])
@@ -61,3 +84,28 @@ def test_unsupported_notation_has_the_same_result_across_pint_versions(unit):
 
     assert canonical_quantity(1, unit) is None
     assert not equivalent_unit_spelling(unit, "mA/cm2")
+
+
+@pytest.mark.parametrize("minus", ["\u2212", "\u2012", "\u2013", "\uf02d"])
+@pytest.mark.parametrize(
+    "printed,standard",
+    [
+        ("mA cm{minus}2", "mA/cm2"),
+        ("mW cm{minus}2", "mW/cm2"),
+        ("cm{minus}3", "1/cm3"),
+        ("mol L{minus}1", "mol/L"),
+    ],
+)
+def test_pdf_minus_glyphs_preserve_explicit_unit_powers(minus, printed, standard):
+    unit = printed.format(minus=minus)
+    assert canonical_quantity(70, unit) == canonical_quantity(70, standard)
+    assert equivalent_unit_spelling(unit, standard)
+    assert convert_reported_value(_reported_value(unit), standard) == pytest.approx(70)
+
+
+@pytest.mark.parametrize(
+    "different", ["A cm‒2", "MA cm‒2", "mA cm+2", "mA cm‒3", "mA/cm‒2"]
+)
+def test_typographic_minus_does_not_erase_scale_or_dimensions(different):
+    assert not equivalent_unit_spelling("mA cm‒2", different)
+    assert canonical_quantity(70, "mA cm‒2") != canonical_quantity(70, different)

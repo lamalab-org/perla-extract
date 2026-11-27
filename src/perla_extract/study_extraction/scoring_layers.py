@@ -7,8 +7,8 @@ Only pairs shared by every longest ordered alignment establish a layer link.
 
 from dataclasses import dataclass, field
 
+from .identity_text import identity_text, identity_tokens
 from .models import DeviceFamily, Layer, StudyExtraction
-from .scoring_claims import scientific_text
 from .scoring_process import ordered_alignment, ordered_overlap
 from .scoring_vocabulary import material_name
 
@@ -20,13 +20,20 @@ def ordered_layers(family: DeviceFamily) -> list[tuple[int, Layer]] | None:
     return sorted(enumerate(family.layers), key=lambda pair: pair[1].sequence or 0)
 
 
-def stack_similarity(left: DeviceFamily, right: DeviceFamily) -> float | None:
-    """Return (2L+V)/(n+m+1): ordered material overlap plus exact variant support.
+def stack_similarity(
+    left: DeviceFamily,
+    right: DeviceFamily,
+    *,
+    label_features: tuple[set[str], set[str]] | None = None,
+) -> float | None:
+    """Return (2L+V+D)/(n+m+2): ordered materials, variant and label support.
 
     A partial or absent order uses the existing conservative feature fallback.
     V is one only for equal, nonempty variant labels. Their length adds no weight.
-    Missing and different labels both add zero; an omitted label cannot be favored
-    over a conflicting label. Uninterpreted paraphrases cannot resolve a tie.
+    D is the Jaccard overlap of literal label words. It can distinguish designs
+    with equally incomplete stacks without guessing chemical equivalence. Neither
+    recipe quantities nor measured outcomes participate. Tied assignments remain
+    unresolved; scientific facts still require their own material/context checks.
     """
     a, b = ordered_layers(left), ordered_layers(right)
     if a is None or b is None:
@@ -35,13 +42,18 @@ def stack_similarity(left: DeviceFamily, right: DeviceFamily) -> float | None:
         [material_name(layer.material) for _, layer in a],
         [material_name(layer.material) for _, layer in b],
     )
-    same_variant = bool(
-        left.variant
-        and right.variant
-        and scientific_text(left.variant) == scientific_text(right.variant)
-    )
+    variants = identity_text(left.variant), identity_text(right.variant)
+    same_variant = bool(variants[0] and variants[0] == variants[1])
     entries = len(a) + len(b)
-    return (overlap * entries + int(same_variant)) / (entries + 1)
+    names = (
+        label_features
+        if label_features is not None
+        else (identity_tokens(left.label), identity_tokens(right.label))
+    )
+    shared_label = (
+        len(names[0] & names[1]) / len(names[0] | names[1]) if any(names) else 0
+    )
+    return (overlap * entries + int(same_variant) + shared_label) / (entries + 2)
 
 
 @dataclass

@@ -13,7 +13,7 @@ from perla_extract.study_extraction.evaluation import (
 )
 from perla_extract.study_extraction.evaluation_cli import main
 from perla_extract.study_extraction.models import ReportedValue
-from perla_extract.study_extraction.scoring_facts import equal_value
+from perla_extract.study_extraction.scoring_context import equal_value
 
 
 def value(raw, unit=None, number=None):

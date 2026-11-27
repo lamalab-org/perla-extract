@@ -19,9 +19,8 @@ separate environment when you only want to try scoring.
 
 ```bash
 perla-extract --pdf paper.pdf --supplement paper_si.pdf \
-  --model openai/gpt-6.1-sol --parser pymupdf \
-  --no-claims --no-refinement --no-targeted-repair --no-enrichment \
-  --max-model-calls 1 --max-output-tokens 40000 \
+  --model openai/gpt-6.1-sol \
+  --max-output-tokens 40000 \
   --output-dir results/paper-check --dry-run
 ```
 
@@ -29,8 +28,8 @@ The dry run parses the input and checks the complete request without calling a
 model. Once it passes, set `OPENAI_API_KEY` in your environment and run the same
 command without `--dry-run`, changing the output to `results/paper`.
 Omit `--supplement` if there is no SI. Each attempt needs a new output directory.
-PyMuPDF avoids parser-model downloads; the default Docling parser can download
-layout-model weights on first use.
+Docling is the default parser and may download local parsing models on first use.
+Select `--parser pymupdf` explicitly when testing the lightweight backend.
 
 This baseline makes one direct extraction call. It sends the complete prepared
 paper and SI; an input that exceeds the limit fails before inference. Additional

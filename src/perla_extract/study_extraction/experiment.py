@@ -1,349 +1,413 @@
-"""Run a paired extraction experiment from one editable TOML file.
+"""Extract, score and compare a frozen roster with one resumable command.
 
-Validate all inputs first, freeze the intended runs, then call the existing
-extractor, scorer and comparator. Each attempt has its own response cache. Failed
-attempts stay in the roster, so they cannot disappear from the final comparison.
+Planning is pure validation. Execution preflights every source, reserves spending,
+then delegates to the production extractor and scorer. Resume reuses sealed work;
+failed or uncertain attempts remain visible and are never silently replaced.
 """
 
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
-import random
-from dataclasses import dataclass
+import os
+import shutil
+from dataclasses import replace
 from pathlib import Path
-from typing import Any
 
 import click
-from pydantic import Field
 
-from .artifacts import write_json_exclusive
+from .artifacts import write_json_atomic, write_json_exclusive
 from .cli import _load_env
-from .comparison import ARMS, _settings, automatic_comparison_ready, summarize
-from .comparison_study import ComparisonStudy, FactorContrast, same_setting
-from .configuration import ExtractionConfig, parse_settings, resolve_config, tomllib
+from .comparison import arm_accounting, automatic_comparison_ready, summarize
+from .comparison_study import ComparisonStudy
+from .configuration import (
+    implementation_sha256,
+    runtime_versions,
+)
+from .evaluation import FACT_PROFILE_VERSION, MATCHER_VERSION
 from .evaluation_cli import main as evaluate
-from .experiment_summary import write_summary
+from .experiment_plan import (
+    Attempt,
+    Experiment,
+    prepare,
+)
+from .experiment_state import BudgetExceeded, CampaignSpending, campaign_lock
+from .experiment_summary import write_campaign_summary, write_summary
+from .extraction_prompts import prompt_sha256
 from .figure_data import export_tables
 from .logging import configure_logging
-from .models import StrictModel
+from .models import study_schema_sha256
 from .reference_io import load_reference
-from .run_artifacts import describe_failed_run, file_digest
+from .run_artifacts import (
+    COMPLETE_OUTPUT_STATUSES,
+    describe_failed_run,
+    file_digest,
+    verify_run_manifest,
+)
+from .source import _parser_dependency_versions
 from .workflow import run_extraction
 
-_MANAGED = {
-    "pdf",
-    "supplement",
-    "output_dir",
-    "document_cache_dir",
-    "model_cache_dir",
-    "dry_run",
-    "refresh_document_cache",
-}
 
-
-class Paper(StrictModel):
-    pdf: str
-    reference: str
-    supplement: str | None = None
-
-
-class ExperimentSettings(StrictModel):
-    output: str
-    repeats: int = Field(default=1, ge=1)
-    order_seed: int = 0
-    extraction: dict[str, Any] = Field(default_factory=dict)
-    stages: dict[str, dict[str, Any]] = Field(default_factory=dict)
-    tracing: dict[str, Any] = Field(default_factory=dict)
-    control: dict[str, Any]
-    treatment: dict[str, Any]
-    papers: list[Paper] = Field(min_length=1)
-
-
-@dataclass(frozen=True)
-class Attempt:
-    paper_id: str
-    repeat: int
-    arm: str
-    reference: Path
-    config: ExtractionConfig
-
-
-@dataclass(frozen=True)
-class Experiment:
-    source: Path
-    output: Path
-    study: ComparisonStudy
-    attempts: list[Attempt]
-    inputs: dict[Path, str]
-    order_seed: int
-
-
-def _path(directory: Path, value: str) -> Path:
-    if not value.strip():
-        raise ValueError("Input and output paths must not be empty")
-    return (directory / value).resolve()
-
-
-def _arm_settings(settings: ExperimentSettings, arm: str, directory: Path) -> dict:
-    overrides = dict(getattr(settings, arm))
-    arm_stages = overrides.pop("stages", {})
-    if not isinstance(arm_stages, dict):
-        raise ValueError(f"{arm}.stages must contain stage tables")
-    options = settings.extraction | overrides
-    if forbidden := _MANAGED & options.keys():
-        raise ValueError(
-            f"Put sources in [[papers]]; run paths and caches are automatic: {', '.join(sorted(forbidden))}"
-        )
-    stage_names = set(settings.stages) | set(arm_stages)
-    stages = {}
-    for stage in stage_names:
-        override = arm_stages.get(stage, {})
-        if not isinstance(override, dict):
-            raise ValueError(f"{arm}.stages.{stage} must be a table")
-        # Selecting a model supplies a complete deployment, including transport.
-        # Limit-only interventions keep the shared connection.
-        stages[stage] = (
-            {} if "model" in override else dict(settings.stages.get(stage, {}))
-        ) | override
-    return parse_settings(
-        {"extraction": options, "stages": stages, "tracing": settings.tracing},
-        directory,
-    )
-
-
-def prepare(path: Path) -> Experiment:
-    """Validate every paper and both arm configurations before any paid request."""
-    path = path.resolve()
-    settings = ExperimentSettings.model_validate(
-        tomllib.loads(path.read_text(encoding="utf-8"))
-    )
-    output = _path(path.parent, settings.output)
-    if output.exists():
-        raise ValueError(
-            f"Output already exists: {output}; choose a new output in {path.name}"
-        )
-    methods = {arm: _arm_settings(settings, arm, path.parent) for arm in ARMS}
-    inputs = {path: file_digest(path)}
-    attempts: list[Attempt] = []
-    paper_ids: list[str] = []
-    splits: set[str] = set()
-    seen_sources: set[str] = set()
-    for index, paper in enumerate(settings.papers, 1):
-        pdf = _path(path.parent, paper.pdf)
-        supplement = _path(path.parent, paper.supplement) if paper.supplement else None
-        reference = _path(path.parent, paper.reference)
-        _, benchmark = load_reference(reference)
-        if benchmark is None or not benchmark.source_sha256:
-            raise ValueError(
-                f"{reference}: use a finalized reference directory with source PDF hashes"
-            )
-        if benchmark.paper_id in paper_ids:
-            raise ValueError(f"Duplicate reference paper: {benchmark.paper_id}")
-        paper_ids.append(benchmark.paper_id)
-        splits.add(benchmark.split)
-        missing = [
-            f"  {role}: {source}"
-            for role, source in (("pdf", pdf), ("supplement", supplement))
-            if source is not None and not source.is_file()
-        ]
-        if missing:
-            raise ValueError(
-                f"{benchmark.paper_id}: source files missing for reference {reference}:\n"
-                + "\n".join(missing)
-                + "\nSet this [[papers]] block's paths to the original main PDF and SI. "
-                "The reference directory contains reviewed answers, not source PDFs."
-            )
-        hashes = [
-            file_digest(source) for source in (pdf, supplement) if source is not None
-        ]
-        if sorted(hashes) != sorted(benchmark.source_sha256):
-            raise ValueError(
-                f"{benchmark.paper_id}: PDF/SI bytes do not match the reference sources. "
-                f"Reference: {reference}; pdf: {pdf}; supplement: {supplement or 'none'}. "
-                "Use the original source files recorded by this reference, including its SI."
-            )
-        if seen_sources.intersection(hashes):
-            raise ValueError(
-                f"{benchmark.paper_id}: source PDF reused by another paper"
-            )
-        seen_sources.update(hashes)
-        for source in (
-            pdf,
-            supplement,
-            reference / "manifest.json",
-            reference / "ground_truth.json",
-        ):
-            if source is not None:
-                inputs[source] = file_digest(source)
-        for repeat in range(1, settings.repeats + 1):
-            for arm in ARMS:
-                run = output / "runs" / f"paper-{index:03d}" / f"{arm}-{repeat}"
-                config = resolve_config(
-                    **methods[arm],
-                    pdf=pdf,
-                    supplement=supplement,
-                    output_dir=run,
-                    document_cache_dir=output / "cache" / "documents",
-                    model_cache_dir=run / "model-cache",
-                )
-                attempts.append(
-                    Attempt(benchmark.paper_id, repeat, arm, reference, config)
-                )
-    if len(splits) > 1:
-        raise ValueError(
-            "Use one reference split per experiment; keep development and test papers separate"
-        )
-    left, right = (
-        _settings({"scientific_settings": attempts[index].config.scientific_settings()})
-        for index in (0, 1)
-    )
-    factors = {
-        name: FactorContrast(control=left.get(name), treatment=right.get(name))
-        for name in left.keys() | right.keys()
-        if not same_setting(left.get(name), right.get(name))
+def _identity(experiment: Experiment) -> dict:
+    return {
+        "inputs": {str(p): digest for p, digest in experiment.inputs.items()},
+        "dataset_role": experiment.dataset_role,
+        "implementation_sha256": implementation_sha256(),
+        "runtime_versions": runtime_versions(),
+        "parser_dependencies": {
+            name: _parser_dependency_versions(name)
+            for name in {a.config.parser for a in experiment.attempts}
+        },
+        "schema_sha256": study_schema_sha256(),
+        "prompt_sha256": prompt_sha256(),
+        "matcher": MATCHER_VERSION,
+        "fact_profile": FACT_PROFILE_VERSION,
+        "settings": experiment.settings.model_dump(mode="json"),
+        "execution_order": [a.key for a in experiment.ordered_attempts()],
+        "methods": {a.arm: a.config.scientific_settings() for a in experiment.attempts},
     }
-    if not factors:
-        raise ValueError(
-            "Control and treatment are identical; change a setting in [treatment]"
-        )
-    if "parser" in factors:
-        raise ValueError(
-            "Use the same parser in both arms; paired extraction comparisons require identical source evidence"
-        )
-    study = ComparisonStudy(
-        paper_ids=paper_ids, repeats=settings.repeats, factors=factors
-    )
-    return Experiment(path, output, study, attempts, inputs, settings.order_seed)
 
 
-def _unchanged(experiment: Experiment, attempt: Attempt | None = None) -> None:
-    paths = (
-        experiment.inputs.keys()
-        if attempt is None
-        else {
-            experiment.source,
-            attempt.config.pdf,
-            attempt.reference / "manifest.json",
-            attempt.reference / "ground_truth.json",
-            *([attempt.config.supplement] if attempt.config.supplement else []),
-        }
-    )
-    for path in paths:
-        digest = experiment.inputs[path]
-        if file_digest(path) != digest:
+def _digest(value: dict) -> str:
+    return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+
+
+def _unchanged(experiment: Experiment, frozen: dict | None = None) -> None:
+    inputs = {str(p): d for p, d in experiment.inputs.items()}
+    inputs.update((frozen or {}).get("sha256", {}))
+    for path, digest in inputs.items():
+        if file_digest(Path(path)) != digest:
             raise ValueError(f"Input changed after the experiment was checked: {path}")
+    if frozen and _identity(experiment) != frozen["plan"]:
+        raise ValueError(
+            "Implementation or runtime changed after the experiment was frozen"
+        )
 
 
-def execute(experiment: Experiment) -> dict:
-    """Freeze the roster before execution and retain incomplete experiments on disk."""
-    _unchanged(experiment)
-    # Use the same optional credential discovery as the individual extraction CLI.
-    environment = Path(".env.local")
-    _load_env(environment if environment.is_file() else None)
-    output = experiment.output
-    output.mkdir(parents=True, exist_ok=False)
-    (output / "experiment.toml").write_bytes(experiment.source.read_bytes())
-    study_path = output / "study.json"
-    write_json_exclusive(study_path, experiment.study.model_dump(mode="json"))
-    roster = output / "runs.csv"
-    with roster.open("x", newline="", encoding="utf-8") as stream:
+def _roster(
+    path: Path, attempts: list[Attempt], *, baseline: str | None = None
+) -> None:
+    """Pair views reference existing attempts; they do not duplicate provider work."""
+    with path.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream)
         writer.writerow(["paper_id", "arm", "repeat", "run_dir"])
-        for attempt in experiment.attempts:
+        for a in attempts:
+            arm = (
+                ("control" if a.arm == baseline else "treatment") if baseline else a.arm
+            )
             writer.writerow(
                 [
-                    attempt.paper_id,
-                    attempt.arm,
-                    attempt.repeat,
-                    str(attempt.config.output_dir.relative_to(output)),
+                    a.paper_id,
+                    arm,
+                    a.repeat,
+                    str(a.config.output_dir.relative_to(path.parent))
+                    if a.config.output_dir.is_relative_to(path.parent)
+                    else str(a.config.output_dir),
                 ]
             )
-    ordered = list(experiment.attempts)
-    random.Random(experiment.order_seed).shuffle(ordered)
-    write_json_exclusive(
-        output / "inputs.json",
-        {
-            "sha256": {str(path): digest for path, digest in experiment.inputs.items()},
-            "order_seed": experiment.order_seed,
-            "execution_order": [
-                str(attempt.config.output_dir.relative_to(output))
-                for attempt in ordered
-            ],
-        },
+
+
+def _require_credentials(attempt: Attempt) -> None:
+    for stage in attempt.config.scientific_settings()["effective_models"]:
+        key = attempt.config.effective_deployment(stage).api_key_env
+        if key and not os.environ.get(key):
+            raise ValueError(
+                f"Missing credential environment variable: {key}; set it before running (values are never recorded)"
+            )
+
+
+def _preflight(experiment: Experiment) -> dict:
+    """Prepare all paper/arm inputs before inference and freeze the parser cache.
+
+    Dry runs use the same production parser and request planner as paid runs.
+    Shared parser settings must produce identical evidence across arms. Capacity
+    and call-budget failures stop the entire roster before its first reservation.
+    """
+    for attempt in experiment.attempts:
+        _require_credentials(attempt)
+    documents = {}
+    by_parser: dict[tuple[str, str], str] = {}
+    for attempt in experiment.attempts:
+        if attempt.repeat != 1:
+            continue
+        directory = (
+            experiment.output
+            / "preflight"
+            / attempt.config.output_dir.parent.name
+            / attempt.arm
+        )
+        config = replace(
+            attempt.config, output_dir=directory, dry_run=True, langfuse=False
+        )
+        if directory.exists() and not (directory / "run_manifest.json").exists():
+            # No provider is called during preflight; an interrupted parse is safe to repeat.
+            shutil.rmtree(directory)
+        if directory.exists():
+            verify_run_manifest(directory)
+            report = json.loads((directory / "report.json").read_text(encoding="utf-8"))
+        else:
+            report = run_extraction(config)
+        if report["status"] != "dry_run" or not report["budget"]["planned_calls_fit"]:
+            raise ValueError(
+                f"Preflight failed for {attempt.paper_id}/{attempt.arm}: {report.get('errors', [])}; planned calls must fit max_model_calls"
+            )
+        digest = file_digest(directory / "document.json")
+        key = (attempt.paper_id, attempt.config.parser)
+        if key in by_parser and by_parser[key] != digest:
+            raise ValueError(
+                f"Prepared evidence differs across arms for {attempt.paper_id}"
+            )
+        by_parser[key] = digest
+        documents[f"{attempt.paper_id}/{attempt.arm}"] = digest
+    paths = [
+        *(experiment.output / "cache/documents").rglob("*"),
+        *(experiment.output / "preflight").rglob("*"),
+    ]
+    return {
+        "plan": _identity(experiment),
+        "document_sha256": documents,
+        "sha256": {str(p): file_digest(p) for p in paths if p.is_file()},
+    }
+
+
+def _score(attempt: Attempt, frozen: dict) -> None:
+    verify_run_manifest(attempt.config.output_dir)
+    configuration = json.loads(
+        (attempt.config.output_dir / "run_configuration.json").read_text(
+            encoding="utf-8"
+        )
     )
-    errors = []
-    stopped = None
-    try:
-        for index, attempt in enumerate(ordered, 1):
-            click.echo(
-                f"[{index}/{len(ordered)}] {attempt.paper_id} · {attempt.arm} · repeat {attempt.repeat}"
-            )
-            # A changed source or method stops the campaign rather than mixing methods.
-            _unchanged(experiment, attempt)
-            try:
-                report = run_extraction(attempt.config)
-                click.echo(f"  Extraction status: {report['status']}")
-                if report["status"] in {"failed", "interrupted"}:
-                    raise ValueError(
-                        describe_failed_run(
-                            report, attempt.config.output_dir / "report.json"
-                        )
-                    )
-                evaluate.main(
-                    args=[
-                        "--truth",
-                        str(attempt.reference),
-                        "--prediction",
-                        str(attempt.config.output_dir),
-                        "--output",
-                        str(attempt.config.output_dir / "evaluation.json"),
-                    ],
-                    standalone_mode=False,
-                )
-            except (OSError, RuntimeError, ValueError, click.ClickException) as exc:
-                errors.append(
-                    {
-                        "run_dir": str(attempt.config.output_dir.relative_to(output)),
-                        "error": str(exc),
-                    }
-                )
-                click.echo(f"Needs attention: {exc}", err=True)
-        _unchanged(experiment)
-    except BaseException as exc:
-        stopped = str(exc) or type(exc).__name__
-        errors.append({"run_dir": "", "error": stopped})
-        raise
-    finally:
-        write_json_exclusive(output / "errors.json", errors)
-        result = summarize(roster, study=study_path)
-        if stopped:
-            issue = f"Experiment stopped: {stopped}"
-            result["issues"].append(issue)
-            result["quality_issues"].append(issue)
-            result.update(
-                quality=None,
-                quality_status="needs_attention",
-                recorded_cost_saving_fraction=None,
-            )
-            result["reference_agreement"].update(
-                status="blocked",
-                papers=[],
-                mean_paired_fact_f1_delta=None,
-                paired_fact_f1_delta_interval=None,
-                issues=[*result["reference_agreement"]["issues"], issue],
-            )
-        write_json_exclusive(output / "comparison.json", result)
-        export_tables(result, output / "figure-data")
-        write_summary(result, output / "summary.md")
+    if configuration["scientific_settings"] != attempt.config.scientific_settings():
+        raise ValueError(f"Saved method differs from plan: {attempt.key}")
+    report = json.loads(
+        (attempt.config.output_dir / "report.json").read_text(encoding="utf-8")
+    )
+    if report["status"] not in COMPLETE_OUTPUT_STATUSES:
+        raise ValueError(
+            describe_failed_run(report, attempt.config.output_dir / "report.json")
+        )
+    expected = frozen["document_sha256"][f"{attempt.paper_id}/{attempt.arm}"]
+    if file_digest(attempt.config.output_dir / "document.json") != expected:
+        raise ValueError(f"Run evidence differs from frozen preflight: {attempt.key}")
+    score = attempt.config.output_dir / "evaluation.json"
+    if not score.exists():
+        evaluate.main(
+            args=[
+                "--truth",
+                str(attempt.reference),
+                "--prediction",
+                str(attempt.config.output_dir),
+                "--output",
+                str(score),
+            ],
+            standalone_mode=False,
+        )
+
+
+def _block(result: dict, reason: str) -> None:
+    result["issues"].append(reason)
+    result["quality_issues"].append(reason)
+    result.update(
+        quality=None,
+        quality_status="needs_attention",
+        recorded_cost_saving_fraction=None,
+    )
+    result["reference_agreement"].update(
+        status="blocked",
+        papers=[],
+        mean_paired_fact_f1_delta=None,
+        paired_fact_f1_delta_interval=None,
+        issues=[*result["reference_agreement"]["issues"], reason],
+    )
+
+
+def _paired_output(
+    experiment: Experiment,
+    directory: Path,
+    study: ComparisonStudy,
+    attempts: list[Attempt],
+    stopped: str | None,
+) -> dict:
+    directory.mkdir(parents=True, exist_ok=True)
+    study_path = directory / "study.json"
+    write_json_atomic(study_path, study.model_dump(mode="json"))
+    _roster(directory / "runs.csv", attempts, baseline=experiment.settings.baseline)
+    result = summarize(
+        directory / "runs.csv",
+        study=study_path,
+        bootstrap_samples=10000,
+        seed=experiment.settings.order_seed,
+    )
+    result["dataset_role"] = experiment.dataset_role
+    if stopped:
+        _block(result, f"Experiment stopped: {stopped}")
+    write_json_atomic(directory / "comparison.json", result)
+    # These are derived views. Frozen plans, run artifacts and accounting are never replaced.
+    shutil.rmtree(directory / "figure-data", ignore_errors=True)
+    (directory / "summary.md").unlink(missing_ok=True)
+    export_tables(result, directory / "figure-data")
+    write_summary(result, directory / "summary.md")
     return result
 
 
+def _results(
+    experiment: Experiment, spending: CampaignSpending, stopped: str | None
+) -> dict:
+    comparisons = {}
+    unique_runs = {}
+    for arm, study in experiment.studies.items():
+        groups = [("primary", study.paper_ids, experiment.settings.repeats)]
+        if experiment.repeat_papers:
+            groups.append(("repeatability", experiment.repeat_papers, 2))
+        for phase, papers, repeats in groups:
+            subset = [
+                a
+                for a in experiment.attempts
+                if a.arm in {experiment.settings.baseline, arm}
+                and a.paper_id in papers
+                and a.repeat <= repeats
+            ]
+            paired_study = study.model_copy(
+                update={"paper_ids": papers, "repeats": repeats}
+            )
+            name = f"{arm}-vs-{experiment.settings.baseline}/{phase}"
+            result = _paired_output(
+                experiment,
+                experiment.output / "comparisons" / name,
+                paired_study,
+                subset,
+                stopped,
+            )
+            # Full ledgers live in each paired report and once in the campaign roster.
+            comparisons[name] = {
+                key: value for key, value in result.items() if key != "runs"
+            }
+            for row in result["runs"]:
+                row = row | {
+                    "arm": experiment.settings.baseline
+                    if row["arm"] == "control"
+                    else arm
+                }
+                unique_runs[(row["paper_id"], row["arm"], row["repeat"])] = row
+    result = {
+        "comparisons": comparisons,
+        "dataset_role": experiment.dataset_role,
+        "spending": spending.summary(),
+        "runs": list(unique_runs.values()),
+        "accounting": {
+            arm: arm_accounting(
+                [row for row in unique_runs.values() if row["arm"] == arm],
+                sum(a.arm == arm for a in experiment.attempts),
+            )
+            for arm in experiment.settings.arms
+        },
+        "reference_agreement": {"status": "see_paired_comparisons"},
+    }
+    write_json_atomic(experiment.output / "comparison.json", result)
+    shutil.rmtree(experiment.output / "figure-data", ignore_errors=True)
+    export_tables(result, experiment.output / "figure-data")
+    write_campaign_summary(
+        result, experiment.output / "summary.md", experiment.settings.baseline
+    )
+    return result
+
+
+def execute(experiment: Experiment) -> dict:
+    """Reserve, extract and score each unique slot once, including after resume."""
+    _unchanged(experiment)
+    environment = Path(".env.local")
+    _load_env(environment if environment.is_file() else None)
+    output = experiment.output
+    if not experiment.resume:
+        output.mkdir(parents=True, exist_ok=False)
+    with campaign_lock(output):
+        plan = _identity(experiment)
+        plan_path = output / "plan.json"
+        if plan_path.exists():
+            if json.loads(plan_path.read_text(encoding="utf-8")) != plan:
+                raise ValueError(
+                    "Frozen plan differs from inputs, method, implementation or runtime; start a new experiment"
+                )
+        else:
+            write_json_exclusive(plan_path, plan)
+            (output / "experiment.toml").write_bytes(experiment.source.read_bytes())
+            _roster(output / "runs.csv", experiment.attempts)
+        frozen_path = output / "inputs.json"
+        frozen = (
+            json.loads(frozen_path.read_text(encoding="utf-8"))
+            if frozen_path.exists()
+            else _preflight(experiment)
+        )
+        if not frozen_path.exists():
+            write_json_exclusive(frozen_path, frozen)
+        _unchanged(experiment, frozen)
+        spending = CampaignSpending(output, _digest(plan), experiment.settings.budget)
+        errors = []
+        stopped = None
+        try:
+            for index, attempt in enumerate(experiment.ordered_attempts(), 1):
+                click.echo(
+                    f"[{index}/{len(experiment.attempts)}] {attempt.paper_id} · {attempt.arm} · repeat {attempt.repeat}"
+                )
+                _unchanged(experiment, frozen)
+                directory = attempt.config.output_dir
+                if attempt.key not in spending.record.attempts:
+                    _require_credentials(attempt)
+                    if directory.exists():
+                        raise ValueError(
+                            f"Untracked run directory; refusing to dispatch: {directory}"
+                        )
+                    spending.reserve(attempt.key, attempt.reservation_usd)
+                    try:
+                        run_extraction(attempt.config)
+                    except (OSError, RuntimeError, ValueError) as exc:
+                        click.echo(f"Extraction failed: {exc}", err=True)
+                    finally:
+                        if (directory / "run_manifest.json").is_file():
+                            spending.reconcile(attempt.key, directory)
+                try:
+                    spending.reconcile(attempt.key, directory)
+                    _score(attempt, frozen)
+                except (OSError, RuntimeError, ValueError, click.ClickException) as exc:
+                    errors.append(
+                        {
+                            "run_dir": str(directory.relative_to(output)),
+                            "error": str(exc),
+                        }
+                    )
+                    click.echo(
+                        f"Needs attention; retained slot and reservation: {exc}",
+                        err=True,
+                    )
+            _unchanged(experiment, frozen)
+        except BudgetExceeded as exc:
+            # Missing repeatability slots must not invalidate a completed primary comparison.
+            errors.append({"run_dir": "", "error": str(exc)})
+        except BaseException as exc:
+            stopped = str(exc) or type(exc).__name__
+            errors.append({"run_dir": "", "error": stopped})
+            raise
+        finally:
+            write_json_atomic(output / "errors.json", errors)
+            write_json_atomic(output / "accounting.json", spending.summary())
+            result = _results(experiment, spending, stopped)
+            if errors:
+                with (output / "summary.md").open("a", encoding="utf-8") as stream:
+                    stream.write(
+                        "\n## Execution notes\n\nSee `errors.json` for all retained failures and stops.\n\n"
+                    )
+                    for error in errors[:3]:
+                        stream.write(f"- {error['run_dir']}: {error['error']}\n")
+        return result
+
+
 def _show_input_mapping(experiment: Experiment) -> None:
-    """Show each source pair and its scoring reference once, before model calls."""
+    if experiment.dataset_role:
+        click.echo(f"Dataset role: {experiment.dataset_role}")
     click.echo("Paper/SI/reference mapping (source fingerprints verified):")
     for attempt in experiment.attempts:
-        if attempt.arm != "control" or attempt.repeat != 1:
+        if attempt.arm != experiment.settings.baseline or attempt.repeat != 1:
             continue
         click.echo(f"  {attempt.paper_id}")
         for label, path in (
@@ -358,12 +422,11 @@ def _show_input_mapping(experiment: Experiment) -> None:
             )
             click.echo(f"    {label}: {shown if shown is not None else 'none'}")
         _, benchmark = load_reference(attempt.reference)
-        if benchmark is None or not benchmark.coverage.complete():
-            click.echo(
-                "    Scoring: diagnostic reference agreement; coverage/context review is incomplete."
-            )
-        else:
-            click.echo("    Scoring: reference scope reviewed.")
+        click.echo(
+            "    Scoring: reference scope reviewed."
+            if benchmark and benchmark.coverage.complete()
+            else "    Scoring: diagnostic reference agreement; coverage/context review is incomplete."
+        )
 
 
 @click.command()
@@ -373,21 +436,27 @@ def _show_input_mapping(experiment: Experiment) -> None:
 @click.option(
     "--check",
     is_flag=True,
-    help="Verify and show paper/SI/reference matches without parsing PDFs, creating output or calling a model.",
+    help="Check all mappings/settings without parsing, writing output or calling a model.",
 )
-def main(experiment_file: Path, check: bool) -> None:
-    """Extract, score and compare both arms of EXPERIMENT_FILE."""
+@click.option(
+    "--resume",
+    is_flag=True,
+    help="Continue the unchanged frozen experiment; never repeat a reserved attempt.",
+)
+def main(experiment_file: Path, check: bool, resume: bool) -> None:
+    """Extract, score and compare the arms of EXPERIMENT_FILE."""
     configure_logging(level="INFO", json_output=False)
     try:
-        experiment = prepare(experiment_file)
+        experiment = prepare(experiment_file, resume=resume)
         _show_input_mapping(experiment)
         click.echo(
-            f"{len(experiment.study.paper_ids)} paper(s) × 2 arms × {experiment.study.repeats} repeat(s) = {len(experiment.attempts)} runs"
+            f"{len({a.paper_id for a in experiment.attempts})} paper(s), {len(experiment.settings.arms)} arms: {len(experiment.attempts)} runs"
         )
-        for name, contrast in sorted(experiment.study.factors.items()):
-            click.echo(
-                f"  {name}: {json.dumps(contrast.control)} → {json.dumps(contrast.treatment)}"
-            )
+        for arm, study in experiment.studies.items():
+            for name, contrast in sorted(study.factors.items()):
+                click.echo(
+                    f"  {arm}: {name}: {json.dumps(contrast.control)} → {json.dumps(contrast.treatment)}"
+                )
         click.echo(f"Output: {experiment.output}")
         if check:
             click.echo(
@@ -395,22 +464,14 @@ def main(experiment_file: Path, check: bool) -> None:
             )
             return
         result = execute(experiment)
-        if result["quality"] is not None:
-            delta = result["quality"]["mean_paired_fact_f1_delta"]
-            click.echo(
-                f"Mean paired attributed fact-F1 change (treatment − control): {delta:+.4f}"
-            )
-        elif automatic_comparison_ready(result):
-            delta = result["reference_agreement"]["mean_paired_fact_f1_delta"]
-            click.echo(
-                f"Diagnostic reference-agreement change (treatment − control): {delta:+.4f}; validated quality unavailable."
-            )
         click.echo(f"Read first: {experiment.output / 'summary.md'}")
-        click.echo(f"Comparison: {experiment.output / 'comparison.json'}")
-        click.echo(f"Figure data: {experiment.output / 'figure-data'}")
-        if result["issues"] and not automatic_comparison_ready(result):
+        comparisons = result["comparisons"]
+        if any(
+            r["issues"] and not automatic_comparison_ready(r)
+            for r in comparisons.values()
+        ):
             raise ValueError(
-                "Experiment needs attention: " + "; ".join(result["issues"][:3])
+                "Experiment needs attention; see summary.md for the paired reports"
             )
     except (OSError, RuntimeError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc

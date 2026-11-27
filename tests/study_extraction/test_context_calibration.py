@@ -147,7 +147,7 @@ def test_canonical_spin_speed_uses_the_same_local_requirements_as_its_alias():
 
 
 def test_pure_text_and_quantity_caches_do_not_change_decisions(monkeypatch):
-    from perla_extract.study_extraction import scoring_claims, scoring_context
+    from perla_extract.study_extraction import quantities, scoring_context
 
     truth = study()
     prediction = truth.model_copy(deep=True)
@@ -156,16 +156,16 @@ def test_pure_text_and_quantity_caches_do_not_change_decisions(monkeypatch):
     )
     cached = evaluate_study(truth, prediction)
     monkeypatch.setattr(
-        scoring_claims,
-        "_normalize_fields",
-        scoring_claims._normalize_fields.__wrapped__,
+        quantities,
+        "_interpret_fields",
+        quantities._interpret_fields.__wrapped__,
     )
     monkeypatch.setattr(
         scoring_context,
         "scientific_value_text",
-        scoring_claims.scientific_value_text.__wrapped__,
+        quantities.scientific_value_text.__wrapped__,
     )
     monkeypatch.setattr(
-        scoring_claims, "scientific_text", scoring_claims.scientific_text.__wrapped__
+        quantities, "scientific_text", quantities.scientific_text.__wrapped__
     )
     assert cached == evaluate_study(truth, prediction)

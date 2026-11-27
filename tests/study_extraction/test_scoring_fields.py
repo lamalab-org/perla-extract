@@ -196,3 +196,27 @@ def test_field_micro_aggregation_uses_counts_and_report_validation_checks_ledger
     payload["core_facts"]["fields"].pop("measurement:ff")
     with pytest.raises(ValidationError, match="field counts"):
         EvaluationReport.model_validate(payload)
+
+
+def test_pv_claim_diagnostics_name_field_and_preserve_literal_denominator():
+    from perla_extract.study_extraction.evaluation import evaluate_study
+    from tests.study_extraction.test_evaluation import study
+
+    truth = study()
+    prediction = truth.model_copy(deep=True)
+    metric = prediction.performance_observations[0].metrics[0]
+    metric.raw_value = "higher than control"
+    metric.value_number = None
+    metric.unit = None
+    score = evaluate_study(truth, prediction).core_facts
+    field = score.fields["measurement:pce"]
+    assert field.predicted == field.truth == 1
+    assert field.matched == 0
+    diagnostic = next(
+        d for d in score.diagnostics.facts["prediction"] if d.field == "measurement:pce"
+    )
+    assert diagnostic.value_interpretation == "literal"
+    reference = next(
+        d for d in score.diagnostics.facts["truth"] if d.field == "measurement:pce"
+    )
+    assert reference.value_interpretation == "quantity"

@@ -11,6 +11,7 @@ import click
 from perla_extract.study_extraction.artifacts import write_json_exclusive
 from perla_extract.study_extraction.evaluation import (
     EvaluationConfig,
+    EvaluationReport,
     aggregate_evaluations,
     evaluate_study,
 )
@@ -21,14 +22,44 @@ from perla_extract.study_extraction.reference_io import (
 from perla_extract.study_extraction.reference_release import ReferenceRelease
 
 
+def check_reference_self_score(score: EvaluationReport, paper_id: str) -> None:
+    """Reject unexplained losses without hiding explicit quantity contradictions."""
+
+    quantity_conflicts = {
+        side: {
+            path
+            for issue in score.core_facts.issues
+            if issue.kind == "quantity_conflict" and issue.side == side
+            for path in issue.paths
+        }
+        for side in ("truth", "prediction")
+    }
+    recovery = score.core_facts.recovery
+    # A contradictory reference cannot recover its own invalid numeric fields.
+    # Accept only losses explicitly identified on both sides; keep their counts
+    # and issues in the audit rather than masking them or changing the reference.
+    explained_recovery = (
+        bool(quantity_conflicts["truth"])
+        and set(recovery.unmatched_truth_paths) <= quantity_conflicts["truth"]
+        and set(recovery.unmatched_prediction_paths) <= quantity_conflicts["prediction"]
+    )
+    if (recovery.micro.f1 != 1 and not explained_recovery) or (
+        score.core_facts.micro.f1 != 1 and not score.core_facts.issues
+    ):
+        raise ValueError(
+            f"Unexplained reference self-check failure: {paper_id}; "
+            "inspect the scorer before changing any reference facts"
+        )
+
+
 def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     """Check the finalized input and expose what its manifest actually records.
 
     A successful self-score is a consistency control, not evidence that the source
     contains no omitted facts. Missing review-stage metadata does not prove that a
     reviewer skipped that work; retain the distinction for a provenance audit.
-    Indistinguishable measurement identities remain review issues, with every fact
-    retained. Missing recovery credit or unexplained losses are software failures.
+    Indistinguishable identities and explicit quantity contradictions remain review
+    issues, with every fact retained. Unexplained recovery losses are failures.
     """
 
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
@@ -40,21 +71,9 @@ def inspect_reference(directory: Path, config: EvaluationConfig | None = None):
     if provenance is None:
         raise ValueError("A frozen reference directory is required")
     score = evaluate_study(truth, truth, benchmark=provenance, config=config)
-    if score.core_facts.recovery.micro.f1 != 1 or (
-        score.core_facts.micro.f1 != 1 and not score.core_facts.issues
-    ):
-        raise ValueError(
-            f"Unexplained reference self-check failure: {provenance.paper_id}; "
-            "inspect the scorer before changing any reference facts"
-        )
+    check_reference_self_score(score, provenance.paper_id)
     review = manifest["review"]
-    stages = review.get("completed_stage_names")
-    if stages is None:
-        stages = [
-            name
-            for name, people in review.get("completed_stages", {}).items()
-            if people
-        ]
+    stages = review["completed_stage_names"]
     return score, {
         "benchmark": provenance.model_dump(mode="json"),
         "truth_content_sha256": score.truth_content_sha256,
@@ -166,7 +185,7 @@ def main(release_path: Path, output: Path) -> None:
         raise click.ClickException(str(error)) from error
     click.echo(
         f"Checked {report['paper_count']} references; "
-        f"{len(report['papers_needing_scoring_review'])} need identity/scope review. "
+        f"references needing scientific review: {len(report['papers_needing_scoring_review'])}. "
         f"Inspect the saved issues, coverage and review declarations in {output}"
     )
 

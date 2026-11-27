@@ -33,6 +33,15 @@ def _dry_run_report(
         if not config.use_claim_ledger
         else []
     )
+    if not config.use_claim_ledger and config.max_total_tokens is not None:
+        reserved_tokens = (
+            approximate_tokens + config.stage_policy("assemble").max_output_tokens
+        )
+        if reserved_tokens > config.max_total_tokens:
+            known_issues.append(
+                f"first live request needs {reserved_tokens} estimated input/output tokens; "
+                f"exceeds max_total_tokens={config.max_total_tokens}"
+            )
     feasibility = {
         "assembly": "conditional_on_reader_output"
         if config.use_claim_ledger
@@ -72,6 +81,7 @@ def _dry_run_report(
         "budget": {
             "max_model_calls": config.max_model_calls,
             "max_cost_usd": config.max_cost_usd,
+            "max_total_tokens": config.max_total_tokens,
             "provider_requests": 0,
             "cost_tracking_complete": True,
             "planned_calls_fit": (
@@ -112,7 +122,6 @@ def _completed_report(
     enrichment_status = exports.enrichment_status
     nomad = exports.nomad
     nomad_error = exports.nomad_error
-    reduced_error = exports.reduced_error
     counts = validation["counts"]
     assembled = any(
         outcome.stage == "assemble" and outcome.status == "complete"
@@ -123,7 +132,7 @@ def _completed_report(
         if not assembled
         else (
             "partial"
-            if errors or nomad_error or reduced_error
+            if errors or nomad_error
             else (
                 "complete"
                 if validation["status"] == "verified"
@@ -168,7 +177,6 @@ def _completed_report(
         "nomad_archive_count": len(nomad.archives) if nomad is not None else 0,
         "nomad_issue_count": len(nomad.issues) if nomad is not None else 0,
         "nomad_conversion_error": nomad_error,
-        "reduced_conversion_error": reduced_error,
         "errors": errors,
         "calls": client.calls,
         "usage": summarize_calls(client.calls),

@@ -13,7 +13,12 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .models import PerformanceObservation, PopulationStatistic, ReportedValue
-from .scoring_claims import CompoundClaim, ScalarClaim, equal_claims, normalize_claim
+from .quantities import (
+    ScalarClaim,
+    equal_claims,
+    interpret_quantity,
+    normalize_claim,
+)
 from .scoring_vocabulary import property_name
 from .scoring_vocabulary import protocol_name as protocol_name
 from .units import canonical_quantity
@@ -30,6 +35,25 @@ _PV_NAME = re.compile(
 
 def metric_definition(name: str) -> tuple[str, str | None, str | None, str | None]:
     """Return the base quantity and only qualifiers explicitly present in its name."""
+    certified = re.fullmatch(
+        r"certified\s+(.+)|(.+?)\s*\(certified\)", name.strip(), re.I
+    )
+    if certified:
+        label = certified[1] or certified[2]
+        quantity, statistic, method, unit = _metric_definition(label)
+        # Certification is a measurement qualification, not another quantity.
+        # Keep unsupported combinations literal instead of dropping qualifiers.
+        if (
+            quantity in {"pce", "ff", "voc", "jsc", "efficiency", "η"}
+            and method is None
+        ):
+            return quantity, statistic, "certified_measurement", unit
+        return property_name(name), None, None, None
+    return _metric_definition(name)
+
+
+def _metric_definition(name: str) -> tuple[str, str | None, str | None, str | None]:
+    """Parse a complete quantity/statistic/method/unit label with the closed grammar."""
     suffix = re.fullmatch(
         r"(.+?)\s*(?:\[([^\[\]()]+)\]|\(([^\[\]()]+)\))", name.strip()
     )
@@ -80,8 +104,11 @@ def metric_value(
         # so an explicit fraction/other suffix cannot acquire a percentage scale.
         if value.unit is not None:
             value = value.model_copy(update={"unit": None})
-        claim = normalize_claim(value)
-        if isinstance(claim, (ScalarClaim, CompoundClaim)) and claim.unit is None:
+        interpretation = interpret_quantity(value, quantity)
+        if (
+            interpretation.status == "normalized"
+            and interpretation.unit_source == "percentage_points"
+        ):
             return value.model_copy(update={"unit": "%"}), "percentage_points"
     return value, None
 
@@ -120,7 +147,7 @@ def _condition_value(name: str, value: ReportedValue) -> ReportedValue:
     if (
         name == "illuminationspectrum"
         and re.fullmatch(
-            r"am\s*1[.]5\s*g(?:\s+(?:irradiation|illumination|spectrum))?",
+            r"(?:simulated\s+)?am\s*1[.]5\s*g(?:\s+(?:irradiation|illumination|spectrum))?",
             value.raw_value.strip(),
             re.I,
         )
@@ -135,48 +162,99 @@ def _condition_name(value: ReportedValue) -> str:
     """Recognize explicitly stated air-mass illumination as a spectrum condition."""
     name = protocol_name(value.name) or property_name(value.name)
     if (
-        name in {"illumination", "illuminationstandard"}
+        name in {"illumination", "illuminationstandard", "spectrum"}
         and _condition_value("illuminationspectrum", value).raw_value == "AM1.5G"
     ):
         return "illuminationspectrum"
     return name
 
 
+def _conditions(
+    value: ReportedValue, path: str, supported: bool
+) -> tuple[MeasurementCondition, ...]:
+    """Split a complete, explicit irradiance/spectrum field without losing prose.
+
+    A printed quantity followed by AM1.5G is equivalent to two structured
+    conditions only when the quantity has irradiance dimensions. The shared
+    claim parser checks the number and unit metadata. Unconsumed qualifiers,
+    multiple quantities and unsupported units keep the original assertion.
+    Both derived components retain the original evidence and source path.
+    """
+    name = _condition_name(value)
+    match = (
+        re.fullmatch(
+            r"(?P<quantity>.+?)\s+(?:simulated\s+)?am\s*1[.]5\s*g"
+            r"(?:\s+(?:irradiation|illumination|spectrum))?",
+            value.raw_value.strip(),
+            re.I,
+        )
+        if name in {"measurementcondition", "illumination", "illuminationstandard"}
+        else None
+    )
+    if match:
+        quantity = value.model_copy(update={"raw_value": match["quantity"]})
+        claim = normalize_claim(quantity)
+        target = canonical_quantity(1, "W/m2")
+        if (
+            isinstance(claim, ScalarClaim)
+            and claim.canonical is not None
+            and target is not None
+            and claim.canonical.unit == target[1]
+        ):
+            return (
+                MeasurementCondition("illuminationintensity", quantity, (path,), True),
+                MeasurementCondition(
+                    "illuminationspectrum",
+                    value.model_copy(
+                        update={
+                            "name": "illumination spectrum",
+                            "raw_value": "AM1.5G",
+                            "value_number": None,
+                            "unit": None,
+                        }
+                    ),
+                    (path,),
+                    True,
+                ),
+            )
+    return (
+        MeasurementCondition(name, _condition_value(name, value), (path,), supported),
+    )
+
+
 def canonical_conditions(
     record: PerformanceObservation | PopulationStatistic, path: str = ""
 ) -> tuple[MeasurementCondition, ...]:
-    """Read explicit conditions and registered legacy metrics through one boundary.
+    """Read protocol conditions from metrics and measurement_conditions.
 
     Only an unambiguous, roundoff-equivalent copy across containers is redundant.
     Repeated assertions within a container and conflicting copies remain separate.
     Unknown explicit conditions retain their literal name; treatment and aging
     containers are never inspected. This function does not mutate either input.
     """
-    legacy = [
-        MeasurementCondition(
-            _condition_name(value),
-            _condition_value(_condition_name(value), value),
-            (f"{path}/metrics/{i}",),
-            True,
-        )
+    embedded_conditions = [
+        item
         for i, value in enumerate(record.metrics)
         if protocol_name(value.name) is not None
+        for item in _conditions(value, f"{path}/metrics/{i}", True)
     ]
     explicit = [
-        MeasurementCondition(
-            _condition_name(value),
-            _condition_value(_condition_name(value), value),
-            (f"{path}/measurement_conditions/{i}",),
+        item
+        for i, value in enumerate(record.measurement_conditions)
+        for item in _conditions(
+            value,
+            f"{path}/measurement_conditions/{i}",
             protocol_name(value.name) is not None,
         )
-        for i, value in enumerate(record.measurement_conditions)
     ]
-    result = list(legacy)
+    result = list(embedded_conditions)
     for item in explicit:
-        old = [i for i, other in enumerate(legacy) if other.name == item.name]
+        old = [
+            i for i, other in enumerate(embedded_conditions) if other.name == item.name
+        ]
         new = [other for other in explicit if other.name == item.name]
         if len(old) == len(new) == 1 and equal_claims(
-            normalize_claim(legacy[old[0]].value),
+            normalize_claim(embedded_conditions[old[0]].value),
             normalize_claim(item.value),
             16 * sys.float_info.epsilon,
             0,

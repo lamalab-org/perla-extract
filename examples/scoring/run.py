@@ -30,6 +30,7 @@ from perla_extract.study_extraction.models import (
     ReportedValue,
     StudyExtraction,
 )
+from perla_extract.study_extraction.nomad import to_nomad_with_report
 from perla_extract.study_extraction.run_artifacts import file_digest, write_run_manifest
 from perla_extract.study_extraction.scoring_coverage import (
     DomainCoverage,
@@ -199,7 +200,7 @@ def build_example(output: Path) -> dict:
         PAPER,
         InventoryAuditRequest(
             base_revision=bundle["revision"],
-            searched_sources=["main"],
+            review_scope_sources=["main"],
             coverage=synthetic_coverage(),
             expected_counts={},
         ),
@@ -251,14 +252,18 @@ def build_example(output: Path) -> dict:
     ]
     wrong_scan = export.ground_truth.model_copy(deep=True)
     wrong_scan.performance_observations[0].scan_direction = "forward"
+    raw_parsed_conflict = export.ground_truth.model_copy(deep=True)
+    raw_parsed_conflict.performance_observations[0].metrics[0].value_number = 2
     cases = {
         "seed": (seed, document),
         "corrected": (export.ground_truth, document),
         "equivalent_units": (equivalent, document),
         "wrong_scan": (wrong_scan, document),
+        "raw_parsed_conflict": (raw_parsed_conflict, document),
     }
     expected = json.loads(EXPECTED.read_text(encoding="utf-8"))
     actual = {}
+    checks = {}
     for name, (prediction, evidence) in cases.items():
         started = perf_counter()
         run = output / "predictions" / name
@@ -309,7 +314,6 @@ def build_example(output: Path) -> dict:
                 str(run),
                 "--output",
                 str(report_path),
-                "--fail-on-scoring-issues",
             ],
             standalone_mode=False,
         )
@@ -330,18 +334,65 @@ def build_example(output: Path) -> dict:
             )
         if report["core_facts"]["profile"] != expected["profile"]:
             raise ValueError("Scoring profile changed; review the example contract")
+        nomad = to_nomad_with_report(prediction)
+        write_json_atomic(run / "nomad_export.json", nomad.model_dump(mode="json"))
+        mapping = next(
+            item
+            for item in nomad.mappings
+            if item.source_kind == "performance_observation"
+            and item.source_id == "reverse"
+        )
+        cell = nomad.archives[mapping.archive_index].data
+        notes = json.loads(cell.additional_notes or "{}")
+        retained = notes.get("reported_metrics", [])
+        original = prediction.performance_observations[0].metrics
+        checks[name] = {
+            "source_verified_values": report["prediction_validation"]["counts"][
+                "source_verified_values"
+            ],
+            "quantity_conflicts": sum(
+                issue["code"] == "quantity_conflict"
+                for issue in report["prediction_validation"]["issues"]
+            ),
+            "scoring_issue_kinds": sorted(
+                issue["kind"] for issue in report["core_facts"]["issues"]
+            ),
+            "recovered_performance": report["core_facts"]["recovery"]["groups"][
+                "performance"
+            ]["matched"],
+            "nomad_pce": cell.pce,
+            "nomad_ff": cell.ff,
+            "nomad_metric_issue_codes": sorted(
+                issue.code
+                for issue in nomad.issues
+                if issue.source_kind == "performance_observation"
+            ),
+            "raw_metrics_preserved": all(
+                any(
+                    all(
+                        item.get(key) == getattr(value, key)
+                        for key in ("name", "raw_value", "value_number", "unit")
+                    )
+                    for item in retained
+                )
+                for value in original
+            ),
+        }
     summary = {
         "synthetic": True,
+        "case_count": len(cases),
         "actual": actual,
         "expected": expected["cases"],
-        "passed": actual == expected["cases"],
+        "checks": checks,
+        "expected_checks": expected["checks"],
+        "passed": actual == expected["cases"] and checks == expected["checks"],
         "python": platform.python_version(),
         "packages": {name: version(name) for name in ("pydantic", "pint", "click")},
     }
     write_json_atomic(output / "summary.json", summary)
     if not summary["passed"]:
         raise ValueError(
-            f"Scoring differs from expected counts; inspect {output}/summary.json"
+            f"Scientific checks differ from expected results; inspect {output}/summary.json"
         )
     roster = output / "runs.csv"
     with roster.open("w", newline="", encoding="utf-8") as stream:
@@ -384,14 +435,16 @@ def build_example(output: Path) -> dict:
 )
 def main(output: Path) -> None:
     try:
-        build_example(output)
+        summary = build_example(output)
     except FileExistsError as exc:
         raise click.ClickException(
             f"Output already exists: {output}; choose a new directory."
         ) from exc
     except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo(f"PASS: four synthetic cases; inspect {output / 'summary.json'}")
+    click.echo(
+        f"PASS: {summary['case_count']} synthetic cases; inspect {output / 'summary.json'}"
+    )
     click.echo(
         f"Paired comparison and figure tables: {output / 'comparison.json'}, {output / 'figure-data'}"
     )

@@ -10,13 +10,23 @@ pages or uses a vision model.
 from __future__ import annotations
 
 import json
-import re
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from pydantic import Field
 
-from .claims import ClaimLedger, audit_claim_coverage
-from .evidence import normalized_source_text
+from .claims import ClaimLedger
+from .correction_checks import (
+    RECORD_COLLECTIONS as _COLLECTIONS,
+)
+from .correction_checks import (
+    candidate_quality as candidate_quality,
+)
+from .correction_checks import (
+    is_monotonic_quality as is_monotonic_quality,
+)
+from .correction_checks import (
+    record_for_path as _record_for_path,
+)
 from .guidance import (
     COMPOSITION_BOUNDARY_POLICY,
     DEVICE_FAMILY_POLICY,
@@ -41,7 +51,6 @@ from .transport import (
     expand_span_citations,
     span_citation_schema,
 )
-from .validation import validate_study
 
 if TYPE_CHECKING:
     from .client import ModelClient
@@ -142,15 +151,6 @@ class RepairAudit(StrictModel):
     reason: str | None
 
 
-_COLLECTIONS = {
-    "device_family": ("device_families", "family_id"),
-    "individual_device": ("individual_devices", "device_id"),
-    "performance_observation": ("performance_observations", "observation_id"),
-    "population_statistic": ("population_statistics", "population_id"),
-    "stability_test": ("stability_tests", "test_id"),
-}
-
-
 def repair_request_schema(worklist: RepairWorklist, spans: list[EvidenceSpan]) -> dict:
     """Expose only requested record types, IDs, and removals to the repair model.
 
@@ -238,27 +238,6 @@ def _citation_block_ids(value: object) -> set[str]:
 
     walk(value.model_dump(mode="json") if hasattr(value, "model_dump") else value)
     return found
-
-
-def _record_for_path(study: StudyExtraction, path: str) -> tuple[str, object] | None:
-    """Resolve a validation JSON path to its top-level scientific record."""
-
-    match = re.match(r"^\$\.([a-z_]+)\[(\d+)\]", path)
-    if not match or not hasattr(study, match.group(1)):
-        return None
-    collection = getattr(study, match.group(1))
-    index = int(match.group(2))
-    if not isinstance(collection, list) or index >= len(collection):
-        return None
-    kind = next(
-        (
-            candidate
-            for candidate, (name, _) in _COLLECTIONS.items()
-            if name == match.group(1)
-        ),
-        match.group(1),
-    )
-    return kind, collection[index]
 
 
 def build_repair_worklist(
@@ -388,89 +367,6 @@ def apply_repair(study: StudyExtraction, repair: StudyRepair) -> StudyExtraction
         dict.fromkeys([*study.unresolved_notes, *repair.unresolved_notes])
     )
     return study.model_copy(update=changes)
-
-
-def candidate_quality(
-    study: StudyExtraction,
-    blocks: list[EvidenceBlock],
-    ledger: ClaimLedger | None,
-    *,
-    baseline: StudyExtraction | None = None,
-) -> dict[str, int]:
-    """Measure technical issues and source-value loss relative to a prior draft.
-
-    Reader notes may be incomplete. Removing a record can reduce their mismatch
-    count while deleting real data, so source-supported values are checked against
-    the prior draft independently. Exact repetitions share one key; adding another
-    value cannot compensate for losing a different one.
-    """
-
-    validation = validate_study(study, blocks)
-    uncovered = 0
-    missing_claims = 0
-    if ledger is not None:
-        coverage = audit_claim_coverage(ledger, study)
-        uncovered = int(coverage["issue_count"])
-        missing_claims = sum(
-            int(coverage["counts"][key])
-            for key in ("unmatched", "possible_match", "missing_shared_targets")
-        )
-    lost_values = (
-        _verified_value_keys(baseline, validate_study(baseline, blocks))
-        - _verified_value_keys(study, validation)
-        if baseline is not None
-        else set()
-    )
-    return {
-        "validation_issues": len(validation["issues"]),
-        "reported_values": int(validation["counts"]["reported_values"]),
-        "source_verified_values": int(validation["counts"]["source_verified_values"]),
-        "semantic_issues": uncovered,
-        "missing_claims": missing_claims,
-        "lost_verified_values": len(lost_values),
-    }
-
-
-def _verified_value_keys(
-    study: StudyExtraction, validation: dict[str, Any]
-) -> set[tuple[str, str, str, str]]:
-    """Identify source values independently of record IDs and list positions.
-
-    Scope labels keep equal values for different specimens separate. Local IDs
-    and list positions are not identity; exact repetitions share a key. This is
-    a conservative retention check, not proof of units or attribution. Semantic
-    deletions or relabelling may require human review.
-    """
-    devices = {item.device_id: item for item in study.individual_devices}
-    keys: set[tuple[str, str, str, str]] = set()
-    for value in validation["verified_values"]:
-        owner = _record_for_path(study, str(value["path"]))
-        record = owner[1] if owner is not None else None
-        subject = devices.get(str(getattr(record, "device_id", "")), record)
-        scope = normalized_source_text(
-            getattr(subject, "label", None) or getattr(record, "specimen_label", "")
-        )
-        keys.update(
-            (
-                scope,
-                normalized_source_text(value["name"]),
-                normalized_source_text(value["raw_value"]),
-                str(citation["block_id"]),
-            )
-            for citation in value["evidence"]
-        )
-    return keys
-
-
-def is_monotonic_quality(before: dict[str, int], after: dict[str, int]) -> bool:
-    """Return whether a candidate avoids trading away any grounded signal."""
-
-    return (
-        after["validation_issues"] <= before["validation_issues"]
-        and after["semantic_issues"] <= before["semantic_issues"]
-        and after["missing_claims"] <= before["missing_claims"]
-        and after["lost_verified_values"] == 0
-    )
 
 
 def _proposal_is_scoped(proposed: StudyRepair, worklist: RepairWorklist) -> bool:

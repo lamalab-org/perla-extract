@@ -100,11 +100,9 @@ def test_only_validated_model_results_enter_cache(tmp_path, monkeypatch):
 
 def test_provider_schema_requires_nullable_defaulted_fields():
     schema = _strict_schema(StudyExtraction)
-    assert "identity_links" not in schema["properties"]
     family = schema["$defs"]["DeviceFamily"]
     assert "absorbers" in family["required"]
     assert "default" not in family["properties"]["absorbers"]
-    assert "absorber_formula" not in family["properties"]
     assert family["additionalProperties"] is False
     absorber = schema["$defs"]["AbsorberComponent"]
     property_values = absorber["properties"]["properties"]
@@ -128,15 +126,11 @@ def test_provider_schema_requires_nullable_defaulted_fields():
     assert_closed_objects_only(schema)
 
 
-def test_only_empty_legacy_identity_links_are_migrated():
-    legacy = empty_result()
-    legacy["identity_links"] = []
-    migrated = StudyExtraction.model_validate(legacy)
-
-    assert "identity_links" not in migrated.model_dump(mode="json")
-    legacy["identity_links"] = [{"link_id": "unresolved"}]
-    with pytest.raises(ValueError, match="manual migration"):
-        StudyExtraction.model_validate(legacy)
+def test_model_response_rejects_unrecognized_fields():
+    payload = empty_result()
+    payload["unrecognized_records"] = []
+    with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+        StudyExtraction.model_validate(payload)
 
 
 @pytest.mark.parametrize("invalid_cache", ["{", "[]"])

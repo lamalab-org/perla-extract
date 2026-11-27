@@ -380,6 +380,7 @@ def test_nomad_export_consumes_only_accepted_enrichment():
             CompositionProposalResult(
                 proposal=CompositionProposal(
                     family_id="f1",
+                    absorber_id="a1",
                     ions=[
                         ProposedIon(site="A", abbreviation="FA", coefficient="1"),
                         ProposedIon(site="B", abbreviation="Pb", coefficient="1"),
@@ -444,6 +445,7 @@ def test_nomad_export_revalidates_an_audit_marked_accepted():
             CompositionProposalResult(
                 proposal=CompositionProposal(
                     family_id="f1",
+                    absorber_id="a1",
                     ions=[
                         ProposedIon(site="A", abbreviation="FA", coefficient="1"),
                         ProposedIon(site="B", abbreviation="Pb", coefficient="1"),

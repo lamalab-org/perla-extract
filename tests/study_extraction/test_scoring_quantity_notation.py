@@ -4,7 +4,7 @@ import pytest
 
 from perla_extract.study_extraction.evaluation import evaluate_study
 from perla_extract.study_extraction.models import ReportedValue
-from perla_extract.study_extraction.scoring_facts import equal_value
+from perla_extract.study_extraction.scoring_context import equal_value
 from tests.study_extraction.test_evaluation import EVIDENCE, study
 
 

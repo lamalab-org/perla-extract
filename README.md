@@ -18,20 +18,21 @@ python -m pip install -e .
 ```bash
 export OPENAI_API_KEY="your-openai-key"
 perla-extract --pdf paper.pdf --supplement paper_si.pdf \
-  --model openai/gpt-6.1-sol --parser pymupdf \
-  --no-claims --no-refinement --no-targeted-repair --no-enrichment \
-  --max-model-calls 1 --max-output-tokens 40000 \
+  --model openai/gpt-6.1-sol \
+  --max-output-tokens 40000 \
   --output-dir results/paper
 ```
 
-Open `results/paper/extraction.json` for the records and `report.json` for progress,
-usage and issues. Omit `--supplement` when there is no SI. Use a new output directory
-for each attempt. [Open models and other providers](docs/workflows/open-models.md)
-use the same workflow. This starts with one direct extraction call. Add reading,
-refinement or other stages only when a controlled comparison shows they help.
-The complete paper and SI must fit the input limit; the command fails before a
-model call when they do not. [Context limits](docs/workflows/open-models.md#understand-context-and-resource-limits)
-explain how to configure larger sources.
+Docling parses the paper and SI. Open `extraction.json` for records and
+`report.json` for usage and issues. Omit `--supplement` when there is no SI.
+
+| Optional pass | When to use it |
+| --- | --- |
+| Refinement | Test whether one source-and-draft review improves accuracy enough to justify its cost |
+| Enrichment | Produce separate composition/processing interpretations for database export |
+
+Both are off by default. [Stage and context details](docs/workflows/extraction.md)
+and [other providers](docs/workflows/open-models.md) are documented separately.
 
 ## Compare two extraction choices
 
@@ -42,12 +43,9 @@ perla-experiment my-experiment.toml --check
 perla-experiment my-experiment.toml
 ```
 
-One TOML file defines both arms and the papers. Start with the one-paper example;
-the root `experiment.toml` lists all 30 frozen development references when you are
-ready to expand. Supply the original PDFs/SIs at the configured paths.
-The command handles extraction and scoring. Open the generated `summary.md` first
-for reference agreement, uncertainty, run coverage and recorded costs;
-`figure-data/` contains plotting tables.
+Open the generated `summary.md` first; `figure-data/` contains plotting tables.
+Build [model-generated development references](benchmarks/development) to tune
+Astra versus cheaper models; evaluate frozen choices on the [human test set](benchmarks/test).
 [Experiment guide](docs/workflows/extraction-ablations.md).
 
 ## Find what you need
@@ -56,13 +54,14 @@ for reference agreement, uncertainty, run coverage and recorded costs;
 | --- | --- |
 | Try scoring without a model, PDFs or credentials | [Offline example](docs/workflows/scoring-example.md) |
 | Understand stages and context limits | [Extraction workflow](docs/workflows/extraction.md) |
+| Compare Docling and GraniteDocling locally | [Parser experiment](examples/parsing/README.md) |
 | Design a defensible scientific evaluation | [Validation method](docs/methods/validation-and-scale.md) |
 | Change or debug the code | [Maintainer guide](docs/development/maintaining.md) |
 | Review records, export data or discover papers | [Documentation](docs/index.md) |
 
-Extraction reads PDF text and tables. Evidence citations and passing software checks
-do not prove scientific correctness. The included 30-paper reference set is development
-data; use independent review and untouched papers for final accuracy claims.
+The human-corrected references are our test set. They already informed earlier
+development, so results must disclose that history rather than claim an untouched
+holdout. Model-generated development labels measure teacher agreement.
 
 ## Authors
 

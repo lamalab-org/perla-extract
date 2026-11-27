@@ -9,9 +9,9 @@ from typing import Any
 from .models import EvidenceBlock, StudyExtraction
 from .validation import Location, validate_study_details
 
-_REMOVABLE_REASONS = {
-    "raw_value not found in cited evidence",
-    "material_form_raw not found in cited evidence",
+_REMOVABLE_CODES = {
+    "raw_value_not_grounded",
+    "material_form_not_grounded",
 }
 
 
@@ -61,10 +61,10 @@ def remove_unsupported_optional_claims(
     removals: list[dict[str, object]] = []
     while True:
         before = validate_study_details(current, blocks)
-        before_counts = Counter(issue.reason for issue in before.issues)
+        before_counts = Counter(issue.code for issue in before.issues)
         accepted = False
         for issue in before.issues:
-            if issue.reason not in _REMOVABLE_REASONS:
+            if issue.code not in _REMOVABLE_CODES:
                 continue
             candidate_data = deepcopy(current.model_dump(mode="json"))
             try:
@@ -73,7 +73,7 @@ def remove_unsupported_optional_claims(
             except (KeyError, IndexError, TypeError, ValueError):
                 continue
             after = validate_study_details(candidate, blocks)
-            after_counts = Counter(item.reason for item in after.issues)
+            after_counts = Counter(item.code for item in after.issues)
             if len(after.issues) >= len(before.issues):
                 continue
             if any(
@@ -86,6 +86,7 @@ def remove_unsupported_optional_claims(
                 {
                     "path": issue.path,
                     "reason": issue.reason,
+                    "code": issue.code,
                     "removed": removed,
                 }
             )

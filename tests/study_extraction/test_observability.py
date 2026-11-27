@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import httpx
 import litellm
 import pytest
+import tiktoken
 from pydantic import BaseModel
 
 from perla_extract.study_extraction.client import (
@@ -222,6 +223,15 @@ def test_provider_http_contract_and_accounting(
 ):
     """Exercise LiteLLM serialization with synthetic HTTP responses and no network."""
     monkeypatch.setenv("TRANSPORT_TEST_KEY", "secret-never-save")
+    # This tests HTTP serialization and provider-reported usage, not tokenization.
+    # Cold LiteLLM installations may otherwise download cl100k_base before send().
+    encoding = tiktoken.Encoding(
+        name="transport-test-bytes",
+        pat_str=r"(?s).+",
+        mergeable_ranks={bytes([value]): value for value in range(256)},
+        special_tokens={},
+    )
+    monkeypatch.setattr(tiktoken, "get_encoding", lambda _: encoding)
     sent = []
     router = host == "openrouter.ai"
 

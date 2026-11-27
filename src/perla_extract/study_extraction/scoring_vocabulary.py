@@ -9,13 +9,15 @@ from __future__ import annotations
 
 import re
 
-from .scoring_claims import scientific_text, scientific_value_text
+from .quantities import scientific_text, scientific_value_text
+from .quantity_specs import QUANTITY_ALIASES
 
 METRIC_ALIASES = {
-    "powerconversionefficiency": "pce",
-    "opencircuitvoltage": "voc",
-    "shortcircuitcurrentdensity": "jsc",
-    "fillfactor": "ff",
+    **{
+        name: kind
+        for name, kind in QUANTITY_ALIASES.items()
+        if kind in {"pce", "voc", "jsc", "ff"}
+    },
     "referenceefficiencyretained": "efficiencyretention",
     "pceretention": "efficiencyretention",
     "referencecell'sefficiencyretained": "efficiencyretention",
@@ -36,6 +38,18 @@ def property_name(name: str) -> str:
             return concepts[0]
     key = re.sub(r"[\s_-]+", "", scientific_text(name).casefold())
     return METRIC_ALIASES.get(key, key)
+
+
+def processing_name(name: str) -> str:
+    """Equate time and duration in fabrication fields, retaining every qualifier.
+
+    Only a final, separate word is interpreted. Thus ``first spin time`` agrees
+    with ``first spin duration``, but not ``second spin duration`` or ``lifetime``.
+    Measurement and stability fields do not use this fabrication convention.
+    """
+    text = scientific_text(name)
+    text = re.sub(r"(^|[\s_-])time$", r"\1duration", text, flags=re.IGNORECASE)
+    return property_name(text)
 
 
 # One vocabulary for measurement context. The canonical labels can also appear in
@@ -115,13 +129,13 @@ def treatment_condition_name(name: str) -> str | None:
     potential``. Unknown qualifiers, starting/ending temperatures and outcomes
     stay literal and cannot establish a treatment identity.
     """
-    direct = TREATMENT_NAMES.get(property_name(name))
+    direct = TREATMENT_NAMES.get(processing_name(name))
     if direct is not None:
         return direct
     text = scientific_text(name)
     for separator in re.finditer(r"\s+", text):
         material, condition = text[: separator.start()], text[separator.end() :]
-        canonical = TREATMENT_NAMES.get(property_name(condition))
+        canonical = TREATMENT_NAMES.get(processing_name(condition))
         if canonical is not None and known_material(material):
             return f"{canonical}@{material_name(material)}"
     return None

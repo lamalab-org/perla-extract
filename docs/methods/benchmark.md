@@ -183,9 +183,9 @@ as if only the extractor had changed.
 
 ## Coverage and the current summary statistic
 
-Schema 7 adds optional structured subject context, population protocol and error-bar
-meaning. Archived schema-6 references load with unknown defaults; their bytes and
-review history remain unchanged. Ground-truth format 4 remains the single format.
+The current study model includes structured subject context, population protocol
+and error-bar meaning. Absent optional context remains unknown. References use
+format 4 and validate against the current model; no field migration is performed.
 
 Evaluation format 11 replaces the previous group-macro headline with per-paper
 attributed fact micro F1. Study comparisons average repeats within each paper and

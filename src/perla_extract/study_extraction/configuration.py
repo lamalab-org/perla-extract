@@ -10,21 +10,23 @@ from __future__ import annotations
 import hashlib
 import math
 import platform
+import tomllib
 from dataclasses import asdict, dataclass, field, fields, replace
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
-
-try:
-    import tomllib
-except ModuleNotFoundError:  # Python 3.10
-    import tomli as tomllib  # type: ignore[no-redef]
 
 from .deployment import DeploymentSettings
 from .request_policy import ResolvedStagePolicy
 
 DEFAULT_EXTRACTION_MODEL = "openai/gpt-5.2"
 STAGES = ("read", "assemble", "refine", "repair", "enrich")
+STAGE_SWITCHES = {
+    "read": "use_claim_ledger",
+    "refine": "use_refinement",
+    "repair": "use_targeted_repair",
+    "enrich": "use_enrichment",
+}
 DEFAULT_OUTPUT_TOKENS = {
     "read": 30_000,
     "assemble": 80_000,
@@ -40,15 +42,6 @@ _DEPLOYMENT_SHORTCUTS = {
     "temperature",
     "max_output_tokens",
 }
-_REMOVED_SETTINGS = {
-    "claim_model": "read.model",
-    "refinement_model": "refine.model",
-    "repair_model": "repair.model",
-    "enrichment_model": "enrich.model",
-    "claim_max_output_tokens": "read.max_output_tokens",
-    "repair_max_output_tokens": "repair.max_output_tokens",
-    "enrichment_max_output_tokens": "enrich.max_output_tokens",
-}
 _PATHS = {"pdf", "supplement", "output_dir", "document_cache_dir", "model_cache_dir"}
 _OPERATIONAL = _PATHS | {
     "heartbeat_seconds",
@@ -57,6 +50,33 @@ _OPERATIONAL = _PATHS | {
     "langfuse",
     "langfuse_capture_content",
 }
+
+
+def active_method_settings(settings: dict[str, Any]) -> dict[str, Any]:
+    """Compare enabled operations while retaining full configuration in run artifacts.
+
+    Historical reports without an explicit switch retain their entries. A disabled
+    reader's limits and deployments cannot constitute an extraction intervention.
+    """
+    result = dict(settings)
+    stages = {
+        stage
+        for stage in STAGES
+        if stage not in STAGE_SWITCHES
+        or settings.get(STAGE_SWITCHES[stage]) is not False
+    }
+    for name in ("effective_models", "deployments"):
+        if isinstance(result.get(name), dict):
+            result[name] = {k: v for k, v in result[name].items() if k in stages}
+    if settings.get("use_claim_ledger") is False:
+        for name in (
+            "claim_recall_passes",
+            "claim_mode",
+            "single_call_max_input_tokens",
+            "claim_window_input_tokens",
+        ):
+            result.pop(name, None)
+    return result
 
 
 def _validate_deployments(deployments: dict[str, DeploymentSettings]) -> None:
@@ -115,17 +135,17 @@ class ExtractionConfig:
     pdf: Path
     supplement: Path | None = None
     output_dir: Path = Path("study_extraction")
-    use_claim_ledger: bool = True
+    use_claim_ledger: bool = False
     claim_recall_passes: int = 2
-    use_enrichment: bool = True
-    use_refinement: bool = True
-    use_targeted_repair: bool = True
+    use_enrichment: bool = False
+    use_refinement: bool = False
+    use_targeted_repair: bool = False
     parser: str = "docling"
     claim_mode: str = "auto"
     single_call_max_input_tokens: int = 90_000
     claim_window_input_tokens: int = 60_000
     assembly_max_input_tokens: int = 180_000
-    max_model_calls: int | None = None
+    max_model_calls: int | None = 1
     max_cost_usd: float | None = None
     max_total_tokens: int | None = None
     max_elapsed_seconds: float | None = None
@@ -134,7 +154,6 @@ class ExtractionConfig:
     document_cache_dir: Path = Path(".perla-cache/documents")
     model_cache_dir: Path = Path(".perla-cache/models")
     refresh_document_cache: bool = False
-    reduced_export: bool = False
     dry_run: bool = False
     deployments: dict[str, DeploymentSettings] = field(default_factory=dict)
     langfuse: bool = False
@@ -155,7 +174,6 @@ class ExtractionConfig:
             "use_refinement",
             "use_targeted_repair",
             "refresh_document_cache",
-            "reduced_export",
             "dry_run",
             "langfuse",
             "langfuse_capture_content",
@@ -278,7 +296,7 @@ class ExtractionConfig:
                 if policy.reasoning_effort == "omit"
                 else policy.reasoning_effort,
             }
-        return result
+        return active_method_settings(result)
 
 
 def implementation_sha256() -> str:
@@ -328,12 +346,6 @@ def parse_settings(document: dict[str, Any], directory: Path) -> dict[str, Any]:
     if not isinstance(options, dict):
         raise ValueError("[extraction] must be a table")
     options = dict(options)
-    for key in options:
-        if key in _REMOVED_SETTINGS or key in _DEPLOYMENT_SHORTCUTS:
-            target = _REMOVED_SETTINGS.get(key, f"default.{key}")
-            raise ValueError(
-                f"extraction.{key} has moved to stages.{target}; use one deployment table"
-            )
     allowed = {f.name for f in fields(ExtractionConfig)} - {
         "deployments",
         "langfuse",
@@ -389,11 +401,6 @@ def resolve_config(
 ) -> ExtractionConfig:
     """Apply invocation overrides to file settings, then validate the resulting method."""
     options = load_settings(config_file)
-    for key in overrides:
-        if key in _REMOVED_SETTINGS:
-            raise ValueError(
-                f"{key} has moved to stages.{_REMOVED_SETTINGS[key]}; use a deployment table"
-            )
     deployment_options = {
         key: overrides.pop(key) for key in _DEPLOYMENT_SHORTCUTS if key in overrides
     }
