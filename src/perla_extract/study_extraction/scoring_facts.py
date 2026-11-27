@@ -24,9 +24,6 @@ from .models import (
     SubjectContext,
 )
 from .quantities import (
-    compound_quantity as compound_quantity,
-)
-from .quantities import (
     is_plain_number as is_plain_number,
 )
 from .quantities import (

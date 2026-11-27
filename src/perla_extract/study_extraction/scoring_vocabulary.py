@@ -52,18 +52,6 @@ def processing_name(name: str) -> str:
     return property_name(text)
 
 
-def label_tokens(label: str) -> set[str]:
-    """Read literal label words for candidate alignment, without synonym inference.
-
-    Case and punctuation outside a word are typography. Internal hyphens and
-    slashes remain significant: c-NiOx, cp-NiOx, A/B and B/A stay distinct.
-    These tokens corroborate identity; they never establish scientific equality.
-    """
-    return set(
-        re.findall(r"[^\W_]+(?:[-/][^\W_]+)*", scientific_text(label).casefold())
-    )
-
-
 # One vocabulary for measurement context. The canonical labels can also appear in
 # extraction guidance; aliases describe the same condition, not related outcomes.
 MEASUREMENT_CONDITIONS = {

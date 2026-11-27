@@ -15,7 +15,6 @@ from perla_extract.study_extraction.quantities import (
     equal_claims,
     interpret_quantity,
     normalize_claim,
-    project_scalar,
     scientific_value_text,
 )
 from perla_extract.study_extraction.quantity_specs import QUANTITY_SPECS
@@ -127,7 +126,7 @@ def test_explicit_fraction_and_missing_percentage_unit_have_different_convention
     value = reported("PCE", raw, number, unit)
     result = interpret_quantity(value)
     assert result.unit_source == source
-    assert project_scalar(value, "percent") == pytest.approx(percent)
+    assert convert_reported_value(value, "percent") == pytest.approx(percent)
 
 
 @pytest.mark.parametrize(
@@ -150,7 +149,7 @@ def test_explicit_contradictions_remain_visible_and_never_export_or_match_themse
     assert result.reason == reason
     assert isinstance(result.claim, LiteralClaim)
     assert not equal_claims(result.claim, result.claim, 0.01, 0)
-    assert project_scalar(value, "%", allow_qualified=True) is None
+    assert convert_reported_value(value, "%", allow_qualified=True) is None
     assert value.model_dump_json() == original
 
 
@@ -160,7 +159,7 @@ def test_consistency_compares_complete_explicit_physical_quantities():
     assert interpret_quantity(converted).status == "normalized"
     assert interpret_quantity(converted).unit_source == "raw_value"
     assert equal_claims(normalize_claim(converted), normalize_claim(plain), 0, 0)
-    assert project_scalar(converted, "s") == pytest.approx(0.02)
+    assert convert_reported_value(converted, "s") == pytest.approx(0.02)
 
 
 @pytest.mark.parametrize("raw", ["20 ms", "1–2 ms", "20 ± 1 ms"])
@@ -168,7 +167,7 @@ def test_a_redundant_unit_with_different_scale_and_no_parsed_number_is_unresolve
     value = reported("duration", raw, None, "s")
     assert interpret_quantity(value).status == "literal"
     assert interpret_quantity(value).reason == "ambiguous_unit_scale"
-    assert project_scalar(value, "s", allow_qualified=True) is None
+    assert convert_reported_value(value, "s", allow_qualified=True) is None
     incompatible = value.model_copy(update={"unit": "V"})
     assert interpret_quantity(incompatible).status == "contradiction"
 
@@ -184,7 +183,7 @@ def test_uninterpreted_numeric_prefix_without_parsed_metadata_is_not_a_contradic
     assert result.status == "literal"
     assert result.reason == "unsupported_unit"
     assert equal_claims(result.claim, result.claim, 0.01, 0)
-    assert project_scalar(value, "%", allow_qualified=True) is None
+    assert convert_reported_value(value, "%", allow_qualified=True) is None
 
 
 @pytest.mark.parametrize(
@@ -203,7 +202,7 @@ def test_complete_field_name_units_precede_a_missing_unit_convention(
     result = interpret_quantity(value)
     assert result.status == "normalized"
     assert result.unit_source == "field_name"
-    assert project_scalar(value, target) == pytest.approx(expected)
+    assert convert_reported_value(value, target) == pytest.approx(expected)
 
 
 def test_absolute_temperature_and_its_uncertainty_have_different_offset_rules():
@@ -214,8 +213,10 @@ def test_absolute_temperature_and_its_uncertainty_have_different_offset_rules():
     assert result.claim.first == pytest.approx(293.15)
     assert result.claim.second == pytest.approx(1)
     assert result.claim.unit == "kelvin"
-    assert project_scalar(value, "K") is None
-    assert project_scalar(value, "K", allow_qualified=True) == pytest.approx(293.15)
+    assert convert_reported_value(value, "K") is None
+    assert convert_reported_value(value, "K", allow_qualified=True) == pytest.approx(
+        293.15
+    )
 
 
 def test_bare_temperature_C_does_not_reinterpret_charge_C():
@@ -238,7 +239,7 @@ def test_complete_range_keeps_endpoints_and_cannot_supply_an_exact_scalar():
         7200,
         "second",
     )
-    assert project_scalar(value, "s", allow_qualified=True) is None
+    assert convert_reported_value(value, "s", allow_qualified=True) is None
     assert not equal_claims(
         result.claim, normalize_claim(reported("duration", "1.5 h", 1.5, "h")), 0.01, 0
     )
@@ -252,7 +253,7 @@ def test_approximation_requires_explicit_qualified_export_and_is_not_an_exact_cl
     result = interpret_quantity(value)
     assert result.status == "normalized"
     assert result.claim.qualifier == "approximate"
-    assert project_scalar(value, "%") is None
+    assert convert_reported_value(value, "%") is None
     assert convert_reported_value(value, "%", allow_qualified=True) == 14
     assert not equal_claims(
         result.claim, normalize_claim(reported("PCE", "14%", 14, "%")), 0.01, 0
@@ -265,7 +266,7 @@ def test_approximation_requires_explicit_qualified_export_and_is_not_an_exact_cl
 def test_arbitrary_qualifiers_and_unsupported_units_never_acquire_a_scalar_center(raw):
     value = reported("PCE", raw, 20, None)
     assert interpret_quantity(value).status == "literal"
-    assert project_scalar(value, "%", allow_qualified=True) is None
+    assert convert_reported_value(value, "%", allow_qualified=True) is None
 
 
 @pytest.mark.parametrize("raw", ["20% certified", "20 ± 1% SD", "20 unknown_unit"])
@@ -300,7 +301,7 @@ def test_implicit_product_or_qualifier_is_unresolved_when_unit_metadata_disagree
     result = interpret_quantity(value)
     assert result.status == "literal"
     assert result.reason == "ambiguous_unit_notation"
-    assert project_scalar(value, unit) is None
+    assert convert_reported_value(value, unit) is None
 
 
 def test_explicit_unit_product_and_actual_numeric_disagreements_remain_contradictions():
@@ -364,4 +365,4 @@ def test_malformed_unit_arithmetic_remains_literal_without_a_parser_exception():
     result = interpret_quantity(value)
     assert result.status == "literal"
     assert result.reason == "unsupported_unit"
-    assert project_scalar(value, "V") is None
+    assert convert_reported_value(value, "V") is None

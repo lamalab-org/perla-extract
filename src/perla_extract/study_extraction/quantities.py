@@ -479,18 +479,7 @@ def is_plain_number(value: ReportedValue) -> bool:
     )
 
 
-def compound_quantity(
-    value: ReportedValue,
-) -> tuple[Literal["range", "uncertainty"], float, float, str | None] | None:
-    claim = normalize_claim(value)
-    return (
-        (claim.kind, claim.first, claim.second, claim.unit)
-        if isinstance(claim, CompoundClaim)
-        else None
-    )
-
-
-def project_scalar(
+def convert_reported_value(
     value: ReportedValue, target_unit: str, *, allow_qualified: bool = False
 ) -> float | None:
     """Project only a complete scalar; qualified centers need an explicit caller policy.
@@ -519,25 +508,6 @@ def project_scalar(
         and claim.unit is not None
     ):
         return _convert_physical(claim.first, claim.unit, target_unit)
-    return None
-
-
-def convert_reported_value(
-    value: ReportedValue, target_unit: str, *, allow_qualified: bool = False
-) -> float | None:
-    """Convert a rich claim using the same interpretation as validation and scoring."""
-
-    return project_scalar(value, target_unit, allow_qualified=allow_qualified)
-
-
-def canonical_reported_quantity(value: ReportedValue) -> tuple[float, str] | None:
-    claim = normalize_claim(value)
-    if (
-        isinstance(claim, ScalarClaim)
-        and claim.canonical is not None
-        and claim.qualifier is None
-    ):
-        return claim.canonical.magnitude, claim.canonical.unit
     return None
 
 
