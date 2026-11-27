@@ -58,7 +58,16 @@ Completed-attempt totals pool mixed historical settings and repeated papers.
 They are diagnostic, not a model ranking or an independent-paper accuracy estimate.
 The four-paper pilot is too small for a strong statistical conclusion.
 
-## Correctness checks
+## Simplification check, 27 November
+
+Cleanup commit `d829665` reproduces **all 410 evaluation reports byte-for-byte**,
+with identical inputs/settings/dependencies and no changed decisions. The retained
+114 production functions/classes were also checked for unchanged syntax trees.
+The full suite passes 1,680 tests; all 132 reference-release/dataset checks and
+three installed export/deployment checks pass. Ruff, mypy and strict docs pass.
+This removes file/API indirection without changing the scientific method.
+
+## Original verification, 26 November
 
 The ordinary suite passes **1,677 tests**. All **124** reference-release tests,
 **three** native/OCR Docling tests and **three** installed NOMAD/prepared-deployment
