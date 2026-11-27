@@ -68,13 +68,13 @@ def test_producer_fingerprint_cannot_override_current_payload_validation(
     reference_copy,
 ):
     path = reference_copy / "ground_truth.json"
-    payload = json.loads(path.read_text())
+    payload = json.loads(path.read_text(encoding="utf-8"))
     payload["retired_field"] = []
-    path.write_text(json.dumps(payload))
+    path.write_text(json.dumps(payload), encoding="utf-8")
     manifest_path = reference_copy / "manifest.json"
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["files"]["ground_truth.json"] = reference_content_digest(payload)
-    manifest_path.write_text(json.dumps(manifest))
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="Extra inputs are not permitted"):
         load_reference(reference_copy)
 
@@ -89,18 +89,18 @@ def test_producer_fingerprint_cannot_override_current_payload_validation(
 )
 def test_reference_requires_valid_producer_metadata(reference_copy, field, value):
     path = reference_copy / "manifest.json"
-    manifest = json.loads(path.read_text())
+    manifest = json.loads(path.read_text(encoding="utf-8"))
     manifest[field] = value
-    path.write_text(json.dumps(manifest))
+    path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="producer schema version and SHA-256"):
         load_reference(reference_copy)
 
 
 @pytest.mark.parametrize("version", [2, 3])
 def test_only_current_reference_artifact_format_is_loaded(tmp_path, version):
-    (tmp_path / "ground_truth.json").write_text("{}")
+    (tmp_path / "ground_truth.json").write_text("{}", encoding="utf-8")
     (tmp_path / "manifest.json").write_text(
-        json.dumps({"artifact_format_version": version})
+        json.dumps({"artifact_format_version": version}), encoding="utf-8"
     )
     with pytest.raises(ValueError, match="format is unsupported"):
         load_reference(tmp_path)

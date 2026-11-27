@@ -68,8 +68,9 @@ reference and extraction bytes remain intact.
 
 The current suite passes 1,677 tests; all 101 active-reference/release checks,
 76 final output/frontend checks and three installed export/deployment checks pass.
-Ruff, mypy, strict docs and the offline scoring example pass. Older format support
-is removed without changing the scientific method or its automatic controls.
+All three real Docling native/OCR tests pass in clean CI. Ruff, mypy, strict docs
+and the offline scoring example pass. Older format support is removed without
+changing the scientific method or its automatic controls.
 
 ## Original verification, 26 November
 
